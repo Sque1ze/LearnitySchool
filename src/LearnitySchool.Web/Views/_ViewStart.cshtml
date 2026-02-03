@@ -1,0 +1,11 @@
+@using LearnitySchool.Web.Common
+@{
+    Layout = "_Layout";
+
+    if (User?.Identity?.IsAuthenticated == true)
+    {
+        if (User.IsInRole(RoleNames.Manager)) { Layout = "_LayoutManager"; }
+        else if (User.IsInRole(RoleNames.Teacher)) { Layout = "_LayoutTeacher"; }
+        else if (User.IsInRole(RoleNames.Student)) { Layout = "_LayoutStudent"; }
+    }
+}

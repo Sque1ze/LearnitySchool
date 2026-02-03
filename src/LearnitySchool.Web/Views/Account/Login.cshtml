@@ -1,0 +1,19 @@
+<h1>Login</h1>
+
+@if (ViewBag.Error is not null)
+{
+    <p style="color:crimson;">@ViewBag.Error</p>
+}
+
+<form method="post">
+    @Html.AntiForgeryToken()
+    <div style="margin-bottom:8px;">
+        <label>Email</label><br />
+        <input name="email" />
+    </div>
+    <div style="margin-bottom:8px;">
+        <label>Password</label><br />
+        <input name="password" type="password" />
+    </div>
+    <button type="submit">Login</button>
+</form>

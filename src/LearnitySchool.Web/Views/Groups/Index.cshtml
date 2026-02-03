@@ -1,0 +1,28 @@
+@model LearnitySchool.Web.ViewModels.Groups.GroupsIndexVm
+
+<h1>Твої групи (Teacher)</h1>
+
+@if (TempData["Error"] is not null)
+{
+    <p style="color:crimson;">@TempData["Error"]</p>
+}
+
+<form asp-action="Create" method="post" style="margin: 12px 0;">
+    @Html.AntiForgeryToken()
+    <input name="name" placeholder="Назва групи" />
+    <button type="submit">Створити</button>
+</form>
+
+@if (Model.Groups.Count == 0)
+{
+    <p>Поки немає груп.</p>
+}
+else
+{
+    <ul>
+        @foreach (var g in Model.Groups)
+        {
+            <li>@g.Name</li>
+        }
+    </ul>
+}
