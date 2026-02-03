@@ -1,19 +1,21 @@
 using LearnitySchool.Application;
+using LearnitySchool.Application.Common;
 using LearnitySchool.Infrastructure;
 using LearnitySchool.Infrastructure.Identity;
-using LearnitySchool.Web.Common;
+using LearnitySchool.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using LearnitySchool.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// MVC
 builder.Services.AddControllersWithViews();
 
+// Application + Infrastructure
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// Identity UI pages (login/register) - optional
+// Cookie paths
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
@@ -36,49 +38,73 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Seed roles + demo users (optional)
+// ✅ Seed
 await SeedIdentityAsync(app);
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();
+
+
+// ================= SEED =================
 
 static async Task SeedIdentityAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-    // Ensure DB exists (for first run). In real projects: use migrations.
-    await db.Database.EnsureCreatedAsync();
+    await db.Database.MigrateAsync();
 
-    string[] roles = [RoleNames.Student, RoleNames.Teacher, RoleNames.Manager];
+    string[] roles =
+    [
+        RoleNames.Student,
+        RoleNames.Teacher,
+        RoleNames.Manager
+    ];
 
     foreach (var role in roles)
     {
         if (!await roleManager.RoleExistsAsync(role))
-            await roleManager.CreateAsync(new IdentityRole(role));
+        {
+            await roleManager.CreateAsync(new ApplicationRole { Name = role });
+        }
     }
 
-    // Demo accounts for quick testing
     await EnsureUserAsync(userManager, "student@learnity.local", "Student123!", RoleNames.Student);
     await EnsureUserAsync(userManager, "teacher@learnity.local", "Teacher123!", RoleNames.Teacher);
     await EnsureUserAsync(userManager, "manager@learnity.local", "Manager123!", RoleNames.Manager);
 }
 
-static async Task EnsureUserAsync(UserManager<ApplicationUser> userManager, string email, string password, string role)
+static async Task EnsureUserAsync(
+    UserManager<ApplicationUser> userManager,
+    string email,
+    string password,
+    string role)
 {
     var user = await userManager.FindByEmailAsync(email);
-    if (user is null)
+
+    if (user == null)
     {
-        user = new ApplicationUser { UserName = email, Email = email, EmailConfirmed = true };
-        var create = await userManager.CreateAsync(user, password);
-        if (!create.Succeeded) return;
+        user = new ApplicationUser
+        {
+            UserName = email,
+            Email = email,
+            EmailConfirmed = true,
+            FirstName = role,
+            LastName = "Demo"
+        };
+
+        var result = await userManager.CreateAsync(user, password);
+        if (!result.Succeeded) return;
     }
 
     if (!await userManager.IsInRoleAsync(user, role))
+    {
         await userManager.AddToRoleAsync(user, role);
+    }
 }

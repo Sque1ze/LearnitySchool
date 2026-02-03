@@ -1,39 +1,79 @@
+using LearnitySchool.Application.Common;
+using LearnitySchool.Infrastructure.Identity;
+using LearnitySchool.Web.ViewModels.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using LearnitySchool.Infrastructure.Identity;
 
 namespace LearnitySchool.Web.Controllers;
 
 public class AccountController : Controller
 {
-    private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly UserManager<ApplicationUser> _users;
+    private readonly SignInManager<ApplicationUser> _signIn;
 
-    public AccountController(SignInManager<ApplicationUser> signInManager)
+    public AccountController(UserManager<ApplicationUser> users, SignInManager<ApplicationUser> signIn)
     {
-        _signInManager = signInManager;
+        _users = users;
+        _signIn = signIn;
     }
 
     [HttpGet]
-    public IActionResult Login() => View();
+    public IActionResult Register() => View(new RegisterVm());
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(string email, string password)
+    public async Task<IActionResult> Register(RegisterVm vm)
     {
-        var result = await _signInManager.PasswordSignInAsync(email, password, isPersistent: false, lockoutOnFailure: false);
-        if (result.Succeeded) return RedirectToAction("Index", "Home");
+        if (!ModelState.IsValid) return View(vm);
 
-        ViewBag.Error = "Невірний email або пароль.";
-        return View();
+        var user = new ApplicationUser
+        {
+            UserName = vm.Email,
+            Email = vm.Email,
+            FirstName = vm.FirstName,
+            LastName = vm.LastName
+        };
+
+        var result = await _users.CreateAsync(user, vm.Password);
+        if (!result.Succeeded)
+        {
+            foreach (var e in result.Errors)
+                ModelState.AddModelError("", e.Description);
+            return View(vm);
+        }
+
+        // ✅ роль за замовчуванням Student
+        await _users.AddToRoleAsync(user, RoleNames.Student);
+
+        await _signIn.SignInAsync(user, isPersistent: false);
+        return RedirectToAction("Index", "Home"); // Home зробить редірект по ролі
     }
 
+    [HttpGet]
+    public IActionResult Login() => View(new LoginVm());
+
     [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Logout()
+    public async Task<IActionResult> Login(LoginVm vm, string? returnUrl = null)
     {
-        await _signInManager.SignOutAsync();
+        if (!ModelState.IsValid) return View(vm);
+
+        var result = await _signIn.PasswordSignInAsync(vm.Email, vm.Password, vm.RememberMe, lockoutOnFailure: false);
+        if (!result.Succeeded)
+        {
+            ModelState.AddModelError("", "Невірна пошта або пароль");
+            return View(vm);
+        }
+
+        // якщо є returnUrl — повертаємо
+        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            return Redirect(returnUrl);
+
         return RedirectToAction("Index", "Home");
     }
 
-    public IActionResult AccessDenied() => View();
+    [HttpPost]
+    public async Task<IActionResult> Logout()
+    {
+        await _signIn.SignOutAsync();
+        return RedirectToAction("Login");
+    }
 }

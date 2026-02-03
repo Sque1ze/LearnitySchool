@@ -1,0 +1,17 @@
+﻿@model LearnitySchool.Web.ViewModels.Manager.Users.UserEditVm
+@{
+    ViewData["Title"] = "Видалити користувача";
+}
+
+<h2>Видалити користувача</h2>
+
+<div style="max-width:520px;">
+    <p>Точно видалити <strong>@Model.Email</strong>?</p>
+
+    <form asp-action="DeleteConfirmed" method="post" style="display:flex; gap:10px;">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <button type="submit" class="dropdown-btn danger-btn">Delete</button>
+        <a asp-action="Index" class="dropdown-btn">Cancel</a>
+    </form>
+</div>

@@ -1,3 +1,9 @@
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <div>
+        @User.Identity.Name (@string.Join(", ", User.Claims.Where(c => c.Type == "role").Select(c => c.Value)))
+    </div>
+}
 <!DOCTYPE html>
 <html lang="uk">
 <head>

@@ -1,7 +1,7 @@
 using LearnitySchool.Application.Abstractions;
+using LearnitySchool.Infrastructure.Identity;
 using LearnitySchool.Infrastructure.Persistence;
 using LearnitySchool.Infrastructure.Services;
-using LearnitySchool.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -18,8 +18,9 @@ public static class DependencyInjection
 
         services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(conn));
 
+        // ✅ Identity + Roles (узгоджено з AppDbContext: ApplicationRole)
         services
-            .AddIdentity<ApplicationUser, IdentityRole>(options =>
+            .AddIdentity<ApplicationUser, ApplicationRole>(options =>
             {
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequiredLength = 6;

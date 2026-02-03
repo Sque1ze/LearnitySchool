@@ -1,11 +1,26 @@
-@using LearnitySchool.Web.Common
+@using LearnitySchool.Application.Common
+
 @{
-    Layout = "_Layout";
+    // За замовчуванням — без layout
+    Layout = null;
 
     if (User?.Identity?.IsAuthenticated == true)
     {
-        if (User.IsInRole(RoleNames.Manager)) { Layout = "_LayoutManager"; }
-        else if (User.IsInRole(RoleNames.Teacher)) { Layout = "_LayoutTeacher"; }
-        else if (User.IsInRole(RoleNames.Student)) { Layout = "_LayoutStudent"; }
+        if (User.IsInRole(RoleNames.Manager))
+        {
+            Layout = "_LayoutManager";
+        }
+        else if (User.IsInRole(RoleNames.Teacher))
+        {
+            Layout = "_LayoutTeacher";
+        }
+        else if (User.IsInRole(RoleNames.Student))
+        {
+            Layout = "_LayoutStudent";
+        }
+        else
+        {
+            Layout = "_LayoutStudent";
+        }
     }
 }

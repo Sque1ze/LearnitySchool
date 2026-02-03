@@ -1,19 +1,85 @@
-<h1>Login</h1>
-
-@if (ViewBag.Error is not null)
-{
-    <p style="color:crimson;">@ViewBag.Error</p>
+@model LearnitySchool.Web.ViewModels.Auth.LoginVm
+@{
+    Layout = null;
 }
 
-<form method="post">
-    @Html.AntiForgeryToken()
-    <div style="margin-bottom:8px;">
-        <label>Email</label><br />
-        <input name="email" />
-    </div>
-    <div style="margin-bottom:8px;">
-        <label>Password</label><br />
-        <input name="password" type="password" />
-    </div>
-    <button type="submit">Login</button>
-</form>
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login • LearnitySchool</title>
+
+    <link rel="stylesheet" href="~/css/login.css" />
+</head>
+<body>
+    <main class="auth">
+        <section class="card">
+            <div class="card__header">
+                <div class="brand">
+                    <div class="brand__dot"></div>
+                    <div class="brand__text">LearnitySchool</div>
+                </div>
+
+                <h1 class="title">Вхід</h1>
+                <p class="subtitle">Увійди, щоб продовжити</p>
+            </div>
+
+            @* Загальна помилка (якщо ти кладеш її в ViewBag.Error) *@
+            @if (ViewBag.Error is not null)
+            {
+                <div class="alert alert--validation">@ViewBag.Error</div>
+            }
+
+            @* Показуємо summary тільки коли є помилки не прив’язані до конкретного поля *@
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert--validation">
+                    <strong>Перевір форму</strong>
+                    @Html.ValidationSummary(excludePropertyErrors: true)
+                </div>
+            }
+
+            <form asp-action="Login" asp-controller="Account" method="post" class="form" novalidate>
+                @Html.AntiForgeryToken()
+
+                <div class="field @(ViewData.ModelState.ContainsKey(nameof(Model.Email))
+                                     && ViewData.ModelState[nameof(Model.Email)]!.Errors.Count > 0 ? "field--invalid" : "")">
+                    <label class="label" asp-for="Email">Email</label>
+                    <input class="input" asp-for="Email" type="email" autocomplete="email" placeholder="name@example.com" />
+                    <span class="validation" asp-validation-for="Email"></span>
+                </div>
+
+                <div class="field @(ViewData.ModelState.ContainsKey(nameof(Model.Password))
+                                     && ViewData.ModelState[nameof(Model.Password)]!.Errors.Count > 0 ? "field--invalid" : "")">
+                    <label class="label" asp-for="Password">Пароль</label>
+                    <input class="input" asp-for="Password" type="password" autocomplete="current-password" placeholder="••••••••" />
+                    <span class="validation" asp-validation-for="Password"></span>
+                </div>
+
+                <div class="field" style="margin-top: 2px;">
+                    <label style="display:flex; gap:10px; align-items:center; color: rgba(229,231,235,0.86); font-size: 13px;">
+                        <input asp-for="RememberMe" type="checkbox" />
+                        Запам’ятати мене
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn--primary">Увійти</button>
+            </form>
+
+            <div class="footer">
+                <span class="muted">Немає акаунту?</span>
+                <a class="link" href="@Url.Action("Register", "Account")">Зареєструватися</a>
+            </div>
+        </section>
+
+        <div class="bg-glow"></div>
+    </main>
+
+    @* Якщо хочеш клієнтську валідацію – залиш.
+   Якщо не хочеш jQuery – видали цей блок. *@
+    @section Scripts {
+        <partial name="_ValidationScriptsPartial" />
+    }
+</body>
+</html>

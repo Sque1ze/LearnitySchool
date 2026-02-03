@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LearnitySchool.Infrastructure.Persistence;
 
-public class AppDbContext : IdentityDbContext<ApplicationUser>
+public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -17,8 +17,13 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<Group>(b =>
         {
-            b.Property(x => x.Name).HasMaxLength(120).IsRequired();
-            b.Property(x => x.TeacherUserId).HasMaxLength(450).IsRequired();
+            b.Property(x => x.Name)
+                .HasMaxLength(120)
+                .IsRequired();
+
+            b.Property(x => x.TeacherUserId)
+                .HasMaxLength(450) 
+                .IsRequired();
         });
     }
 }

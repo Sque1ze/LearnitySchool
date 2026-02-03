@@ -1,0 +1,20 @@
+﻿@model LearnitySchool.Web.ViewModels.Manager.Users.UserEditVm
+@{
+    ViewData["Title"] = "Дані користувача";
+}
+
+<h2>Details</h2>
+
+<div style="max-width:520px; display:grid; gap:8px;">
+    <div><strong>Email:</strong> @Model.Email</div>
+    <div><strong>UserName:</strong> @Model.UserName</div>
+    <div><strong>FirstName:</strong> @Model.FirstName</div>
+    <div><strong>LastName:</strong> @Model.LastName</div>
+    <div><strong>Age:</strong> @Model.Age</div>
+    <div><strong>Phone:</strong> @Model.PhoneNumber</div>
+
+    <div style="margin-top:12px; display:flex; gap:10px;">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="dropdown-btn">Edit</a>
+        <a asp-action="Index" class="dropdown-btn">Back</a>
+    </div>
+</div>

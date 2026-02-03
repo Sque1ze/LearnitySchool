@@ -1,0 +1,14 @@
+﻿@model LearnitySchool.Web.ViewModels.Student.StudentProfileVm
+
+@{
+    ViewData["Title"] = "Профіль";
+}
+
+<h2>Мій профіль</h2>
+
+<div style="max-width:480px; margin-top:20px;">
+    <div><strong>Імʼя:</strong> @Model.FirstName</div>
+    <div><strong>Прізвище:</strong> @Model.LastName</div>
+    <div><strong>Email:</strong> @Model.Email</div>
+    <div><strong>Логін:</strong> @Model.UserName</div>
+</div>

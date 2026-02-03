@@ -1,4 +1,4 @@
-using LearnitySchool.Web.Common;
+using LearnitySchool.Application.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,14 +8,11 @@ public class HomeController : Controller
 {
     public IActionResult Index()
     {
-        // If authenticated, redirect to role dashboard
-        if (User.Identity?.IsAuthenticated == true)
-        {
-            if (User.IsInRole(RoleNames.Manager)) return RedirectToAction("Index", "Manager");
-            if (User.IsInRole(RoleNames.Teacher)) return RedirectToAction("Index", "Teacher");
-            if (User.IsInRole(RoleNames.Student)) return RedirectToAction("Index", "Student");
-        }
+        if (User?.Identity?.IsAuthenticated != true)
+            return RedirectToAction("Login", "Account");
 
-        return View();
+        if (User.IsInRole(RoleNames.Manager)) return RedirectToAction("Index", "Manager");
+        if (User.IsInRole(RoleNames.Teacher)) return RedirectToAction("Index", "Teacher");
+        return RedirectToAction("Index", "Student");
     }
 }
