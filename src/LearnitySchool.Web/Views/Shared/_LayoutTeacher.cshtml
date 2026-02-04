@@ -1,56 +1,116 @@
-@if (User.Identity?.IsAuthenticated == true)
-{
-    <div>
-        @User.Identity.Name (@string.Join(", ", User.Claims.Where(c => c.Type == "role").Select(c => c.Value)))
-    </div>
+@using LearnitySchool.Infrastructure.Identity
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    Layout = null;
+
+    string displayName = "Guest";
+
+    if (User?.Identity?.IsAuthenticated == true)
+    {
+        var user = await UserManager.GetUserAsync(User);
+
+        var first = user?.FirstName?.Trim() ?? "";
+        var last = user?.LastName?.Trim() ?? "";
+
+        if (!string.IsNullOrWhiteSpace(first) && !string.IsNullOrWhiteSpace(last))
+            displayName = $"{first} {char.ToUpper(last[0])}.";
+        else if (!string.IsNullOrWhiteSpace(first))
+            displayName = first;
+        else
+            displayName = User.Identity?.Name ?? "User";
+    }
+
+    var title = ViewData["Title"] as string ?? "Teacher";
 }
+
 <!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Teacher - LearnitySchool</title>
-    <link rel="stylesheet" href="~/css/site.css" />
+    <title>@title - LearnitySchool</title>
+
+    <link rel="stylesheet" href="~/css/studentLayout.css" asp-append-version="true" />
 </head>
 <body>
-    <header style="padding:12px 16px; border-bottom:1px solid #e5e5e5;">
-        <div style="display:flex; gap:12px; align-items:center; justify-content:space-between;">
-            <div>
-                <strong>LearnitySchool</strong>
-                <span style="margin-left:10px; opacity:.7;">Teacher layout</span>
-            </div>
 
-            <div>
-                @if (User?.Identity?.IsAuthenticated == true)
-                {
-                    <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
-                        @Html.AntiForgeryToken()
-                        <button type="submit">Logout</button>
-                    </form>
-                }
-                else
-                {
-                    <a asp-controller="Account" asp-action="Login">Login</a>
-                }
-            </div>
+    <div class="layout">
+
+        <aside class="sidebar">
+            <a asp-controller="Home" asp-action="Index" class="logo">
+                <span class="logo-icon">L</span>
+                <span class="logo-text">LearnitySchool</span>
+            </a>
+
+            <!-- МЕНЮ ДЛЯ TEACHER -->
+            <nav class="menu">
+                <a asp-controller="Teacher" asp-action="Index" class="menu-item">Dashboard</a>
+                <a asp-controller="Groups" asp-action="Index" class="menu-item">Groups</a>
+                <a asp-controller="Student" asp-action="Index" class="menu-item">Students</a>
+                <a asp-controller="Home" asp-action="Index" class="menu-item">Home</a>
+            </nav>
+        </aside>
+
+        <div class="content">
+
+            <header class="top-header">
+                <div class="header-left">
+                    <span class="page-title">@title</span>
+                </div>
+
+                <div class="header-right">
+
+                    <div class="dropdown" id="langDropdown">
+                        <button type="button" class="dropdown-btn" data-dropdown="langDropdown">
+                            UA <span class="caret">▾</span>
+                        </button>
+                        <div class="dropdown-menu">
+                            <button type="button" class="dropdown-item">Українська</button>
+                            <button type="button" class="dropdown-item">English</button>
+                        </div>
+                    </div>
+
+                    <div class="dropdown" id="userDropdown">
+                        <button type="button" class="dropdown-btn avatar-btn" data-dropdown="userDropdown">
+                            <span class="user-avatar">👤</span>
+                            <span class="user-display">@displayName</span>
+                            <span class="caret">▾</span>
+                        </button>
+
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a asp-controller="Teacher" asp-action="Profile" class="dropdown-item link-item">
+                                Профіль
+                            </a>
+
+                            @if (User?.Identity?.IsAuthenticated == true)
+                            {
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="logout-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item danger-btn">Вийти</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <a asp-controller="Account" asp-action="Login" class="dropdown-item link-item">
+                                    Увійти
+                                </a>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            </header>
+
+            <main class="main-content">
+                @RenderBody()
+            </main>
+
         </div>
-        <nav style="margin-top:10px;">
-            <a asp-controller="Home" asp-action="Index">Home</a>
-            <span style="margin:0 8px;">|</span>
-            <a asp-controller="Teacher" asp-action="Index">Teacher</a>
-            <span style="margin:0 8px;">|</span>
-            <a asp-controller="Student" asp-action="Index">Student</a>
-            <span style="margin:0 8px;">|</span>
-            <a asp-controller="Manager" asp-action="Index">Manager</a>
-            <span style="margin:0 8px;">|</span>
-            <a asp-controller="Groups" asp-action="Index">Groups</a>
-        </nav>
-    </header>
+    </div>
 
-    <main style="padding:16px;">
-        @RenderBody()
-    </main>
-
-    @RenderSection("Scripts", required: false)
+    <script src="~/js/studentLayout.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

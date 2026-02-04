@@ -1,0 +1,32 @@
+﻿@model LearnitySchool.Web.ViewModels.Manager.Lessons.LessonEditVm
+@{
+    ViewData["Title"] = "Edit Lesson";
+}
+
+<h2 style="margin:0;">Edit Lesson — @Model.CourseTitle</h2>
+
+<form asp-action="Edit" method="post" style="max-width:860px; display:grid; gap:12px; margin-top:14px;">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <input type="hidden" name="CourseId" value="@Model.CourseId" />
+
+    <input name="Order" value="@Model.Order" placeholder="Order (1..10)" class="dropdown-btn" />
+    <input name="Title" value="@Model.Title" placeholder="Title" class="dropdown-btn" />
+
+    <textarea name="Description" placeholder="Description (опційно)" class="dropdown-btn" rows="3">@Model.Description</textarea>
+
+    <textarea name="Content" placeholder="Content (markdown / текст / посилання)" class="dropdown-btn" rows="10">@Model.Content</textarea>
+
+    <label style="display:flex; gap:10px; align-items:center;">
+        <input type="checkbox" name="IsPublished" value="true" @(Model.IsPublished ? "checked" : "") />
+        Опублікований
+    </label>
+
+    <div style="display:flex; gap:10px;">
+        <button type="submit" class="dropdown-btn">Save</button>
+        <a asp-action="Index" asp-route-courseId="@Model.CourseId" class="dropdown-btn">Back</a>
+    </div>
+
+    <div asp-validation-summary="All"></div>
+</form>

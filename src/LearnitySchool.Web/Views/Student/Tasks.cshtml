@@ -1,0 +1,83 @@
+﻿@using LearnitySchool.Domain.Enums
+@model List<LearnitySchool.Web.ViewModels.Student.StudentTaskVm>
+
+@{
+    ViewData["Title"] = "Tasks";
+    var lessonId = (Guid)ViewBag.LessonId;
+}
+
+<div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+    <div>
+        <h2 style="margin:0;">Tasks</h2>
+        <div style="opacity:.75; margin-top:4px;">Завдання цього уроку</div>
+    </div>
+
+    <a asp-action="Lessons"
+       asp-route-courseId="@ViewBag.CourseId"
+       class="dropdown-btn">
+        ← Back to lessons
+    </a>
+</div>
+
+<div style="margin-top:16px; overflow:auto;">
+    <table style="width:100%; border-collapse:collapse;">
+        <thead>
+            <tr>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">#</th>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Title</th>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Type</th>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Status</th>
+                <th style="padding:10px; border-bottom:1px solid #1F2933;"></th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (Model == null || Model.Count == 0)
+            {
+                <tr>
+                    <td colspan="5" style="padding:14px; opacity:.75;">
+                        Немає завдань для цього уроку
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var t in Model)
+                {
+                    <tr>
+                        <td style="padding:10px; border-bottom:1px solid #1F2933;">
+                            @t.Order
+                        </td>
+
+                        <td style="padding:10px; border-bottom:1px solid #1F2933; font-weight:600;">
+                            @t.Title
+                        </td>
+
+                        <td style="padding:10px; border-bottom:1px solid #1F2933;">
+                            @t.Type
+                        </td>
+
+                        <td style="padding:10px; border-bottom:1px solid #1F2933;">
+                            @if (t.IsCompleted)
+                            {
+                                <span style="color:#22C55E;">✅ Completed</span>
+                            }
+                            else
+                            {
+                                <span style="opacity:.75;">Not completed</span>
+                            }
+                        </td>
+
+                        <td style="padding:10px; border-bottom:1px solid #1F2933; white-space:nowrap;">
+                            <a asp-action="TaskDetails"
+                               asp-route-taskId="@t.TaskId"
+                               class="dropdown-btn">
+                                Open
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

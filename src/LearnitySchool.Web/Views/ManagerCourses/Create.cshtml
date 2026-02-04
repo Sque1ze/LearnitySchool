@@ -1,0 +1,26 @@
+﻿@model LearnitySchool.Web.ViewModels.Manager.Courses.CourseEditVm
+@{
+    ViewData["Title"] = "Створити курс";
+}
+
+<h2>Створити курс</h2>
+
+<form asp-action="Create" method="post" style="max-width:720px; display:grid; gap:12px; margin-top:14px;">
+    @Html.AntiForgeryToken()
+
+    <input name="Title" value="@Model.Title" placeholder="Назва курсу" class="dropdown-btn" />
+
+    <textarea name="Description" placeholder="Опис (опційно)" class="dropdown-btn" rows="5">@Model.Description</textarea>
+
+    <label style="display:flex; gap:10px; align-items:center;">
+        <input type="checkbox" name="IsPublished" value="true" @(Model.IsPublished ? "checked" : "") />
+        Опублікувати курс
+    </label>
+
+    <div style="display:flex; gap:10px;">
+        <button type="submit" class="dropdown-btn">Create</button>
+        <a asp-action="Index" class="dropdown-btn">Cancel</a>
+    </div>
+
+    <div asp-validation-summary="All"></div>
+</form>

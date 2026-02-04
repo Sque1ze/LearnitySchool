@@ -1,0 +1,47 @@
+﻿@model LearnitySchool.Web.ViewModels.Manager.Courses.CoursePeopleVm
+@{
+    ViewData["Title"] = "People";
+}
+
+<h2 style="margin:0;">People — @Model.CourseTitle</h2>
+<div style="opacity:.75; margin:6px 0 16px 0;">Признач викладача та додай учнів на курс</div>
+
+<form asp-action="People" method="post" style="max-width:860px; display:grid; gap:14px;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="CourseId" value="@Model.CourseId" />
+
+    <div style="display:grid; gap:8px;">
+        <div style="font-weight:600;">Teacher</div>
+        <select name="TeacherUserId" class="dropdown-btn">
+            <option value="">— Без викладача —</option>
+            @foreach (var t in Model.Teachers)
+            {
+                <option value="@t.Value" selected="@(Model.TeacherUserId == t.Value)">@t.Text</option>
+            }
+        </select>
+    </div>
+
+    <div style="display:grid; gap:8px;">
+        <div style="font-weight:600;">Students</div>
+
+        <!-- simple multi-select -->
+        <select name="SelectedStudentIds" multiple size="12" class="dropdown-btn" style="height:auto;">
+            @foreach (var s in Model.Students)
+            {
+                var selected = Model.SelectedStudentIds.Contains(s.Value ?? "");
+                <option value="@s.Value" selected="@(selected ? "selected" : null)">@s.Text</option>
+            }
+        </select>
+
+        <div style="opacity:.7; font-size:13px;">
+            Порада: щоб вибрати декількох — тримай Ctrl (Windows) / Cmd (Mac)
+        </div>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+        <button type="submit" class="dropdown-btn">Save</button>
+        <a asp-action="Index" class="dropdown-btn">Back</a>
+    </div>
+
+    <div asp-validation-summary="All"></div>
+</form>

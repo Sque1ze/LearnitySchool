@@ -1,82 +1,89 @@
-﻿@model List<LearnitySchool.Web.ViewModels.Manager.Users.UserListItemVm>
+﻿@model LearnitySchool.Web.ViewModels.Manager.Users.UsersIndexVm
 @{
     ViewData["Title"] = "Користувачі";
 }
 
-@if (TempData["Error"] != null)
-{
-    <div style="padding:10px; border:1px solid #1F2933; border-radius:12px; margin-bottom:12px;">
-        @TempData["Error"]
+<div class="users-page">
+
+    <div class="users-header">
+        <h2 class="users-title">Користувачі</h2>
+        <a asp-action="Create" class="btn btn-primary">+ Додати</a>
     </div>
-}
 
-<div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-    <h2 style="margin:0;">Користувачі</h2>
-    <a asp-action="Create" class="dropdown-btn">+ Додати</a>
-</div>
+    <!-- Filters -->
+    <form method="get" asp-action="Index" class="card users-filters">
+        <input name="q"
+               value="@Model.Q"
+               class="input"
+               placeholder="Пошук за ім’ям або прізвищем" />
 
-<div style="margin-top:16px; overflow:auto;">
-    <table style="width:100%; border-collapse:collapse;">
-        <thead>
-            <tr>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Email</th>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Ім'я</th>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Прізвище</th>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Role</th>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Age</th>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Phone</th>
-                <th style="padding:10px; border-bottom:1px solid #1F2933;"></th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @if (Model == null || Model.Count == 0)
+        <select name="role" class="select">
+            <option value="">Усі ролі</option>
+            @foreach (var r in Model.AvailableRoles)
             {
-                <tr>
-                    <td colspan="7" style="padding:14px; opacity:.75;">
-                        Немає користувачів
-                    </td>
-                </tr>
+                <option value="@r" selected="@(Model.Role == r)">
+                    @r
+                </option>
             }
-            else
-            {
-                @foreach (var u in Model)
+        </select>
+
+        <button type="submit" class="btn">Фільтрувати</button>
+        <a asp-action="Index" class="btn btn-muted">Скинути</a>
+    </form>
+
+    <!-- Table -->
+    <div class="card">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Ім’я</th>
+                    <th>Прізвище</th>
+                    <th>Role</th>
+                    <th>Age</th>
+                    <th>Phone</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.Users == null || Model.Users.Count == 0)
                 {
                     <tr>
-                        <td style="padding:10px; border-bottom:1px solid #1F2933;">
-                            @u.Email
-                        </td>
-
-                        <td style="padding:10px; border-bottom:1px solid #1F2933;">
-                            @u.FirstName
-                        </td>
-
-                        <td style="padding:10px; border-bottom:1px solid #1F2933;">
-                            @u.LastName
-                        </td>
-
-                        <td style="padding:10px; border-bottom:1px solid #1F2933;">
-                            @u.Role
-                        </td>
-
-                        <td style="padding:10px; border-bottom:1px solid #1F2933;">
-                            @u.Age
-                        </td>
-
-                        <td style="padding:10px; border-bottom:1px solid #1F2933;">
-                            @u.PhoneNumber
-                        </td>
-
-                        <td style="padding:10px; border-bottom:1px solid #1F2933; white-space:nowrap;">
-                            <a asp-action="Details" asp-route-id="@u.Id">Details</a>
-                            <span style="opacity:.5;"> | </span>
-                            <a asp-action="Edit" asp-route-id="@u.Id">Edit</a>
-                            <span style="opacity:.5;"> | </span>
-                            <a asp-action="Delete" asp-route-id="@u.Id">Delete</a>
+                        <td colspan="7" class="empty">
+                            Немає користувачів
                         </td>
                     </tr>
                 }
-            }
-        </tbody>
-    </table>
+                else
+                {
+                    @foreach (var u in Model.Users)
+                    {
+                        <tr>
+                            <td>@u.Email</td>
+                            <td>@u.FirstName</td>
+                            <td>@u.LastName</td>
+                            <td>
+                                <span class="role-badge @u.Role">@u.Role</span>
+                            </td>
+                            <td>@u.Age</td>
+                            <td>@u.PhoneNumber</td>
+                            <td class="actions">
+                                <a asp-action="Details" asp-route-id="@u.Id">Details</a>
+                                <span>·</span>
+                                <a asp-action="Edit" asp-route-id="@u.Id">Edit</a>
+                                <span>·</span>
+                                <a asp-action="Delete" asp-route-id="@u.Id">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
 </div>
+
+@section Scripts {
+    <link rel="stylesheet" href="~/css/userManager/userIndex.css" />
+}

@@ -1,0 +1,30 @@
+﻿@model LearnitySchool.Web.ViewModels.Manager.Lessons.LessonEditVm
+@{
+    ViewData["Title"] = "Delete Lesson";
+}
+
+<h2 style="margin:0 0 12px 0;">Delete Lesson — @Model.CourseTitle</h2>
+
+<div style="padding:14px; border:1px solid #1F2933; border-radius:14px; background:#020617; max-width:860px;">
+    <div style="font-weight:700; font-size:18px;">
+        @Model.Order. @Model.Title
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Description))
+    {
+        <div style="opacity:.8; margin-top:8px;">@Model.Description</div>
+    }
+
+    <div style="margin-top:14px; padding:12px; border:1px solid #1F2933; border-radius:12px;">
+        ⚠️ Урок буде видалений. (пізніше тут також будуть завдання)
+    </div>
+
+    <form asp-action="DeleteConfirmed" method="post" style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <input type="hidden" name="courseId" value="@Model.CourseId" />
+
+        <button type="submit" class="dropdown-btn" style="border-color:#ef4444;">Так, видалити</button>
+        <a asp-action="Index" asp-route-courseId="@Model.CourseId" class="dropdown-btn">Cancel</a>
+    </form>
+</div>

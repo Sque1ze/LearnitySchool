@@ -18,7 +18,6 @@ public static class DependencyInjection
 
         services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(conn));
 
-        // ✅ Identity + Roles (узгоджено з AppDbContext: ApplicationRole)
         services
             .AddIdentity<ApplicationUser, ApplicationRole>(options =>
             {

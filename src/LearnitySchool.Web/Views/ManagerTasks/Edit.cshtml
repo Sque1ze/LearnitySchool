@@ -1,0 +1,36 @@
+﻿@using LearnitySchool.Domain.Enums
+@model LearnitySchool.Web.ViewModels.Manager.Tasks.TaskEditVm
+@{
+    ViewData["Title"] = "Edit Task";
+}
+
+<h2 style="margin:0;">Edit Task — @Model.LessonTitle</h2>
+
+<form asp-action="Edit" method="post" style="max-width:860px; display:grid; gap:12px; margin-top:14px;">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <input type="hidden" name="LessonId" value="@Model.LessonId" />
+
+    <input name="Order" value="@Model.Order" placeholder="Order" class="dropdown-btn" />
+    <input name="Title" value="@Model.Title" placeholder="Title" class="dropdown-btn" />
+
+    <select name="Type" class="dropdown-btn">
+        <option value="@((int)LessonTaskType.Quiz)" selected="@(Model.Type == LessonTaskType.Quiz)">Quiz</option>
+        <option value="@((int)LessonTaskType.Practice)" selected="@(Model.Type == LessonTaskType.Practice)">Practice</option>
+    </select>
+
+    <textarea name="Description" placeholder="Description" class="dropdown-btn" rows="6">@Model.Description</textarea>
+
+    <label style="display:flex; gap:10px; align-items:center;">
+        <input type="checkbox" name="IsPublished" value="true" @(Model.IsPublished ? "checked" : "") />
+        Published
+    </label>
+
+    <div style="display:flex; gap:10px;">
+        <button type="submit" class="dropdown-btn">Save</button>
+        <a asp-action="Index" asp-route-lessonId="@Model.LessonId" class="dropdown-btn">Back</a>
+    </div>
+
+    <div asp-validation-summary="All"></div>
+</form>

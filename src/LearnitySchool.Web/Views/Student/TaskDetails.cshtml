@@ -1,0 +1,146 @@
+﻿@model LearnitySchool.Web.ViewModels.Student.StudentTaskDetailsVm
+
+@{
+    ViewData["Title"] = "Task";
+}
+
+<div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+    <div>
+        <h2 style="margin:0;">Task #@Model.Order — @Model.Title</h2>
+        <div style="opacity:.75; margin-top:6px;">
+            Type: <strong>@Model.Type</strong>
+            <span style="opacity:.6;"> | </span>
+            Status:
+            @if (Model.IsCompleted)
+            {
+                <span style="color:#22C55E; font-weight:700;">✅ Completed</span>
+            }
+            else
+            {
+                <span style="opacity:.85;">Not completed</span>
+            }
+        </div>
+    </div>
+
+    <div style="display:flex; gap:10px; align-items:center;">
+        <a asp-action="Tasks" asp-route-lessonId="@Model.LessonId" class="dropdown-btn">
+            ← Back to tasks
+        </a>
+        <a asp-action="Lessons" asp-route-courseId="@Model.CourseId" class="dropdown-btn">
+            ← Back to lessons
+        </a>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Description))
+{
+    <div style="margin-top:14px; border:1px solid #1F2933; border-radius:12px; padding:12px;">
+        <div style="font-weight:700; margin-bottom:6px;">Description</div>
+        <div style="opacity:.9; line-height:1.6;">
+            @Model.Description
+        </div>
+    </div>
+}
+
+<!-- ========= PRACTICE: simple editor ========= -->
+@if (Model.Type.Equals("Practice", StringComparison.OrdinalIgnoreCase))
+{
+    <div style="margin-top:14px; border:1px solid #1F2933; border-radius:12px; padding:12px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div style="font-weight:700;">Code editor (Practice)</div>
+            <div style="opacity:.75; font-size:13px;">Autosave в браузері</div>
+        </div>
+
+        <textarea id="codeBox"
+              style="margin-top:10px; width:100%; min-height:320px; resize:vertical;
+                         border:1px solid #1F2933; border-radius:12px; padding:12px;
+                         background:#020617; color:#E5E7EB; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
+// write your code here...
+        </textarea>
+
+        <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+            <button type="button" class="dropdown-btn" id="saveBtn">Save draft</button>
+            <span id="savedInfo" style="opacity:.75; font-size:13px;"></span>
+
+            @if (!Model.IsCompleted)
+            {
+                <form asp-action="CompleteTask" method="post" style="margin-left:auto;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="taskId" value="@Model.TaskId" />
+                    <input type="hidden" name="lessonId" value="@Model.LessonId" />
+                    <button type="submit" class="dropdown-btn">Mark completed</button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const key = "learnity.task.draft." + "@Model.TaskId";
+            const box = document.getElementById("codeBox");
+            const saveBtn = document.getElementById("saveBtn");
+            const info = document.getElementById("savedInfo");
+
+            // load
+            const saved = localStorage.getItem(key);
+            if (saved) {
+                box.value = saved;
+                info.textContent = "Draft loaded";
+            }
+
+            function save() {
+                localStorage.setItem(key, box.value);
+                const d = new Date();
+                info.textContent = "Saved " + d.toLocaleTimeString();
+            }
+
+            // manual save
+            saveBtn.addEventListener("click", save);
+
+            // autosave
+            let t = null;
+            box.addEventListener("input", function () {
+                clearTimeout(t);
+                t = setTimeout(save, 600);
+            });
+        })();
+    </script>
+}
+else if (Model.Type.Equals("Quiz", StringComparison.OrdinalIgnoreCase))
+{
+    <div style="margin-top:14px; border:1px solid #1F2933; border-radius:12px; padding:12px;">
+        <div style="font-weight:700;">Quiz mode</div>
+        <div style="opacity:.8; margin-top:6px;">
+            Тут буде quiz (варіанти відповідей / перевірка). Зробимо наступним кроком.
+        </div>
+
+        @if (!Model.IsCompleted)
+        {
+            <form asp-action="CompleteTask" method="post" style="margin-top:12px;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="taskId" value="@Model.TaskId" />
+                <input type="hidden" name="lessonId" value="@Model.LessonId" />
+                <button type="submit" class="dropdown-btn">Mark completed</button>
+            </form>
+        }
+    </div>
+}
+else
+{
+    <div style="margin-top:14px; border:1px solid #1F2933; border-radius:12px; padding:12px;">
+        <div style="font-weight:700;">Task view</div>
+        <div style="opacity:.8; margin-top:6px;">
+            Тип задачі: <strong>@Model.Type</strong>
+        </div>
+
+        @if (!Model.IsCompleted)
+        {
+            <form asp-action="CompleteTask" method="post" style="margin-top:12px;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="taskId" value="@Model.TaskId" />
+                <input type="hidden" name="lessonId" value="@Model.LessonId" />
+                <button type="submit" class="dropdown-btn">Mark completed</button>
+            </form>
+        }
+    </div>
+}

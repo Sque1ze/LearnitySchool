@@ -1,0 +1,68 @@
+﻿@model List<LearnitySchool.Web.ViewModels.Manager.Courses.CourseEditVm>
+@{
+    ViewData["Title"] = "Курси";
+}
+
+<div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+    <h2 style="margin:0;">Курси</h2>
+    <a asp-action="Create" class="dropdown-btn">+ Створити курс</a>
+</div>
+
+<div style="margin-top:16px; overflow:auto;">
+    <table style="width:100%; border-collapse:collapse;">
+        <thead>
+            <tr>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Title</th>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Published</th>
+                <th style="padding:10px; border-bottom:1px solid #1F2933;"></th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (Model == null || Model.Count == 0)
+            {
+                <tr>
+                    <td colspan="3" style="padding:14px; opacity:.75;">
+                        Немає курсів
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var c in Model)
+                {
+                    <tr>
+                        <td style="padding:10px; border-bottom:1px solid #1F2933;">
+                            <div style="font-weight:600;">@c.Title</div>
+
+                            @if (!string.IsNullOrWhiteSpace(c.Description))
+                            {
+                                <div style="opacity:.75; margin-top:4px;">@c.Description</div>
+                            }
+                        </td>
+
+                        <td style="padding:10px; border-bottom:1px solid #1F2933;">
+                            @(c.IsPublished ? "✅" : "—")
+                        </td>
+
+                        <td style="padding:10px; border-bottom:1px solid #1F2933; white-space:nowrap;">
+                            <a asp-action="People" asp-route-id="@c.Id">People</a>
+                            <span style="opacity:.5;"> | </span>
+
+                            <a asp-controller="ManagerLessons"
+                               asp-action="Index"
+                               asp-route-courseId="@c.Id">
+                                Lessons
+                            </a>
+                            <span style="opacity:.5;"> | </span>
+
+                            <a asp-action="Edit" asp-route-id="@c.Id">Edit</a>
+                            <span style="opacity:.5;"> | </span>
+                            <a asp-action="Delete" asp-route-id="@c.Id">Delete</a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

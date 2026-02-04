@@ -32,9 +32,25 @@ public class ManagerUsersController : Controller
     }
 
     // GET: /ManagerUsers
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? q, string? role)
     {
-        var users = await _userManager.Users
+        q = q?.Trim();
+        role = role?.Trim();
+
+        // беремо список ролей для dropdown
+        var availableRoles = await GetAllRolesAsync();
+
+        // 1) Пошук по імені/прізвищу робимо в БД (швидко)
+        var query = _userManager.Users.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            query = query.Where(u =>
+                (u.FirstName != null && u.FirstName.Contains(q)) ||
+                (u.LastName != null && u.LastName.Contains(q)));
+        }
+
+        var users = await query
             .OrderBy(u => u.Email)
             .Select(u => new UserListItemVm
             {
@@ -45,11 +61,13 @@ public class ManagerUsersController : Controller
                 LastName = u.LastName,
                 Age = u.Age,
                 PhoneNumber = u.PhoneNumber ?? "",
-                Role = "" // заповнимо нижче
+                Role = ""
             })
             .ToListAsync();
 
-        // 1 роль на юзера (показуємо першу)
+        // 2) Підтягуємо ролі і тут же фільтруємо по ролі
+        var filtered = new List<UserListItemVm>();
+
         foreach (var u in users)
         {
             var user = await _userManager.FindByIdAsync(u.Id);
@@ -57,9 +75,27 @@ public class ManagerUsersController : Controller
 
             var roles = await _userManager.GetRolesAsync(user);
             u.Role = roles.FirstOrDefault() ?? "";
+
+            if (!string.IsNullOrWhiteSpace(role))
+            {
+                if (string.Equals(u.Role, role, StringComparison.OrdinalIgnoreCase))
+                    filtered.Add(u);
+            }
+            else
+            {
+                filtered.Add(u);
+            }
         }
 
-        return View(users);
+        var vm = new UsersIndexVm
+        {
+            Q = q,
+            Role = role,
+            AvailableRoles = availableRoles,
+            Users = filtered
+        };
+
+        return View(vm);
     }
 
     // GET: /ManagerUsers/Details/{id}
