@@ -1,5 +1,5 @@
 ﻿using LearnitySchool.Infrastructure.Persistence;
-using LearnitySchool.Web.Common;
+using LearnitySchool.Application.Common;
 using LearnitySchool.Web.ViewModels.Manager.Lessons;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

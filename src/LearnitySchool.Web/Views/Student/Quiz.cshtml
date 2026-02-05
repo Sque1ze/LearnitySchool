@@ -1,0 +1,78 @@
+﻿@model LearnitySchool.Web.ViewModels.Student.StudentQuizVm
+
+@{
+    ViewData["Title"] = "Quiz";
+}
+
+<div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+    <div>
+        <h2 style="margin:0;">Quiz — @Model.Title</h2>
+        <div style="opacity:.75; margin-top:6px;">Оберіть відповіді та натисніть Submit</div>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+        <a asp-action="Tasks" asp-route-lessonId="@Model.LessonId" class="dropdown-btn">← Back to tasks</a>
+        <a asp-action="Lessons" asp-route-courseId="@Model.CourseId" class="dropdown-btn">← Back to lessons</a>
+    </div>
+</div>
+
+@if (Model.HasResult)
+{
+    <div style="margin-top:14px; border:1px solid #1F2933; border-radius:12px; padding:12px;">
+        <div style="font-weight:800;">
+            Result: @Model.ScorePercent% (@Model.Correct / @Model.Total)
+            @if (Model.Passed)
+            {
+                <span style="color:#22C55E; margin-left:8px;">✅ Passed</span>
+            }
+            else
+            {
+                <span style="color:#E5E7EB; opacity:.8; margin-left:8px;">Not passed (need 70%)</span>
+            }
+        </div>
+    </div>
+}
+
+@if (Model.Questions == null || Model.Questions.Count == 0)
+{
+    <div style="margin-top:14px; opacity:.8;">
+        Немає питань для цього Quiz (менеджер ще не додав).
+    </div>
+}
+else
+{
+    <form asp-action="SubmitQuiz" method="post" style="margin-top:14px;">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" name="TaskId" value="@Model.TaskId" />
+        <input type="hidden" name="LessonId" value="@Model.LessonId" />
+
+        <div style="display:grid; gap:12px;">
+            @foreach (var q in Model.Questions)
+            {
+                <div style="border:1px solid #1F2933; border-radius:12px; padding:12px;">
+                    <div style="font-weight:800;">
+                        @q.Order. @q.Text
+                    </div>
+
+                    <div style="margin-top:10px; display:grid; gap:8px;">
+                        @foreach (var o in q.Options)
+                        {
+                            <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; opacity:.95;">
+                                <input type="radio"
+                                       name="Answers[@q.QuestionId]"
+                                       value="@o.OptionId"
+                                       style="margin-top:4px;" />
+                                <span>@o.Text</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <button type="submit" class="dropdown-btn" style="margin-top:14px;">
+            Submit quiz
+        </button>
+    </form>
+}

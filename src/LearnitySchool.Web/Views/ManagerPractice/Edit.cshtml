@@ -1,0 +1,119 @@
+﻿@model LearnitySchool.Web.ViewModels.Manager.Practice.PracticeEditVm
+
+@{
+    ViewData["Title"] = "Practice builder";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div style="padding:10px; border:1px solid #1F2933; border-radius:12px; margin-bottom:12px;">
+        @TempData["Success"]
+    </div>
+}
+
+<div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+    <div>
+        <h2 style="margin:0;">Practice builder — @Model.TaskTitle</h2>
+        <div style="opacity:.75; margin-top:4px;">Умова + Starter + Reference (HTML/CSS/JS)</div>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+        <a asp-controller="ManagerTasks"
+           asp-action="Index"
+           asp-route-lessonId="@Model.LessonId"
+           class="dropdown-btn">Back</a>
+
+        <button type="submit" form="practiceForm" class="dropdown-btn">Save</button>
+    </div>
+</div>
+
+<form id="practiceForm" asp-action="Edit" method="post" style="margin-top:16px;">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" name="TaskId" value="@Model.TaskId" />
+    <input type="hidden" name="LessonId" value="@Model.LessonId" />
+    <input type="hidden" name="CourseId" value="@Model.CourseId" />
+    <input type="hidden" name="TaskTitle" value="@Model.TaskTitle" />
+
+    <div style="display:grid; gap:12px; max-width:980px;">
+        <div style="border:1px solid #1F2933; border-radius:14px; padding:14px;">
+            <div style="font-weight:700; margin-bottom:8px;">Statement</div>
+            <textarea name="Statement" rows="6" class="dropdown-btn" style="width:100%;">@Model.Statement</textarea>
+        </div>
+
+        <div style="display:flex; gap:12px; align-items:center;">
+            <div style="border:1px solid #1F2933; border-radius:14px; padding:14px; min-width:260px;">
+                <div style="font-weight:700; margin-bottom:8px;">Threshold (%)</div>
+                <input name="SimilarityThreshold" value="@Model.SimilarityThreshold" class="dropdown-btn" style="width:100%;" />
+                <div style="opacity:.75; margin-top:6px;">Рекомендовано: 70–90</div>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <!-- Starter -->
+            <div style="border:1px solid #1F2933; border-radius:14px; padding:14px;">
+                <div style="font-weight:800; margin-bottom:10px;">Starter</div>
+
+                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                    <button type="button" class="dropdown-btn" data-tab="starter-html">HTML</button>
+                    <button type="button" class="dropdown-btn" data-tab="starter-css">CSS</button>
+                    <button type="button" class="dropdown-btn" data-tab="starter-js">JS</button>
+                </div>
+
+                <div data-pane="starter-html">
+                    <textarea name="StarterHtml" rows="12" class="dropdown-btn" style="width:100%;">@Model.StarterHtml</textarea>
+                </div>
+                <div data-pane="starter-css" style="display:none;">
+                    <textarea name="StarterCss" rows="12" class="dropdown-btn" style="width:100%;">@Model.StarterCss</textarea>
+                </div>
+                <div data-pane="starter-js" style="display:none;">
+                    <textarea name="StarterJs" rows="12" class="dropdown-btn" style="width:100%;">@Model.StarterJs</textarea>
+                </div>
+            </div>
+
+            <!-- Reference -->
+            <div style="border:1px solid #1F2933; border-radius:14px; padding:14px;">
+                <div style="font-weight:800; margin-bottom:10px;">Reference (не показувати студенту)</div>
+
+                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                    <button type="button" class="dropdown-btn" data-tab="ref-html">HTML</button>
+                    <button type="button" class="dropdown-btn" data-tab="ref-css">CSS</button>
+                    <button type="button" class="dropdown-btn" data-tab="ref-js">JS</button>
+                </div>
+
+                <div data-pane="ref-html">
+                    <textarea name="ReferenceHtml" rows="12" class="dropdown-btn" style="width:100%;">@Model.ReferenceHtml</textarea>
+                </div>
+                <div data-pane="ref-css" style="display:none;">
+                    <textarea name="ReferenceCss" rows="12" class="dropdown-btn" style="width:100%;">@Model.ReferenceCss</textarea>
+                </div>
+                <div data-pane="ref-js" style="display:none;">
+                    <textarea name="ReferenceJs" rows="12" class="dropdown-btn" style="width:100%;">@Model.ReferenceJs</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div asp-validation-summary="All" style="opacity:.85;"></div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        // simple tabs inside same page
+        const buttons = document.querySelectorAll("[data-tab]");
+        const panes = document.querySelectorAll("[data-pane]");
+
+        function showPane(key) {
+            panes.forEach(p => {
+                p.style.display = (p.getAttribute("data-pane") === key) ? "block" : "none";
+            });
+        }
+
+        buttons.forEach(btn => {
+            btn.addEventListener("click", () => showPane(btn.getAttribute("data-tab")));
+        });
+
+        // default
+        showPane("starter-html");
+    </script>
+}

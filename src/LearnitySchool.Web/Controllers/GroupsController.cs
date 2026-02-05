@@ -1,5 +1,5 @@
 using LearnitySchool.Application.Abstractions;
-using LearnitySchool.Web.Common;
+using LearnitySchool.Application.Common;
 using LearnitySchool.Web.ViewModels.Groups;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

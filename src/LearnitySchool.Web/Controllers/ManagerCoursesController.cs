@@ -1,7 +1,7 @@
 ﻿using LearnitySchool.Domain.Entities;
 using LearnitySchool.Infrastructure.Identity;
 using LearnitySchool.Infrastructure.Persistence;
-using LearnitySchool.Web.Common;
+using LearnitySchool.Application.Common;
 using LearnitySchool.Web.ViewModels.Manager.Courses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;

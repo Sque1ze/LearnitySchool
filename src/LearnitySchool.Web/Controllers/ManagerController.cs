@@ -1,5 +1,5 @@
 using LearnitySchool.Infrastructure.Identity;
-using LearnitySchool.Web.Common;
+using LearnitySchool.Application.Common;
 using LearnitySchool.Web.ViewModels.Manager;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;

@@ -1,0 +1,29 @@
+﻿@model LearnitySchool.Web.ViewModels.Manager.Quiz.QuizQuestionEditVm
+
+@{
+    ViewData["Title"] = "Edit question";
+}
+
+<h2>Edit question</h2>
+
+<form asp-action="EditQuestion" method="post" style="max-width:720px; display:grid; gap:12px;">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <input type="hidden" name="TaskId" value="@Model.TaskId" />
+
+    <input name="Order" value="@Model.Order" class="dropdown-btn" placeholder="Order (1..)" />
+    <textarea name="Text" class="dropdown-btn" style="min-height:120px;" placeholder="Question text">@Model.Text</textarea>
+
+    <label style="display:flex; gap:8px; align-items:center; opacity:.9;">
+        <input type="checkbox" name="IsPublished" value="true" @(Model.IsPublished ? "checked" : "") />
+        Published
+    </label>
+
+    <div style="display:flex; gap:10px;">
+        <button type="submit" class="dropdown-btn">Save</button>
+        <a asp-action="Quiz" asp-route-taskId="@Model.TaskId" class="dropdown-btn">Back</a>
+    </div>
+
+    <div asp-validation-summary="All"></div>
+</form>

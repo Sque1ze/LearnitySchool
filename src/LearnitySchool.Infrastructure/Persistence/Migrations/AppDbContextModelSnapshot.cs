@@ -204,6 +204,144 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
                     b.ToTable("LessonTasks");
                 });
 
+            modelBuilder.Entity("LearnitySchool.Domain.Entities.PracticeTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LessonTaskId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ReferenceCss")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReferenceHtml")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReferenceJs")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SimilarityThreshold")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StarterCss")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StarterHtml")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StarterJs")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Statement")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LessonTaskId")
+                        .IsUnique();
+
+                    b.ToTable("PracticeTasks");
+                });
+
+            modelBuilder.Entity("LearnitySchool.Domain.Entities.QuizOption", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("QuestionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuestionId", "Order")
+                        .IsUnique();
+
+                    b.ToTable("QuizOptions");
+                });
+
+            modelBuilder.Entity("LearnitySchool.Domain.Entities.QuizQuestion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaskId", "Order")
+                        .IsUnique();
+
+                    b.ToTable("QuizQuestions");
+                });
+
+            modelBuilder.Entity("LearnitySchool.Domain.Entities.StudentQuizAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("CorrectAnswers")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScorePercent")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StudentUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TotalQuestions")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaskId", "StudentUserId")
+                        .IsUnique();
+
+                    b.ToTable("StudentQuizAttempts");
+                });
+
             modelBuilder.Entity("LearnitySchool.Domain.Entities.StudentTaskProgress", b =>
                 {
                     b.Property<Guid>("Id")
@@ -498,6 +636,39 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
                     b.Navigation("Lesson");
                 });
 
+            modelBuilder.Entity("LearnitySchool.Domain.Entities.PracticeTask", b =>
+                {
+                    b.HasOne("LearnitySchool.Domain.Entities.LessonTask", "LessonTask")
+                        .WithOne()
+                        .HasForeignKey("LearnitySchool.Domain.Entities.PracticeTask", "LessonTaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LessonTask");
+                });
+
+            modelBuilder.Entity("LearnitySchool.Domain.Entities.QuizOption", b =>
+                {
+                    b.HasOne("LearnitySchool.Domain.Entities.QuizQuestion", "Question")
+                        .WithMany("Options")
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Question");
+                });
+
+            modelBuilder.Entity("LearnitySchool.Domain.Entities.QuizQuestion", b =>
+                {
+                    b.HasOne("LearnitySchool.Domain.Entities.LessonTask", "Task")
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Task");
+                });
+
             modelBuilder.Entity("LearnitySchool.Domain.Entities.StudentTaskProgress", b =>
                 {
                     b.HasOne("LearnitySchool.Domain.Entities.LessonTask", "Task")
@@ -574,6 +745,11 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("LearnitySchool.Domain.Entities.Lesson", b =>
                 {
                     b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("LearnitySchool.Domain.Entities.QuizQuestion", b =>
+                {
+                    b.Navigation("Options");
                 });
 #pragma warning restore 612, 618
         }

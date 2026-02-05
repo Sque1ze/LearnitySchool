@@ -26,6 +26,12 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
     public DbSet<LessonTask> LessonTasks => Set<LessonTask>();
     public DbSet<StudentTaskProgress> StudentTaskProgresses => Set<StudentTaskProgress>();
 
+    public DbSet<QuizQuestion> QuizQuestions => Set<QuizQuestion>();
+    public DbSet<QuizOption> QuizOptions => Set<QuizOption>();
+    public DbSet<StudentQuizAttempt> StudentQuizAttempts => Set<StudentQuizAttempt>();
+    public DbSet<PracticeTask> PracticeTasks => Set<PracticeTask>();
+
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -209,6 +215,61 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
             b.HasOne(x => x.Task)
                 .WithMany()
                 .HasForeignKey(x => x.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // =========================
+        // QuizQuestion
+        // =========================
+        builder.Entity<QuizQuestion>(b =>
+        {
+            b.Property(x => x.Text).HasMaxLength(4000).IsRequired();
+            b.Property(x => x.Order).IsRequired();
+
+            b.HasMany(x => x.Options)
+                .WithOne(x => x.Question)
+                .HasForeignKey(x => x.QuestionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            b.HasIndex(x => new { x.TaskId, x.Order }).IsUnique();
+        });
+
+        // =========================
+        // QuizOption
+        // =========================
+        builder.Entity<QuizOption>(b =>
+        {
+            b.Property(x => x.Text).HasMaxLength(2000).IsRequired();
+            b.Property(x => x.Order).IsRequired();
+
+            b.HasIndex(x => new { x.QuestionId, x.Order }).IsUnique();
+        });
+
+        // =========================
+        // StudentQuizAttempt
+        // =========================
+        builder.Entity<StudentQuizAttempt>(b =>
+        {
+            b.Property(x => x.StudentUserId).HasMaxLength(450).IsRequired();
+            b.Property(x => x.SubmittedAt).IsRequired();
+
+            // 1 attempt per student per task (останній перезаписуємо)
+            b.HasIndex(x => new { x.TaskId, x.StudentUserId }).IsUnique();
+        });
+
+        builder.Entity<PracticeTask>(b =>
+        {
+            b.HasKey(x => x.Id);
+
+            b.Property(x => x.Statement)
+                .IsRequired();
+
+            b.Property(x => x.SimilarityThreshold)
+                .IsRequired();
+
+            b.HasOne(x => x.LessonTask)
+                .WithOne()
+                .HasForeignKey<PracticeTask>(x => x.LessonTaskId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

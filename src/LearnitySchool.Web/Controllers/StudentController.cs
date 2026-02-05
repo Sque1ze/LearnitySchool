@@ -1,7 +1,7 @@
 using LearnitySchool.Domain.Entities;
 using LearnitySchool.Infrastructure.Identity;
 using LearnitySchool.Infrastructure.Persistence;
-using LearnitySchool.Web.Common;
+using LearnitySchool.Application.Common;
 using LearnitySchool.Web.ViewModels.Student;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -236,7 +236,161 @@ public class StudentController : Controller
             IsCompleted = isCompleted
         };
 
+        if (vm.Type.Equals("Quiz", StringComparison.OrdinalIgnoreCase))
+        {
+            return RedirectToAction(nameof(Quiz), new { taskId = vm.TaskId });
+        }
+
         return View(vm);
+    }
+
+    public async Task<IActionResult> Quiz(Guid taskId)
+    {
+        var userId = _userManager.GetUserId(User);
+
+        // task + access
+        var task = await _db.LessonTasks
+            .Where(t => t.Id == taskId && t.IsPublished)
+            .Select(t => new { t.Id, t.Title, t.LessonId, CourseId = t.Lesson.CourseId })
+            .FirstOrDefaultAsync();
+
+        if (task == null) return NotFound();
+
+        var allowed = await _db.CourseStudents.AnyAsync(cs =>
+            cs.CourseId == task.CourseId && cs.StudentUserId == userId);
+
+        if (!allowed) return Forbid();
+
+        var questions = await _db.QuizQuestions
+            .Where(q => q.TaskId == taskId && q.IsPublished)
+            .OrderBy(q => q.Order)
+            .Select(q => new StudentQuizQuestionVm
+            {
+                QuestionId = q.Id,
+                Order = q.Order,
+                Text = q.Text,
+                Options = q.Options
+                    .OrderBy(o => o.Order)
+                    .Select(o => new StudentQuizOptionVm
+                    {
+                        OptionId = o.Id,
+                        Order = o.Order,
+                        Text = o.Text
+                    })
+                    .ToList()
+            })
+            .ToListAsync();
+
+        // якщо вже є результат — покажемо
+        var attempt = await _db.StudentQuizAttempts
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a => a.TaskId == taskId && a.StudentUserId == userId);
+
+        var vm = new StudentQuizVm
+        {
+            TaskId = task.Id,
+            LessonId = task.LessonId,
+            CourseId = task.CourseId,
+            Title = task.Title,
+            Questions = questions
+        };
+
+        if (attempt != null)
+        {
+            vm.HasResult = true;
+            vm.Total = attempt.TotalQuestions;
+            vm.Correct = attempt.CorrectAnswers;
+            vm.ScorePercent = attempt.ScorePercent;
+            vm.Passed = attempt.ScorePercent >= 70; // поріг
+        }
+
+        return View(vm);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubmitQuiz(StudentQuizSubmitVm vm)
+    {
+        var userId = _userManager.GetUserId(User);
+
+        // task + access
+        var task = await _db.LessonTasks
+            .Where(t => t.Id == vm.TaskId && t.IsPublished)
+            .Select(t => new { t.Id, t.LessonId, CourseId = t.Lesson.CourseId })
+            .FirstOrDefaultAsync();
+
+        if (task == null) return NotFound();
+
+        var allowed = await _db.CourseStudents.AnyAsync(cs =>
+            cs.CourseId == task.CourseId && cs.StudentUserId == userId);
+
+        if (!allowed) return Forbid();
+
+        // правильні відповіді (QuestionId -> CorrectOptionId)
+        var correctMap = await _db.QuizOptions
+            .Where(o => o.Question.TaskId == vm.TaskId && o.Question.IsPublished && o.IsCorrect)
+            .Select(o => new { o.QuestionId, o.Id })
+            .ToDictionaryAsync(x => x.QuestionId, x => x.Id);
+
+        var total = correctMap.Count;
+        var correct = 0;
+
+        foreach (var (questionId, correctOptionId) in correctMap)
+        {
+            if (vm.Answers.TryGetValue(questionId, out var selected) && selected == correctOptionId)
+                correct++;
+        }
+
+        var score = total == 0 ? 0 : (correct * 100) / total;
+
+        // save attempt (upsert)
+        var attempt = await _db.StudentQuizAttempts
+            .FirstOrDefaultAsync(a => a.TaskId == vm.TaskId && a.StudentUserId == userId);
+
+        if (attempt == null)
+        {
+            attempt = new Domain.Entities.StudentQuizAttempt
+            {
+                Id = Guid.NewGuid(),
+                TaskId = vm.TaskId,
+                StudentUserId = userId!,
+            };
+            _db.StudentQuizAttempts.Add(attempt);
+        }
+
+        attempt.TotalQuestions = total;
+        attempt.CorrectAnswers = correct;
+        attempt.ScorePercent = score;
+        attempt.SubmittedAt = DateTime.UtcNow;
+
+        // якщо пройшов — ставимо completed
+        if (score >= 70)
+        {
+            var progress = await _db.StudentTaskProgresses
+                .FirstOrDefaultAsync(p => p.TaskId == vm.TaskId && p.StudentUserId == userId);
+
+            if (progress == null)
+            {
+                progress = new Domain.Entities.StudentTaskProgress
+                {
+                    Id = Guid.NewGuid(),
+                    TaskId = vm.TaskId,
+                    StudentUserId = userId!,
+                    IsCompleted = true,
+                    CompletedAt = DateTime.UtcNow
+                };
+                _db.StudentTaskProgresses.Add(progress);
+            }
+            else
+            {
+                progress.IsCompleted = true;
+                progress.CompletedAt = DateTime.UtcNow;
+            }
+        }
+
+        await _db.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Quiz), new { taskId = vm.TaskId });
     }
 
 

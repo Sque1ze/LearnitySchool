@@ -1,6 +1,6 @@
 ﻿using LearnitySchool.Domain.Entities;
 using LearnitySchool.Infrastructure.Persistence;
-using LearnitySchool.Web.Common;
+using LearnitySchool.Application.Common;
 using LearnitySchool.Web.ViewModels.Manager.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,15 +21,16 @@ public class ManagerTasksController : Controller
     // GET: /ManagerTasks?lessonId=...
     public async Task<IActionResult> Index(Guid lessonId)
     {
-        var lessonTitle = await _db.Lessons
+        var lessonInfo = await _db.Lessons
             .Where(x => x.Id == lessonId)
-            .Select(x => x.Title)
+            .Select(x => new { x.Title, x.CourseId })
             .FirstOrDefaultAsync();
 
-        if (lessonTitle == null) return NotFound();
+        if (lessonInfo == null) return NotFound();
 
         ViewBag.LessonId = lessonId;
-        ViewBag.LessonTitle = lessonTitle;
+        ViewBag.LessonTitle = lessonInfo.Title;
+        ViewBag.CourseId = lessonInfo.CourseId;
 
         var tasks = await _db.LessonTasks
             .Where(x => x.LessonId == lessonId)

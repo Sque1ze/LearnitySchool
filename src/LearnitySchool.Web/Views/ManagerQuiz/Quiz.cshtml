@@ -1,0 +1,62 @@
+﻿@model List<LearnitySchool.Web.ViewModels.Manager.Quiz.QuizQuestionListItemVm>
+
+@{
+    ViewData["Title"] = "Quiz Questions";
+    var taskId = (Guid)ViewBag.TaskId;
+    var taskTitle = (string)ViewBag.TaskTitle;
+}
+
+<div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+    <div>
+        <h2 style="margin:0;">Quiz — @taskTitle</h2>
+        <div style="opacity:.75; margin-top:4px;">Питання для цього Quiz</div>
+    </div>
+
+    <a asp-action="CreateQuestion" asp-route-taskId="@taskId" class="dropdown-btn">
+        + Add question
+    </a>
+</div>
+
+<div style="margin-top:16px; overflow:auto;">
+    <table style="width:100%; border-collapse:collapse;">
+        <thead>
+            <tr>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">#</th>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Text</th>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Options</th>
+                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Correct</th>
+                <th style="padding:10px; border-bottom:1px solid #1F2933;"></th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (Model == null || Model.Count == 0)
+            {
+                <tr>
+                    <td colspan="5" style="padding:14px; opacity:.75;">Питань ще немає</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var q in Model)
+                {
+                    <tr>
+                        <td style="padding:10px; border-bottom:1px solid #1F2933;">@q.Order</td>
+                        <td style="padding:10px; border-bottom:1px solid #1F2933;">@q.Text</td>
+                        <td style="padding:10px; border-bottom:1px solid #1F2933;">@q.OptionsCount</td>
+                        <td style="padding:10px; border-bottom:1px solid #1F2933;">
+                            @(q.HasCorrectOption ? "✅" : "—")
+                        </td>
+                        <td style="padding:10px; border-bottom:1px solid #1F2933; white-space:nowrap;">
+                            <a asp-action="Options" asp-route-questionId="@q.Id">Options</a>
+                            <span style="opacity:.5;"> | </span>
+                            <a asp-action="EditQuestion" asp-route-id="@q.Id">Edit</a>
+                            <span style="opacity:.5;"> | </span>
+                            <a asp-action="DeleteQuestion" asp-route-id="@q.Id">Delete</a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
