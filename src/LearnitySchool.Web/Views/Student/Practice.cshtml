@@ -1,0 +1,111 @@
+﻿@model LearnitySchool.Web.ViewModels.Student.StudentPracticeVm
+@{
+    ViewData["Title"] = "Practice";
+}
+
+<link rel="stylesheet" href="~/css/student/practice.css" asp-append-version="true" />
+
+<div class="practice-page">
+
+    <div class="practice-head">
+        <div class="practice-title">
+            <div class="kicker">Practice task</div>
+            <h2>@Model.Title</h2>
+
+            @if (!string.IsNullOrWhiteSpace(Model.Description))
+            {
+                <p class="desc">@Model.Description</p>
+            }
+        </div>
+
+        <div class="practice-actions">
+            <a asp-controller="Student"
+               asp-action="Tasks"
+               asp-route-lessonId="@Model.LessonId"
+               class="btn btn-ghost">
+                ← Back to tasks
+            </a>
+
+            <button type="button" id="runBtn" class="btn btn-primary">
+                Run ▶
+            </button>
+
+            <button type="button" id="checkBtn" class="btn btn-secondary">
+                Check ✓
+            </button>
+        </div>
+    </div>
+
+    <div class="practice-grid">
+
+        <!-- ===== LEFT: EDITOR ===== -->
+        <section class="panel editor-panel">
+
+            <div class="tabs" role="tablist" aria-label="Code tabs">
+                <button class="tab active" type="button" data-tab="html">HTML</button>
+                <button class="tab" type="button" data-tab="css">CSS</button>
+                <button class="tab" type="button" data-tab="js">JS</button>
+
+                <div class="tab-right">
+                    <span id="similarityBadge" class="badge badge-muted">Similarity: —</span>
+                </div>
+            </div>
+
+            <div class="tab-content">
+                <div class="tab-pane active" data-pane="html">
+                    <textarea id="htmlEditor" class="code-area" spellcheck="false">@Model.StarterHtml</textarea>
+                </div>
+
+                <div class="tab-pane" data-pane="css">
+                    <textarea id="cssEditor" class="code-area" spellcheck="false">@Model.StarterCss</textarea>
+                </div>
+
+                <div class="tab-pane" data-pane="js">
+                    <textarea id="jsEditor" class="code-area" spellcheck="false">@Model.StarterJs</textarea>
+                </div>
+            </div>
+
+            <div class="hint">
+                <div class="hint-dot"></div>
+                <div>
+                    <div class="hint-title">Порада</div>
+                    <div class="hint-text">
+                        Натисни <b>Run</b>, щоб побачити результат в Preview.
+                        Натисни <b>Check</b>, щоб отримати відсоток схожості (поки базово).
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ===== RIGHT: PREVIEW ===== -->
+        <section class="panel preview-panel">
+
+            <div class="preview-head">
+                <div class="preview-title">Preview</div>
+                <div class="preview-sub">iframe sandbox</div>
+            </div>
+
+            <div class="preview-wrap">
+                <div id="overlay" class="overlay hidden">
+                    <div class="overlay-card">
+                        <div class="overlay-title">Checking…</div>
+                        <div class="overlay-sub">Please wait</div>
+                    </div>
+                </div>
+
+                <iframe id="previewFrame" title="Preview" sandbox="allow-scripts allow-forms"></iframe>
+            </div>
+
+            <div class="preview-footer">
+                <div class="muted">
+                    * JS виконується в iframe. Доступ до сайту/куків заблокований sandbox’ом.
+                </div>
+            </div>
+
+        </section>
+
+    </div>
+</div>
+
+<script src="~/js/student/practice.js" asp-append-version="true"></script>

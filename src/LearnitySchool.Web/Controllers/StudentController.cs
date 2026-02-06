@@ -1,7 +1,8 @@
+using LearnitySchool.Application.Common;          // RoleNames (важливо: тільки одне!)
 using LearnitySchool.Domain.Entities;
+using LearnitySchool.Domain.Enums;
 using LearnitySchool.Infrastructure.Identity;
 using LearnitySchool.Infrastructure.Persistence;
-using LearnitySchool.Application.Common;
 using LearnitySchool.Web.ViewModels.Student;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -40,16 +41,18 @@ public class StudentController : Controller
                 Title = c.Title,
                 Description = c.Description,
 
-                LessonsCount = c.Lessons.Count(l => l.IsPublished),
+                LessonsCount = _db.Lessons.Count(l => l.CourseId == c.Id && l.IsPublished),
 
-                TotalTasks = c.Lessons
-                    .Where(l => l.IsPublished)
-                    .SelectMany(l => l.Tasks)
-                    .Count(t => t.IsPublished),
+                TotalTasks = _db.LessonTasks.Count(t =>
+                    t.IsPublished &&
+                    t.Lesson.IsPublished &&
+                    t.Lesson.CourseId == c.Id),
 
                 CompletedTasks = _db.StudentTaskProgresses.Count(p =>
                     p.StudentUserId == userId &&
                     p.IsCompleted &&
+                    p.Task.IsPublished &&
+                    p.Task.Lesson.IsPublished &&
                     p.Task.Lesson.CourseId == c.Id),
 
                 ProgressPercent = 0
@@ -87,6 +90,7 @@ public class StudentController : Controller
                 CompletedTasks = _db.StudentTaskProgresses.Count(p =>
                     p.StudentUserId == userId &&
                     p.IsCompleted &&
+                    p.Task.IsPublished &&
                     p.Task.LessonId == l.Id),
 
                 ProgressPercent = 0
@@ -140,7 +144,7 @@ public class StudentController : Controller
     }
 
     // =========================
-    // COMPLETE TASK (POST)
+    // COMPLETE TASK (POST) - manual mark (може лишитись)
     // =========================
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -177,78 +181,61 @@ public class StudentController : Controller
                 IsCompleted = true,
                 CompletedAt = DateTime.UtcNow
             };
-
             _db.StudentTaskProgresses.Add(progress);
         }
         else
         {
             progress.IsCompleted = true;
             progress.CompletedAt = DateTime.UtcNow;
-            _db.StudentTaskProgresses.Update(progress);
         }
 
         await _db.SaveChangesAsync();
         return RedirectToAction(nameof(Tasks), new { lessonId });
     }
 
+    // =========================
+    // TaskDetails -> redirect Quiz/Practice
+    // =========================
     public async Task<IActionResult> TaskDetails(Guid taskId)
     {
         var userId = _userManager.GetUserId(User);
 
-        // 1) Витягаємо задачу + lessonId + courseId
         var task = await _db.LessonTasks
             .Where(t => t.Id == taskId && t.IsPublished)
             .Select(t => new
             {
                 t.Id,
                 t.LessonId,
-                t.Order,
                 t.Title,
                 t.Description,
-                Type = t.Type, // enum або string
+                t.Type,
                 CourseId = t.Lesson.CourseId
             })
             .FirstOrDefaultAsync();
 
-        if (task == null)
-            return NotFound();
+        if (task == null) return NotFound();
 
-        // 2) Перевірка доступу: студент має бути записаний на курс
         var allowed = await _db.CourseStudents.AnyAsync(cs =>
             cs.CourseId == task.CourseId && cs.StudentUserId == userId);
 
-        if (!allowed)
-            return Forbid();
+        if (!allowed) return Forbid();
 
-        // 3) Чи вже виконано
-        var isCompleted = await _db.StudentTaskProgresses.AnyAsync(p =>
-            p.TaskId == task.Id && p.StudentUserId == userId && p.IsCompleted);
+        if (task.Type == LessonTaskType.Quiz)
+            return RedirectToAction(nameof(Quiz), new { taskId });
 
-        var vm = new StudentTaskDetailsVm
-        {
-            TaskId = task.Id,
-            LessonId = task.LessonId,
-            CourseId = task.CourseId,
-            Order = task.Order,
-            Title = task.Title,
-            Description = task.Description ?? "",
-            Type = task.Type.ToString(),
-            IsCompleted = isCompleted
-        };
+        if (task.Type == LessonTaskType.Practice)
+            return RedirectToAction(nameof(Practice), new { taskId });
 
-        if (vm.Type.Equals("Quiz", StringComparison.OrdinalIgnoreCase))
-        {
-            return RedirectToAction(nameof(Quiz), new { taskId = vm.TaskId });
-        }
-
-        return View(vm);
+        return BadRequest("Unknown task type.");
     }
 
+    // =========================
+    // QUIZ
+    // =========================
     public async Task<IActionResult> Quiz(Guid taskId)
     {
         var userId = _userManager.GetUserId(User);
 
-        // task + access
         var task = await _db.LessonTasks
             .Where(t => t.Id == taskId && t.IsPublished)
             .Select(t => new { t.Id, t.Title, t.LessonId, CourseId = t.Lesson.CourseId })
@@ -281,7 +268,6 @@ public class StudentController : Controller
             })
             .ToListAsync();
 
-        // якщо вже є результат — покажемо
         var attempt = await _db.StudentQuizAttempts
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.TaskId == taskId && a.StudentUserId == userId);
@@ -301,7 +287,7 @@ public class StudentController : Controller
             vm.Total = attempt.TotalQuestions;
             vm.Correct = attempt.CorrectAnswers;
             vm.ScorePercent = attempt.ScorePercent;
-            vm.Passed = attempt.ScorePercent >= 70; // поріг
+            vm.Passed = attempt.ScorePercent >= 70;
         }
 
         return View(vm);
@@ -313,7 +299,6 @@ public class StudentController : Controller
     {
         var userId = _userManager.GetUserId(User);
 
-        // task + access
         var task = await _db.LessonTasks
             .Where(t => t.Id == vm.TaskId && t.IsPublished)
             .Select(t => new { t.Id, t.LessonId, CourseId = t.Lesson.CourseId })
@@ -326,7 +311,6 @@ public class StudentController : Controller
 
         if (!allowed) return Forbid();
 
-        // правильні відповіді (QuestionId -> CorrectOptionId)
         var correctMap = await _db.QuizOptions
             .Where(o => o.Question.TaskId == vm.TaskId && o.Question.IsPublished && o.IsCorrect)
             .Select(o => new { o.QuestionId, o.Id })
@@ -343,17 +327,16 @@ public class StudentController : Controller
 
         var score = total == 0 ? 0 : (correct * 100) / total;
 
-        // save attempt (upsert)
         var attempt = await _db.StudentQuizAttempts
             .FirstOrDefaultAsync(a => a.TaskId == vm.TaskId && a.StudentUserId == userId);
 
         if (attempt == null)
         {
-            attempt = new Domain.Entities.StudentQuizAttempt
+            attempt = new StudentQuizAttempt
             {
                 Id = Guid.NewGuid(),
                 TaskId = vm.TaskId,
-                StudentUserId = userId!,
+                StudentUserId = userId!
             };
             _db.StudentQuizAttempts.Add(attempt);
         }
@@ -363,7 +346,6 @@ public class StudentController : Controller
         attempt.ScorePercent = score;
         attempt.SubmittedAt = DateTime.UtcNow;
 
-        // якщо пройшов — ставимо completed
         if (score >= 70)
         {
             var progress = await _db.StudentTaskProgresses
@@ -371,7 +353,7 @@ public class StudentController : Controller
 
             if (progress == null)
             {
-                progress = new Domain.Entities.StudentTaskProgress
+                progress = new StudentTaskProgress
                 {
                     Id = Guid.NewGuid(),
                     TaskId = vm.TaskId,
@@ -389,10 +371,60 @@ public class StudentController : Controller
         }
 
         await _db.SaveChangesAsync();
-
         return RedirectToAction(nameof(Quiz), new { taskId = vm.TaskId });
     }
 
+    // =========================
+    // PRACTICE (✅ FIXED)
+    // =========================
+    public async Task<IActionResult> Practice(Guid taskId)
+    {
+        var userId = _userManager.GetUserId(User);
+
+        var taskInfo = await _db.LessonTasks
+            .Where(t => t.Id == taskId && t.IsPublished)
+            .Select(t => new
+            {
+                t.Id,
+                t.Title,
+                t.Description,
+                t.Type,
+                t.LessonId,
+                CourseId = t.Lesson.CourseId
+            })
+            .FirstOrDefaultAsync();
+
+        if (taskInfo == null) return NotFound();
+        if (taskInfo.Type != LessonTaskType.Practice) return BadRequest("Task is not Practice.");
+
+        var allowed = await _db.CourseStudents.AnyAsync(cs =>
+            cs.CourseId == taskInfo.CourseId && cs.StudentUserId == userId);
+
+        if (!allowed) return Forbid();
+
+        // ✅ ВАЖЛИВО: PracticeTask має FK LessonTaskId
+        var practice = await _db.PracticeTasks
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.LessonTaskId == taskId);
+
+        var starterHtml = practice?.StarterHtml ?? "<!-- write your HTML here -->";
+        var starterCss = practice?.StarterCss ?? "/* write your CSS here */";
+        var starterJs = practice?.StarterJs ?? "// write your JS here";
+
+        var vm = new StudentPracticeVm
+        {
+            TaskId = taskId,
+            LessonId = taskInfo.LessonId,
+            CourseId = taskInfo.CourseId,
+            Title = taskInfo.Title,
+            Description = taskInfo.Description ?? "",
+            StarterHtml = starterHtml,
+            StarterCss = starterCss,
+            StarterJs = starterJs
+        };
+
+        return View(vm);
+    }
 
     // =========================
     // PROFILE
