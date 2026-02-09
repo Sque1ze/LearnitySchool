@@ -1,0 +1,70 @@
+﻿@model LearnitySchool.Web.ViewModels.Teacher.Groups.TeacherGroupSuccessVm
+@{
+    ViewData["Title"] = "Успіхи";
+}
+
+<link rel="stylesheet" href="~/css/teacher/group-success.css" asp-append-version="true" />
+
+<div class="page-head">
+    <div class="kicker">TEACHER</div>
+    <h1 class="page-title">Успіхи — @Model.CourseTitle</h1>
+    <div class="page-sub">Прогрес учнів по уроках (натисни урок зліва)</div>
+</div>
+
+<div class="success-layout">
+
+    <!-- LEFT: Lessons list -->
+    <div class="panel lessons-panel">
+        <div class="panel-title">Уроки</div>
+
+        <div class="lesson-list">
+            @foreach (var l in Model.Lessons)
+            {
+                var active = Model.SelectedLessonId == l.LessonId;
+                <a class="lesson-item @(active ? "active" : "")"
+                   asp-controller="TeacherGroups"
+                   asp-action="Success"
+                   asp-route-id="@Model.CourseId"
+                   asp-route-lessonId="@l.LessonId">
+
+                    <div class="lesson-left">
+                        <span class="lesson-badge">@l.Percent%</span>
+                        <div class="lesson-title">@l.Title</div>
+                    </div>
+
+                    <div class="lesson-right">
+                        <span class="muted">@l.TasksCount tasks</span>
+                    </div>
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- RIGHT: Students list -->
+    <div class="panel students-panel">
+        <div class="panel-title">Учні — прогрес по вибраному уроці</div>
+
+        <div class="students-table">
+            @if (Model.Students.Count == 0)
+            {
+                <div class="empty">У цій групі поки немає учнів.</div>
+            }
+            else
+            {
+                foreach (var s in Model.Students)
+                {
+                    <div class="student-row">
+                        <div class="student-name">@s.StudentName</div>
+
+                        <div class="bar-wrap" aria-label="progress">
+                            <div class="bar" style="width:@s.Percent%"></div>
+                        </div>
+
+                        <div class="student-percent">@s.Percent%</div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+</div>

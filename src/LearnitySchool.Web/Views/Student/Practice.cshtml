@@ -23,18 +23,56 @@
                asp-action="Tasks"
                asp-route-lessonId="@Model.LessonId"
                class="btn btn-ghost">
-                ← Back to tasks
+                ← Back
             </a>
 
-            <button type="button" id="runBtn" class="btn btn-primary">
-                Run ▶
+            <button type="button" id="runBtn" class="btn btn-primary">Run ▶</button>
+            <button type="button" id="checkBtn" class="btn btn-secondary">Check ✓</button>
+
+            <button type="button" id="resetBtn" class="btn btn-ghost" title="Reset to starter code">
+                Reset ↺
             </button>
 
-            <button type="button" id="checkBtn" class="btn btn-secondary">
-                Check ✓
-            </button>
+            <!-- ✅ SUBMIT (enabled after Check when similarity >= threshold) -->
+            <form id="submitForm"
+                  asp-controller="Student"
+                  asp-action="SubmitPractice"
+                  method="post"
+                  style="display:inline;">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="TaskId" value="@Model.TaskId" />
+                <input type="hidden" name="LessonId" value="@Model.LessonId" />
+
+                <input type="hidden" name="Html" id="submitHtml" />
+                <input type="hidden" name="Css" id="submitCss" />
+                <input type="hidden" name="Js" id="submitJs" />
+                <input type="hidden" name="ClientSimilarity" id="submitSimilarity" value="0" />
+
+                <button type="submit"
+                        id="submitBtn"
+                        class="btn btn-secondary"
+                        data-threshold="@Model.SimilarityThreshold"
+                        disabled
+                        title="Спочатку натисни Check і набери потрібний %">
+                    Submit ✅
+                </button>
+            </form>
         </div>
     </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div style="margin:10px 0; padding:10px; border:1px solid #1F2933; border-radius:12px; opacity:.9;">
+            ❌ @TempData["Error"]
+        </div>
+    }
+    @if (TempData["Success"] != null)
+    {
+        <div style="margin:10px 0; padding:10px; border:1px solid #1F2933; border-radius:12px; opacity:.9;">
+            ✅ @TempData["Success"]
+        </div>
+    }
 
     <div class="practice-grid">
 
@@ -47,7 +85,15 @@
                 <button class="tab" type="button" data-tab="js">JS</button>
 
                 <div class="tab-right">
-                    <span id="similarityBadge" class="badge badge-muted">Similarity: —</span>
+                    <span id="draftStatus" class="badge badge-muted">
+                        @(Model.HasDraft
+                                                ? $"Draft: saved {Model.DraftUpdatedAt?.ToLocalTime():HH:mm:ss}"
+                                                : "Draft: —")
+                    </span>
+
+                    <span id="similarityBadge" class="badge badge-muted">
+                        Similarity: — (need @Model.SimilarityThreshold%)
+                    </span>
                 </div>
             </div>
 
@@ -70,8 +116,13 @@
                 <div>
                     <div class="hint-title">Порада</div>
                     <div class="hint-text">
-                        Натисни <b>Run</b>, щоб побачити результат в Preview.
-                        Натисни <b>Check</b>, щоб отримати відсоток схожості (поки базово).
+                        Натисни <b>Run</b> — щоб побачити результат.
+                        Натисни <b>Check</b> — щоб порахувати %.
+                        Кнопка <b>Submit</b> стане активною коли % ≥ @Model.SimilarityThreshold%.
+                        @if (Model.HasReference)
+                        {
+                            <span> Перемкнись на <b>Reference</b>, щоб бачити приклад.</span>
+                        }
                     </div>
                 </div>
             </div>
@@ -81,9 +132,20 @@
         <!-- ===== RIGHT: PREVIEW ===== -->
         <section class="panel preview-panel">
 
-            <div class="preview-head">
-                <div class="preview-title">Preview</div>
-                <div class="preview-sub">iframe sandbox</div>
+            <div class="preview-head" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div>
+                    <div class="preview-title">Preview</div>
+                    <div class="preview-sub">iframe sandbox</div>
+                </div>
+
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn btn-ghost" id="previewTabBtn">My preview</button>
+
+                    @if (Model.HasReference)
+                    {
+                        <button type="button" class="btn btn-ghost" id="referenceTabBtn">Reference</button>
+                    }
+                </div>
             </div>
 
             <div class="preview-wrap">
@@ -94,7 +156,19 @@
                     </div>
                 </div>
 
-                <iframe id="previewFrame" title="Preview" sandbox="allow-scripts allow-forms"></iframe>
+                <iframe id="previewFrame"
+                        class="preview-iframe"
+                        title="Preview"
+                        sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+
+                @if (Model.HasReference)
+                {
+                    <iframe id="referenceFrame"
+                            class="preview-iframe"
+                            title="Reference preview"
+                            sandbox="allow-scripts allow-forms allow-same-origin"
+                            style="display:none;"></iframe>
+                }
             </div>
 
             <div class="preview-footer">
@@ -108,4 +182,22 @@
     </div>
 </div>
 
-<script src="~/js/student/practice.js" asp-append-version="true"></script>
+<!-- ✅ meta for autosave -->
+<div id="taskMeta" data-taskid="@Model.TaskId" style="display:none;"></div>
+
+<!-- ✅ Reference payload for JS -->
+@if (Model.HasReference)
+{
+    <textarea id="refHtml" style="display:none;">@Model.ReferenceHtml</textarea>
+    <textarea id="refCss" style="display:none;">@Model.ReferenceCss</textarea>
+    <textarea id="refJs" style="display:none;">@Model.ReferenceJs</textarea>
+}
+
+<!-- ✅ Starter (ORIGINAL task starter, not draft) for Reset -->
+<textarea id="starterHtml" style="display:none;">@Model.InitialHtml</textarea>
+<textarea id="starterCss" style="display:none;">@Model.InitialCss</textarea>
+<textarea id="starterJs" style="display:none;">@Model.InitialJs</textarea>
+
+@section Scripts {
+    <script src="~/js/student/practice.js" asp-append-version="true"></script>
+}

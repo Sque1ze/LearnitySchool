@@ -1,0 +1,165 @@
+﻿/* базові */
+.page-head {
+    margin-bottom: 14px;
+}
+
+.kicker {
+    letter-spacing: .12em;
+    font-size: 12px;
+    opacity: .7;
+}
+
+.page-title {
+    margin: 6px 0 0 0;
+    font-size: 28px;
+}
+
+.page-sub {
+    margin-top: 6px;
+    opacity: .75;
+}
+
+.panel {
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 16px;
+    background: rgba(255,255,255,.03);
+    box-shadow: 0 18px 55px rgba(0,0,0,.35);
+}
+
+.panel-title {
+    padding: 14px 14px 10px 14px;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+}
+
+.muted {
+    opacity: .65;
+}
+
+/* layout */
+.success-layout {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 14px;
+    align-items: start;
+}
+
+@media (max-width: 1100px) {
+    .success-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* lessons list */
+.lesson-list {
+    padding: 10px;
+    display: grid;
+    gap: 8px;
+}
+
+.lesson-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid rgba(255,255,255,.07);
+    background: rgba(255,255,255,.02);
+    transition: transform .08s ease, background .12s ease, border-color .12s ease;
+}
+
+    .lesson-item:hover {
+        background: rgba(255,255,255,.04);
+        border-color: rgba(125, 211, 252, .35);
+        transform: translateY(-1px);
+    }
+
+    .lesson-item.active {
+        background: rgba(125, 211, 252, .08);
+        border-color: rgba(125, 211, 252, .55);
+    }
+
+.lesson-left {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+}
+
+.lesson-title {
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 280px;
+}
+
+.lesson-badge {
+    font-weight: 900;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(34,197,94,.18);
+    border: 1px solid rgba(34,197,94,.35);
+    color: rgba(220,255,235,.95);
+}
+
+/* students */
+.students-table {
+    padding: 10px 14px 14px 14px;
+    display: grid;
+    gap: 10px;
+}
+
+.student-row {
+    display: grid;
+    grid-template-columns: 260px 1fr 60px;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.07);
+    background: rgba(255,255,255,.02);
+}
+
+@media (max-width: 700px) {
+    .student-row {
+        grid-template-columns: 1fr;
+    }
+
+    .student-percent {
+        justify-self: end;
+    }
+}
+
+.student-name {
+    font-weight: 700;
+}
+
+.bar-wrap {
+    height: 10px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.08);
+}
+
+.bar {
+    height: 100%;
+    border-radius: 999px;
+    background: rgba(34,197,94,.9);
+}
+
+.student-percent {
+    font-weight: 900;
+    opacity: .9;
+    text-align: right;
+}
+
+.empty {
+    padding: 18px 14px;
+    opacity: .75;
+}

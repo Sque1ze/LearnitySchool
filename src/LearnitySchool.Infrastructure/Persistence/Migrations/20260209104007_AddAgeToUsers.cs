@@ -61,7 +61,8 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: true),
                     IsPublished = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ManagerUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -356,6 +357,29 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "StudentPracticeDrafts",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    LessonTaskId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    StudentUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    Html = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Css = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Js = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StudentPracticeDrafts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_StudentPracticeDrafts_LessonTasks_LessonTaskId",
+                        column: x => x.LessonTaskId,
+                        principalTable: "LessonTasks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "StudentTaskProgresses",
                 columns: table => new
                 {
@@ -493,6 +517,22 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_StudentPracticeDrafts_LessonTaskId",
+                table: "StudentPracticeDrafts",
+                column: "LessonTaskId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StudentPracticeDrafts_LessonTaskId_StudentUserId",
+                table: "StudentPracticeDrafts",
+                columns: new[] { "LessonTaskId", "StudentUserId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StudentPracticeDrafts_StudentUserId",
+                table: "StudentPracticeDrafts",
+                column: "StudentUserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_StudentQuizAttempts_TaskId_StudentUserId",
                 table: "StudentQuizAttempts",
                 columns: new[] { "TaskId", "StudentUserId" },
@@ -545,6 +585,9 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "QuizOptions");
+
+            migrationBuilder.DropTable(
+                name: "StudentPracticeDrafts");
 
             migrationBuilder.DropTable(
                 name: "StudentQuizAttempts");

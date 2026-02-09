@@ -54,13 +54,16 @@ public class ManagerCoursesController : Controller
     {
         if (!ModelState.IsValid) return View(vm);
 
+        var managerId = _userManager.GetUserId(User);
+
         var course = new Course
         {
             Id = Guid.NewGuid(),
             Title = vm.Title.Trim(),
             Description = vm.Description?.Trim(),
             IsPublished = vm.IsPublished,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            ManagerUserId = managerId
         };
 
         _db.Courses.Add(course);
@@ -100,6 +103,10 @@ public class ManagerCoursesController : Controller
         course.Title = vm.Title.Trim();
         course.Description = vm.Description?.Trim();
         course.IsPublished = vm.IsPublished;
+
+        // ✅ якщо раніше не було — запишемо хто зараз менеджер
+        if (string.IsNullOrWhiteSpace(course.ManagerUserId))
+            course.ManagerUserId = _userManager.GetUserId(User);
 
         await _db.SaveChangesAsync();
 

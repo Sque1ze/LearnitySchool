@@ -35,9 +35,12 @@ public class ManagerPracticeController : Controller
             .FirstOrDefaultAsync();
 
         if (info == null) return NotFound();
-        if (info.Type != LessonTaskType.Practice) return BadRequest("Це не Practice-задача.");
+        if (info.Type != LessonTaskType.Practice)
+            return BadRequest("Це не Practice-задача.");
 
-        var practice = await _db.PracticeTasks.FirstOrDefaultAsync(x => x.LessonTaskId == taskId);
+        var practice = await _db.PracticeTasks
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.LessonTaskId == taskId);
 
         var vm = new PracticeEditVm
         {
@@ -51,7 +54,7 @@ public class ManagerPracticeController : Controller
 
             StarterHtml = practice?.StarterHtml ?? "<!-- write your HTML here -->",
             StarterCss = practice?.StarterCss ?? "/* write your CSS here */",
-            StarterJs = practice?.StarterJs ?? "// write your JS here",
+            StarterJs = practice?.StarterJs ?? "",
 
             ReferenceHtml = practice?.ReferenceHtml ?? "",
             ReferenceCss = practice?.ReferenceCss ?? "",
@@ -66,14 +69,28 @@ public class ManagerPracticeController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(PracticeEditVm vm)
     {
+        // ✅ Вимикаємо валідацію “JS required”, навіть якщо десь стоїть [Required]
+        ModelState.Remove(nameof(vm.ReferenceJs));
+        ModelState.Remove(nameof(vm.StarterJs));
+
+        // (опційно) якщо захочеш зробити і HTML/CSS не обов'язковими — розкоментуй:
+        // ModelState.Remove(nameof(vm.ReferenceHtml));
+        // ModelState.Remove(nameof(vm.ReferenceCss));
+        // ModelState.Remove(nameof(vm.StarterHtml));
+        // ModelState.Remove(nameof(vm.StarterCss));
+
         if (!ModelState.IsValid)
             return View(vm);
 
-        var task = await _db.LessonTasks.FirstOrDefaultAsync(t => t.Id == vm.TaskId);
-        if (task == null) return NotFound();
-        if (task.Type != LessonTaskType.Practice) return BadRequest("Це не Practice-задача.");
+        var task = await _db.LessonTasks
+            .FirstOrDefaultAsync(t => t.Id == vm.TaskId);
 
-        var practice = await _db.PracticeTasks.FirstOrDefaultAsync(x => x.LessonTaskId == vm.TaskId);
+        if (task == null) return NotFound();
+        if (task.Type != LessonTaskType.Practice)
+            return BadRequest("Це не Practice-задача.");
+
+        var practice = await _db.PracticeTasks
+            .FirstOrDefaultAsync(x => x.LessonTaskId == vm.TaskId);
 
         if (practice == null)
         {
@@ -85,16 +102,17 @@ public class ManagerPracticeController : Controller
             _db.PracticeTasks.Add(practice);
         }
 
+        // ✅ Зберігаємо все як є — порожні значення ОК
         practice.Statement = vm.Statement?.Trim() ?? "";
         practice.SimilarityThreshold = vm.SimilarityThreshold;
 
         practice.StarterHtml = vm.StarterHtml ?? "";
         practice.StarterCss = vm.StarterCss ?? "";
-        practice.StarterJs = vm.StarterJs ?? "";
+        practice.StarterJs = vm.StarterJs ?? ""; // може бути пусто
 
         practice.ReferenceHtml = vm.ReferenceHtml ?? "";
         practice.ReferenceCss = vm.ReferenceCss ?? "";
-        practice.ReferenceJs = vm.ReferenceJs ?? "";
+        practice.ReferenceJs = vm.ReferenceJs ?? ""; // може бути пусто
 
         await _db.SaveChangesAsync();
 

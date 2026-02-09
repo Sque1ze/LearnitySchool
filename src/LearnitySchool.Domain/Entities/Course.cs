@@ -11,6 +11,7 @@ public class Course
     public bool IsPublished { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string? ManagerUserId { get; set; }
 
     // Навігація
     public ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();

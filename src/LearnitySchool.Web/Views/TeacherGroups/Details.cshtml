@@ -1,0 +1,220 @@
+﻿@model LearnitySchool.Web.ViewModels.Teacher.Groups.TeacherGroupDetailsVm
+@{
+    ViewData["Title"] = "Group details";
+}
+
+<link rel="stylesheet" href="~/css/teacher/group-details.css" asp-append-version="true" />
+
+<div class="page-head">
+    <div class="head-row">
+        <div>
+            <div class="kicker">TEACHER</div>
+            <h1 class="h1">@Model.Title</h1>
+            @if (!string.IsNullOrWhiteSpace(Model.Description))
+            {
+                <div class="sub">@Model.Description</div>
+            }
+        </div>
+
+        <div class="head-actions">
+            <a class="btn btn-ghost" asp-controller="TeacherGroups" asp-action="Index">← Назад</a>
+        </div>
+    </div>
+
+    <div class="pill-row">
+        <span class="pill pill-muted">Група</span>
+        <span class="pill @(Model.IsPublished ? "pill-success" : "pill-danger")">
+            @(Model.IsPublished ? "Активна" : "Неактивна")
+        </span>
+        <span class="pill pill-muted">@Model.Format</span>
+        <span class="pill pill-muted">Учнів: @Model.StudentsCount</span>
+    </div>
+</div>
+
+<!-- ===== Tabs ===== -->
+<div class="tabs-panel panel">
+    <div class="tabs" role="tablist" aria-label="Group tabs">
+        <button type="button" class="tab active" data-tab="students">Учні</button>
+        <button type="button" class="tab" data-tab="schedule">Розклад</button>
+        <button type="button" class="tab" data-tab="success">Успіхи</button>
+        <button type="button" class="tab" data-tab="history">Історія групи</button>
+
+        <div class="tabs-right">
+            <a class="btn btn-ghost small" href="#" onclick="return false;" title="Пізніше зробимо">Відкрити урок</a>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Tab panes ===== -->
+<div class="tab-content">
+
+    <!-- ===================== -->
+    <!-- TAB: STUDENTS (default) -->
+    <!-- ===================== -->
+    <div class="tab-pane active" data-pane="students">
+        <div class="grid">
+            <!-- LEFT: info -->
+            <section class="panel card">
+                <div class="card-title">Інформація</div>
+
+                <div class="kv">
+                    <div class="k">Викладач</div>
+                    <div class="v">@Model.TeacherName</div>
+
+                    <div class="k">Менеджер</div>
+                    <div class="v">@(string.IsNullOrWhiteSpace(Model.ManagerName) ? "—" : Model.ManagerName)</div>
+
+                    <div class="k">Розклад</div>
+                    <div class="v">@Model.ScheduleText</div>
+
+                    <div class="k">Створено</div>
+                    <div class="v">@Model.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+                </div>
+            </section>
+
+            <!-- RIGHT: students -->
+            <section class="panel card">
+                <div class="card-head">
+                    <div>
+                        <div class="card-title">Учні</div>
+                        <div class="card-sub">Список учнів у групі</div>
+                    </div>
+
+                    <div class="search">
+                        <input id="studentSearch" class="input" placeholder="Пошук учня..." />
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="table" id="studentsTable">
+                        <thead>
+                            <tr>
+                                <th>Учень</th>
+                                <th style="width:240px;">Email</th>
+                                <th style="width:90px;">Вік</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Students.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="3" class="empty">У групі ще немає учнів.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var s in Model.Students)
+                                {
+                                    <tr class="student-row">
+                                        <td class="strong">@(!string.IsNullOrWhiteSpace(s.FullName) ? s.FullName : "—")</td>
+                                        <td class="muted">@((s.Email ?? "—"))</td>
+                                        <td>@(s.Age?.ToString() ?? "—")</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- ===================== -->
+    <!-- TAB: SCHEDULE -->
+    <!-- ===================== -->
+    <div class="tab-pane" data-pane="schedule">
+        <div class="panel card">
+            <div class="card-title">Розклад</div>
+            <div class="card-sub">Пізніше зробимо красиво як календар/список</div>
+
+            <div style="margin-top:12px; color:var(--text); font-weight:700;">
+                @Model.ScheduleText
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== -->
+    <!-- TAB: SUCCESS -->
+    <!-- ===================== -->
+    <div class="tab-pane" data-pane="success">
+        <div class="success-layout">
+
+            <!-- LEFT: lessons list -->
+            <section class="panel card lessons-card">
+                <div class="card-title">Успішність по уроках</div>
+                <div class="card-sub">Натисни урок, щоб побачити прогрес учнів</div>
+
+                <div class="lesson-list" id="lessonList">
+                    @* Якщо в VM ще нема Success — можеш тимчасово показати заглушку *@
+                    @if (Model.SuccessLessons == null || Model.SuccessLessons.Count == 0)
+                    {
+                        <div class="empty" style="border:0;">Немає даних (підключимо після).</div>
+                    }
+                    else
+                    {
+                        foreach (var l in Model.SuccessLessons)
+                        {
+                            <button type="button"
+                                    class="lesson-item @(l.IsSelected ? "active" : "")"
+                                    data-lesson="@l.LessonId">
+                                <span class="lesson-badge">@l.Percent%</span>
+                                <span class="lesson-title">@l.Title</span>
+                                <span class="lesson-meta">@l.DateText</span>
+                            </button>
+                        }
+                    }
+                </div>
+            </section>
+
+            <!-- RIGHT: students progress -->
+            <section class="panel card students-card">
+                <div class="card-title">Прогрес учнів (вибраний урок)</div>
+                <div class="card-sub">Відсоток виконання задач по цьому уроку</div>
+
+                <div class="students-progress" id="studentsProgress">
+                    @if (Model.SuccessStudents == null || Model.SuccessStudents.Count == 0)
+                    {
+                        <div class="empty" style="border:0;">Немає даних (підключимо після).</div>
+                    }
+                    else
+                    {
+                        foreach (var s in Model.SuccessStudents)
+                        {
+                            <div class="progress-row" data-lesson="@s.LessonId">
+                                <div class="progress-left">
+                                    <div class="avatar">@s.Initials</div>
+                                    <div class="name-wrap">
+                                        <div class="name">@s.StudentName</div>
+                                        <div class="muted small">@s.SubText</div>
+                                    </div>
+                                </div>
+
+                                <div class="bar-wrap" aria-label="progress">
+                                    <div class="bar" style="width:@s.Percent%"></div>
+                                </div>
+
+                                <div class="percent">@s.Percent%</div>
+                            </div>
+                        }
+                    }
+                </div>
+
+            </section>
+        </div>
+    </div>
+
+    <!-- ===================== -->
+    <!-- TAB: HISTORY -->
+    <!-- ===================== -->
+    <div class="tab-pane" data-pane="history">
+        <div class="panel card">
+            <div class="card-title">Історія групи</div>
+            <div class="card-sub">Пізніше додамо події: створено, змінено викладача, додано учнів, тощо</div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="~/js/teacher/successStudent.js" asp-append-version="true"></script>
+}

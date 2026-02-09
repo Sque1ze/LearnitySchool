@@ -2,6 +2,7 @@ using LearnitySchool.Domain.Entities;
 using LearnitySchool.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace LearnitySchool.Infrastructure.Persistence;
 
@@ -10,19 +11,15 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options) { }
 
-    // ===== Existing =====
     public DbSet<Group> Groups => Set<Group>();
 
-    // ===== Courses =====
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<Lesson> Lessons => Set<Lesson>();
     public DbSet<CourseSchedule> CourseSchedules => Set<CourseSchedule>();
 
-    // ===== Course ↔ People =====
     public DbSet<CourseTeacher> CourseTeachers => Set<CourseTeacher>();
     public DbSet<CourseStudent> CourseStudents => Set<CourseStudent>();
 
-    // ===== Lessons ↔ Tasks =====
     public DbSet<LessonTask> LessonTasks => Set<LessonTask>();
     public DbSet<StudentTaskProgress> StudentTaskProgresses => Set<StudentTaskProgress>();
 
@@ -30,6 +27,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
     public DbSet<QuizOption> QuizOptions => Set<QuizOption>();
     public DbSet<StudentQuizAttempt> StudentQuizAttempts => Set<StudentQuizAttempt>();
     public DbSet<PracticeTask> PracticeTasks => Set<PracticeTask>();
+    public DbSet<StudentPracticeDraft> StudentPracticeDrafts => Set<StudentPracticeDraft>();
 
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -86,6 +84,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
                 .OnDelete(DeleteBehavior.Cascade);
 
             b.HasIndex(x => x.Title);
+
+            b.Property(x => x.ManagerUserId)
+                .HasMaxLength(450);
         });
 
         // =========================
@@ -252,8 +253,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
         {
             b.Property(x => x.StudentUserId).HasMaxLength(450).IsRequired();
             b.Property(x => x.SubmittedAt).IsRequired();
-
-            // 1 attempt per student per task (останній перезаписуємо)
             b.HasIndex(x => new { x.TaskId, x.StudentUserId }).IsUnique();
         });
 
@@ -271,6 +270,37 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
                 .WithOne()
                 .HasForeignKey<PracticeTask>(x => x.LessonTaskId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<StudentPracticeDraft>(b =>
+        {
+            b.HasKey(x => x.Id);
+
+            b.Property(x => x.StudentUserId)
+                .HasMaxLength(450)
+                .IsRequired();
+
+            b.Property(x => x.UpdatedAt)
+                .IsRequired();
+
+            // HTML/CSS/JS можуть бути великими => nvarchar(max) (за замовчуванням і так ок)
+            b.Property(x => x.Html);
+            b.Property(x => x.Css);
+            b.Property(x => x.Js);
+
+            // ✅ 1 draft на 1 студента на 1 задачу
+            b.HasIndex(x => new { x.LessonTaskId, x.StudentUserId })
+                .IsUnique();
+
+            // FK на LessonTask
+            b.HasOne(x => x.LessonTask)
+                .WithMany() // можна .WithMany() бо в LessonTask у тебе немає Drafts navigation
+                .HasForeignKey(x => x.LessonTaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Корисні індекси для вибірок
+            b.HasIndex(x => x.StudentUserId);
+            b.HasIndex(x => x.LessonTaskId);
         });
     }
 }

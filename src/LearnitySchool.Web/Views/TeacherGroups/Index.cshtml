@@ -1,0 +1,125 @@
+﻿@model LearnitySchool.Web.ViewModels.Teacher.Groups.TeacherGroupsVm
+
+@{
+    ViewData["Title"] = "Groups";
+}
+
+<link rel="stylesheet" href="~/css/teacher/groups.css" asp-append-version="true" />
+
+<div class="page-head">
+    <h1 class="page-title">Групи</h1>
+    <div class="page-sub">Перелік груп (курси) з учнями, викладачем та менеджером</div>
+</div>
+
+<form method="get" class="panel filter-panel">
+    <div class="filter-grid">
+
+        <!-- 1) Назва групи -->
+        <div class="field">
+            <div class="label">Назва групи</div>
+            <input name="Q"
+                   value="@Model.Q"
+                   class="dropdown-btn input"
+                   placeholder="Пошук..." />
+        </div>
+
+        <!-- 2) К-ть учнів (одне число) -->
+        <div class="field">
+            <div class="label">К-ть учнів</div>
+            <input name="StudentsCount"
+                   value="@(Model.StudentsCount?.ToString() ?? "")"
+                   class="dropdown-btn input"
+                   type="number"
+                   min="0"
+                   placeholder="наприклад 8" />
+        </div>
+
+        <!-- 3) Викладач -->
+        <div class="field">
+            <div class="label">Викладач</div>
+            <select name="TeacherId" class="dropdown-btn input">
+                <option value="">Усі</option>
+                @foreach (var t in Model.Teachers)
+                {
+                    <option value="@t.Id" selected="@(Model.TeacherId == t.Id)">
+                        @t.Text
+                    </option>
+                }
+            </select>
+        </div>
+
+        <!-- 4) Менеджер -->
+        <div class="field">
+            <div class="label">Менеджер</div>
+            <select name="ManagerId" class="dropdown-btn input">
+                <option value="">Усі</option>
+                @foreach (var m in Model.Managers)
+                {
+                    <option value="@m.Id" selected="@(Model.ManagerId == m.Id)">
+                        @m.Text
+                    </option>
+                }
+            </select>
+        </div>
+
+        <!-- 5) Кнопки -->
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a class="btn btn-ghost" href="@Url.Action("Index")">Reset</a>
+        </div>
+
+    </div>
+</form>
+
+<div class="panel table-panel">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Назва групи</th>
+                <th style="width:120px;">К-ть учнів</th>
+                <th>Викладач</th>
+                <th>Менеджер</th>
+                <th style="width:120px;">Статус</th>
+                <th style="width:120px;">Формат</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (Model.Items.Count == 0)
+            {
+                <tr>
+                    <td colspan="6" class="empty">Нічого не знайдено…</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var row in Model.Items)
+                {
+                    <tr>
+                        <!-- 👇 КЛІКАБЕЛЬНА НАЗВА ГРУПИ -->
+                        <td class="strong">
+                            <a class="row-link"
+                               asp-controller="TeacherGroups"
+                               asp-action="Details"
+                               asp-route-id="@row.CourseId">
+                                @row.Title
+                            </a>
+                        </td>
+
+                        <td>@row.StudentsCount</td>
+                        <td>@row.TeacherName</td>
+                        <td>@(string.IsNullOrWhiteSpace(row.ManagerName) ? "—" : row.ManagerName)</td>
+                        <td>
+                            <span class="pill @(row.IsPublished ? "pill-success" : "pill-danger")">
+                                @(row.IsPublished ? "Активна" : "Неактивна")
+                            </span>
+                        </td>
+                        <td>
+                            <span class="pill pill-muted">@row.Format</span>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

@@ -395,14 +395,16 @@ public class StudentController : Controller
             .FirstOrDefaultAsync();
 
         if (taskInfo == null) return NotFound();
-        if (taskInfo.Type != LessonTaskType.Practice) return BadRequest("Task is not Practice.");
+        if (taskInfo.Type != LessonTaskType.Practice)
+            return BadRequest("Task is not Practice.");
 
         var allowed = await _db.CourseStudents.AnyAsync(cs =>
-            cs.CourseId == taskInfo.CourseId && cs.StudentUserId == userId);
+            cs.CourseId == taskInfo.CourseId &&
+            cs.StudentUserId == userId);
 
         if (!allowed) return Forbid();
 
-        // ✅ ВАЖЛИВО: PracticeTask має FK LessonTaskId
+        // ===== Practice task =====
         var practice = await _db.PracticeTasks
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.LessonTaskId == taskId);
@@ -411,19 +413,190 @@ public class StudentController : Controller
         var starterCss = practice?.StarterCss ?? "/* write your CSS here */";
         var starterJs = practice?.StarterJs ?? "// write your JS here";
 
+        // ===== Reference =====
+        var referenceHtml = practice?.ReferenceHtml;
+        var referenceCss = practice?.ReferenceCss;
+        var referenceJs = practice?.ReferenceJs;
+
+        // ===== Threshold =====
+        var threshold = practice?.SimilarityThreshold ?? 80;
+
+        // ===== Draft =====
+        var draft = await _db.StudentPracticeDrafts
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d =>
+                d.LessonTaskId == taskId &&
+                d.StudentUserId == userId);
+
+        // ===== ViewModel (ОДИН РАЗ) =====
         var vm = new StudentPracticeVm
         {
             TaskId = taskId,
             LessonId = taskInfo.LessonId,
             CourseId = taskInfo.CourseId,
+
             Title = taskInfo.Title,
             Description = taskInfo.Description ?? "",
-            StarterHtml = starterHtml,
-            StarterCss = starterCss,
-            StarterJs = starterJs
+
+            // якщо є draft — показуємо його, інакше starter
+            StarterHtml = draft?.Html ?? starterHtml,
+            StarterCss = draft?.Css ?? starterCss,
+            StarterJs = draft?.Js ?? starterJs,
+
+            ReferenceHtml = referenceHtml,
+            ReferenceCss = referenceCss,
+            ReferenceJs = referenceJs,
+
+            SimilarityThreshold = threshold,
+
+            HasDraft = draft != null,
+            DraftUpdatedAt = draft?.UpdatedAt
         };
 
         return View(vm);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubmitPractice(StudentPracticeSubmitVm vm)
+    {
+        var userId = _userManager.GetUserId(User);
+
+        // task + access
+        var taskInfo = await _db.LessonTasks
+            .Where(t => t.Id == vm.TaskId && t.IsPublished)
+            .Select(t => new { t.Id, t.LessonId, CourseId = t.Lesson.CourseId, t.Type })
+            .FirstOrDefaultAsync();
+
+        if (taskInfo == null) return NotFound();
+        if (taskInfo.Type != LessonTaskType.Practice) return BadRequest("Not practice task.");
+
+        var allowed = await _db.CourseStudents.AnyAsync(cs =>
+            cs.CourseId == taskInfo.CourseId && cs.StudentUserId == userId);
+
+        if (!allowed) return Forbid();
+
+        var practice = await _db.PracticeTasks
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.LessonTaskId == vm.TaskId);
+
+        if (practice == null)
+        {
+            TempData["Error"] = "Practice task is not configured yet.";
+            return RedirectToAction(nameof(Practice), new { taskId = vm.TaskId });
+        }
+
+        // ✅ серверна перевірка similarity
+        int Calc(string refText, string curText)
+        {
+            string Normalize(string s) =>
+                (s ?? "").Replace("\r\n", "\n").Trim().ToLowerInvariant();
+
+            var refTokens = System.Text.RegularExpressions.Regex
+                .Matches(Normalize(refText), @"[a-z0-9_\-#\.]+")
+                .Select(m => m.Value)
+                .ToHashSet();
+
+            if (refTokens.Count == 0) return -1; // не враховуємо
+
+            var curTokens = System.Text.RegularExpressions.Regex
+                .Matches(Normalize(curText), @"[a-z0-9_\-#\.]+")
+                .Select(m => m.Value)
+                .ToHashSet();
+
+            var hit = refTokens.Count(t => curTokens.Contains(t));
+            return (int)Math.Round(hit * 100.0 / refTokens.Count);
+        }
+
+        var parts = new List<int>();
+
+        var pHtml = Calc(practice.ReferenceHtml, vm.Html);
+        if (pHtml >= 0) parts.Add(pHtml);
+
+        var pCss = Calc(practice.ReferenceCss, vm.Css);
+        if (pCss >= 0) parts.Add(pCss);
+
+        var pJs = Calc(practice.ReferenceJs, vm.Js);
+        if (pJs >= 0) parts.Add(pJs);
+
+        var avg = parts.Count == 0 ? 0 : (int)Math.Round(parts.Average());
+
+        if (avg < practice.SimilarityThreshold)
+        {
+            TempData["Error"] = $"Not enough similarity: {avg}% (need {practice.SimilarityThreshold}%).";
+            return RedirectToAction(nameof(Practice), new { taskId = vm.TaskId });
+        }
+
+        // ✅ mark completed
+        var progress = await _db.StudentTaskProgresses
+            .FirstOrDefaultAsync(p => p.TaskId == vm.TaskId && p.StudentUserId == userId);
+
+        if (progress == null)
+        {
+            progress = new StudentTaskProgress
+            {
+                Id = Guid.NewGuid(),
+                TaskId = vm.TaskId,
+                StudentUserId = userId!,
+                IsCompleted = true,
+                CompletedAt = DateTime.UtcNow
+            };
+            _db.StudentTaskProgresses.Add(progress);
+        }
+        else
+        {
+            progress.IsCompleted = true;
+            progress.CompletedAt = DateTime.UtcNow;
+        }
+
+        await _db.SaveChangesAsync();
+
+        TempData["Success"] = $"Submitted ✅ Similarity: {avg}%";
+        return RedirectToAction(nameof(Tasks), new { lessonId = taskInfo.LessonId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SavePracticeDraft([FromBody] StudentPracticeDraftSaveVm vm)
+    {
+        var userId = _userManager.GetUserId(User);
+
+        // доступ + тип задачі
+        var taskInfo = await _db.LessonTasks
+            .Where(t => t.Id == vm.TaskId && t.IsPublished)
+            .Select(t => new { t.Id, t.Type, CourseId = t.Lesson.CourseId })
+            .FirstOrDefaultAsync();
+
+        if (taskInfo == null) return NotFound();
+        if (taskInfo.Type != LessonTaskType.Practice) return BadRequest();
+
+        var allowed = await _db.CourseStudents.AnyAsync(cs =>
+            cs.CourseId == taskInfo.CourseId && cs.StudentUserId == userId);
+
+        if (!allowed) return Forbid();
+
+        var draft = await _db.StudentPracticeDrafts
+            .FirstOrDefaultAsync(d => d.LessonTaskId == vm.TaskId && d.StudentUserId == userId);
+
+        if (draft == null)
+        {
+            draft = new Domain.Entities.StudentPracticeDraft
+            {
+                Id = Guid.NewGuid(),
+                LessonTaskId = vm.TaskId,
+                StudentUserId = userId!,
+            };
+            _db.StudentPracticeDrafts.Add(draft);
+        }
+
+        draft.Html = vm.Html ?? "";
+        draft.Css = vm.Css ?? "";
+        draft.Js = vm.Js ?? "";
+        draft.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+
+        return Json(new { ok = true, updatedAt = draft.UpdatedAt });
     }
 
     // =========================
