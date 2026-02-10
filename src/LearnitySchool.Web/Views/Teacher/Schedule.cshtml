@@ -1,0 +1,95 @@
+﻿@model LearnitySchool.Web.ViewModels.Teacher.TeacherScheduleVm
+
+@{
+    ViewData["Title"] = "Розклад";
+}
+
+<link rel="stylesheet" href="~/css/teacher/schedule.css" asp-append-version="true" />
+
+<div class="page-head">
+    <div class="sub">Показує “наступний” урок у кожній групі — перший закритий урок по порядку.</div>
+</div>
+
+<form method="get" class="panel filter-panel">
+    <div class="filter-grid">
+        <div class="field">
+            <div class="label">Назва групи</div>
+            <input class="input" name="GroupQ" value="@Model.GroupQ" placeholder="Напр. WebDesign" />
+        </div>
+
+        <div class="field">
+            <div class="label">Назва уроку</div>
+            <input class="input" name="LessonQ" value="@Model.LessonQ" placeholder="Напр. CSS" />
+        </div>
+
+        <div class="field">
+            <div class="label">К-ть учнів</div>
+            <input class="input" name="StudentsCount" value="@(Model.StudentsCount?.ToString() ?? "")" type="number" min="0" placeholder="Напр. 8" />
+        </div>
+
+        <div class="filter-actions">
+            <button class="btn btn-primary" type="submit">Filter</button>
+            <a class="btn btn-ghost" asp-controller="Teacher" asp-action="Schedule">Reset</a>
+        </div>
+    </div>
+</form>
+
+<div class="panel table-panel">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Група</th>
+                <th style="width:120px;">Учнів</th>
+                <th>Наступний урок</th>
+                <th style="width:140px;">Статус</th>
+                <th style="width:150px;"></th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (Model.Items.Count == 0)
+            {
+                <tr>
+                    <td colspan="5" class="empty">Немає уроків у черзі (або все вже відкрито).</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var r in Model.Items)
+                {
+                    <tr>
+                        <td class="strong">
+                            <a class="row-link"
+                               asp-controller="TeacherGroups"
+                               asp-action="Details"
+                               asp-route-id="@r.CourseId">
+                                @r.CourseTitle
+                            </a>
+                        </td>
+
+                        <td>@r.StudentsCount</td>
+
+                        <td>
+                            <span class="muted">@r.LessonOrder.</span>
+                            <span class="strong">@r.LessonTitle</span>
+                        </td>
+
+                        <td>
+                            <span class="pill pill-closed">Закритий</span>
+                        </td>
+
+                        <td class="right">
+                            <a class="btn btn-ghost small"
+                               asp-controller="TeacherGroups"
+                               asp-action="Details"
+                               asp-route-id="@r.CourseId">
+                                Відкрити доступ
+                            </a>
+
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

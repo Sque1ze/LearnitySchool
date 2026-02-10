@@ -54,6 +54,37 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
                     b.ToTable("Courses");
                 });
 
+            modelBuilder.Entity("LearnitySchool.Domain.Entities.CourseLessonGate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsOpen")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("LessonId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByTeacherUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId", "LessonId")
+                        .IsUnique();
+
+                    b.ToTable("CourseLessonGates");
+                });
+
             modelBuilder.Entity("LearnitySchool.Domain.Entities.CourseSchedule", b =>
                 {
                     b.Property<Guid>("Id")
@@ -169,6 +200,30 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Lessons");
+                });
+
+            modelBuilder.Entity("LearnitySchool.Domain.Entities.LessonAccess", b =>
+                {
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LessonId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsOpen")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("OpenedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OpenedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("CourseId", "LessonId");
+
+                    b.HasIndex("LessonId");
+
+                    b.ToTable("LessonAccesses");
                 });
 
             modelBuilder.Entity("LearnitySchool.Domain.Entities.LessonTask", b =>
@@ -310,6 +365,42 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("QuizQuestions");
+                });
+
+            modelBuilder.Entity("LearnitySchool.Domain.Entities.StudentLessonAttendance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LessonId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StudentUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByTeacherUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId", "LessonId", "StudentUserId")
+                        .IsUnique();
+
+                    b.ToTable("StudentLessonAttendances");
                 });
 
             modelBuilder.Entity("LearnitySchool.Domain.Entities.StudentPracticeDraft", b =>
@@ -668,6 +759,25 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Course");
+                });
+
+            modelBuilder.Entity("LearnitySchool.Domain.Entities.LessonAccess", b =>
+                {
+                    b.HasOne("LearnitySchool.Domain.Entities.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LearnitySchool.Domain.Entities.Lesson", "Lesson")
+                        .WithMany()
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("Lesson");
                 });
 
             modelBuilder.Entity("LearnitySchool.Domain.Entities.LessonTask", b =>

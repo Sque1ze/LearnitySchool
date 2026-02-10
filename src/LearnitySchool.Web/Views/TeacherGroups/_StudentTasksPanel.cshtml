@@ -1,0 +1,38 @@
+﻿@model LearnitySchool.Web.ViewModels.Teacher.Groups.TeacherStudentTasksVm
+
+<div class="student-panel">
+    <div class="student-panel-head">
+        <div class="title">Задачі учня: <span class="strong">@Model.StudentName</span></div>
+        <div class="muted small">Зелений — виконано, сірий — не виконано</div>
+    </div>
+
+    <div class="student-panel-body">
+        @foreach (var lesson in Model.Lessons)
+        {
+            <div class="lesson-block">
+                <div class="lesson-line">
+                    <div class="lesson-title">
+                        <span class="muted">@lesson.Order.</span> @lesson.Title
+                    </div>
+                </div>
+
+                <div class="task-grid">
+                    @if (lesson.Tasks.Count == 0)
+                    {
+                        <div class="muted small">Немає задач</div>
+                    }
+                    else
+                    {
+                        foreach (var t in lesson.Tasks)
+                        {
+                            <div class="task-square @(t.IsCompleted ? "done" : "todo")"
+                                 title="@lesson.Title — @t.Title">
+                                @t.Order
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>

@@ -29,6 +29,11 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
     public DbSet<PracticeTask> PracticeTasks => Set<PracticeTask>();
     public DbSet<StudentPracticeDraft> StudentPracticeDrafts => Set<StudentPracticeDraft>();
 
+    public DbSet<CourseLessonGate> CourseLessonGates => Set<CourseLessonGate>();
+    public DbSet<StudentLessonAttendance> StudentLessonAttendances => Set<StudentLessonAttendance>();
+    public DbSet<LessonAccess> LessonAccesses => Set<LessonAccess>();
+
+
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -301,6 +306,41 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
             // Корисні індекси для вибірок
             b.HasIndex(x => x.StudentUserId);
             b.HasIndex(x => x.LessonTaskId);
+        });
+
+        builder.Entity<CourseLessonGate>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => new { x.CourseId, x.LessonId }).IsUnique();
+            b.Property(x => x.UpdatedByTeacherUserId).HasMaxLength(450).IsRequired();
+        });
+
+        builder.Entity<StudentLessonAttendance>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => new { x.CourseId, x.LessonId, x.StudentUserId }).IsUnique();
+            b.Property(x => x.StudentUserId).HasMaxLength(450).IsRequired();
+            b.Property(x => x.UpdatedByTeacherUserId).HasMaxLength(450).IsRequired();
+        });
+
+        builder.Entity<LessonAccess>(b =>
+        {
+            b.HasKey(x => new { x.CourseId, x.LessonId });
+
+            b.Property(x => x.IsOpen).IsRequired();
+
+            b.HasOne(x => x.Course)
+                .WithMany()
+                .HasForeignKey(x => x.CourseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ✅ тут НЕ Cascade, інакше multiple cascade paths
+            b.HasOne(x => x.Lesson)
+                .WithMany()
+                .HasForeignKey(x => x.LessonId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            b.HasIndex(x => x.LessonId);
         });
     }
 }

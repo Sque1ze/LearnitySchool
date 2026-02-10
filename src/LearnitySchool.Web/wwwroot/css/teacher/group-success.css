@@ -1,5 +1,4 @@
-﻿/* базові */
-.page-head {
+﻿.page-head {
     margin-bottom: 14px;
 }
 
@@ -36,7 +35,6 @@
     opacity: .65;
 }
 
-/* layout */
 .success-layout {
     display: grid;
     grid-template-columns: 420px 1fr;
@@ -50,7 +48,6 @@
     }
 }
 
-/* lessons list */
 .lesson-list {
     padding: 10px;
     display: grid;
@@ -107,7 +104,6 @@
     color: rgba(220,255,235,.95);
 }
 
-/* students */
 .students-table {
     padding: 10px 14px 14px 14px;
     display: grid;

@@ -7,7 +7,6 @@
         const btn = e.target.closest("[data-dropdown]");
         const dropdown = e.target.closest(".dropdown");
 
-        // клік по кнопці — toggle
         if (btn) {
             const id = btn.getAttribute("data-dropdown");
             const el = document.getElementById(id);
@@ -19,7 +18,6 @@
             return;
         }
 
-        // клік поза дропдауном — закрити
         if (!dropdown) closeAll();
     });
 

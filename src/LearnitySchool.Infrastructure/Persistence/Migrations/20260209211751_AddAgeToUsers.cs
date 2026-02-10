@@ -54,6 +54,22 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CourseLessonGates",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CourseId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    LessonId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IsOpen = table.Column<bool>(type: "bit", nullable: false),
+                    UpdatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedByTeacherUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CourseLessonGates", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Courses",
                 columns: table => new
                 {
@@ -80,6 +96,23 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Groups", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "StudentLessonAttendances",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CourseId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    LessonId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    StudentUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    UpdatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedByTeacherUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StudentLessonAttendances", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -287,6 +320,32 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "LessonAccesses",
+                columns: table => new
+                {
+                    CourseId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    LessonId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IsOpen = table.Column<bool>(type: "bit", nullable: false),
+                    OpenedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OpenedByUserId = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LessonAccesses", x => new { x.CourseId, x.LessonId });
+                    table.ForeignKey(
+                        name: "FK_LessonAccesses_Courses_CourseId",
+                        column: x => x.CourseId,
+                        principalTable: "Courses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_LessonAccesses_Lessons_LessonId",
+                        column: x => x.LessonId,
+                        principalTable: "Lessons",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "LessonTasks",
                 columns: table => new
                 {
@@ -461,6 +520,12 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CourseLessonGates_CourseId_LessonId",
+                table: "CourseLessonGates",
+                columns: new[] { "CourseId", "LessonId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Courses_Title",
                 table: "Courses",
                 column: "Title");
@@ -480,6 +545,11 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
                 name: "IX_CourseTeachers_TeacherUserId",
                 table: "CourseTeachers",
                 column: "TeacherUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LessonAccesses_LessonId",
+                table: "LessonAccesses",
+                column: "LessonId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Lessons_CourseId_Order",
@@ -514,6 +584,12 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
                 name: "IX_QuizQuestions_TaskId_Order",
                 table: "QuizQuestions",
                 columns: new[] { "TaskId", "Order" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StudentLessonAttendances_CourseId_LessonId_StudentUserId",
+                table: "StudentLessonAttendances",
+                columns: new[] { "CourseId", "LessonId", "StudentUserId" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -569,6 +645,9 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "CourseLessonGates");
+
+            migrationBuilder.DropTable(
                 name: "CourseSchedules");
 
             migrationBuilder.DropTable(
@@ -581,10 +660,16 @@ namespace LearnitySchool.Infrastructure.Persistence.Migrations
                 name: "Groups");
 
             migrationBuilder.DropTable(
+                name: "LessonAccesses");
+
+            migrationBuilder.DropTable(
                 name: "PracticeTasks");
 
             migrationBuilder.DropTable(
                 name: "QuizOptions");
+
+            migrationBuilder.DropTable(
+                name: "StudentLessonAttendances");
 
             migrationBuilder.DropTable(
                 name: "StudentPracticeDrafts");

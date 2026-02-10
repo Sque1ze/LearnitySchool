@@ -1,0 +1,87 @@
+﻿@model LearnitySchool.Web.ViewModels.Teacher.Students.TeacherStudentsVm
+
+@{
+    ViewData["Title"] = "Учні";
+}
+
+<link rel="stylesheet" href="~/css/teacher/students.css" asp-append-version="true" />
+
+<div class="page-head">
+    <div class="page-sub">Усі учні, які є у вас в групах (навіть якщо вони з різних курсів)</div>
+</div>
+
+<form method="get" class="panel filter-panel">
+    <div class="filter-grid">
+
+        <div class="field">
+            <div class="label">Ім'я / Прізвище / Email</div>
+            <input name="Q" value="@Model.Q" class="input" placeholder="Пошук..." />
+        </div>
+
+        <div class="field">
+            <div class="label">Вік від</div>
+            <input name="AgeFrom" value="@(Model.AgeFrom?.ToString() ?? "")" class="input" type="number" min="0" placeholder="наприклад 8" />
+        </div>
+
+        <div class="field">
+            <div class="label">Вік до</div>
+            <input name="AgeTo" value="@(Model.AgeTo?.ToString() ?? "")" class="input" type="number" min="0" placeholder="наприклад 14" />
+        </div>
+
+        <div class="field">
+            <div class="label">Телефон</div>
+            <input name="Phone" value="@Model.Phone" class="input" placeholder="+380..." />
+        </div>
+
+        <div class="field">
+            <div class="label">Логін</div>
+            <input name="Login" value="@Model.Login" class="input" placeholder="username" />
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a class="btn btn-ghost" href="@Url.Action("Students", "Teacher")">Reset</a>
+        </div>
+
+    </div>
+</form>
+
+<div class="panel table-panel">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Учень</th>
+                <th style="width:260px;">Email</th>
+                <th style="width:170px;">Телефон</th>
+                <th style="width:90px;">Вік</th>
+                <th style="width:180px;">Логін</th>
+                <th style="width:120px;">Груп</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (Model.Items.Count == 0)
+            {
+                <tr>
+                    <td colspan="6" class="empty">Нічого не знайдено…</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var row in Model.Items)
+                {
+                    <tr>
+                        <td class="strong">@row.FullName</td>
+                        <td>@(row.Email ?? "—")</td>
+                        <td>@(row.Phone ?? "—")</td>
+                        <td>@(row.Age?.ToString() ?? "—")</td>
+                        <td class="muted">@((row.Login ?? "—"))</td>
+                        <td>
+                            <span class="pill pill-muted">@row.GroupsCount</span>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

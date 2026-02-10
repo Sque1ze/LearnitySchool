@@ -1,4 +1,5 @@
 ﻿using LearnitySchool.Application.Common;
+using LearnitySchool.Domain.Entities;
 using LearnitySchool.Infrastructure.Identity;
 using LearnitySchool.Infrastructure.Persistence;
 using LearnitySchool.Web.ViewModels.Teacher.Groups;
@@ -31,61 +32,22 @@ public class TeacherGroupsController : Controller
         return u.Email ?? u.UserName ?? u.Id;
     }
 
-    // GET: /TeacherGroups
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] TeacherGroupsVm vm)
     {
         var currentTeacherId = _userManager.GetUserId(User);
 
-        // dropdowns
-        var teachers = await _userManager.GetUsersInRoleAsync(RoleNames.Teacher);
-        var managers = await _userManager.GetUsersInRoleAsync(RoleNames.Manager);
-
-        vm.Teachers = teachers
-            .OrderBy(Display)
-            .Select(t => new FilterOptionVm { Id = t.Id, Text = Display(t) })
-            .ToList();
-
-        vm.Managers = managers
-            .OrderBy(Display)
-            .Select(m => new FilterOptionVm { Id = m.Id, Text = Display(m) })
-            .ToList();
-
-        // ✅ базовий query: показуємо лише курси, де призначений цей teacher
         var q = _db.Courses
             .AsNoTracking()
             .Where(c => c.Teachers.Any(t => t.TeacherUserId == currentTeacherId))
             .AsQueryable();
 
-        // 🔎 Назва
         if (!string.IsNullOrWhiteSpace(vm.Q))
         {
             var term = vm.Q.Trim();
             q = q.Where(c => c.Title.Contains(term));
         }
 
-        // 👤 Викладач (фільтр по конкретному teacher)
-        if (!string.IsNullOrWhiteSpace(vm.TeacherId))
-        {
-            var tid = vm.TeacherId.Trim();
-            q = q.Where(c => c.Teachers.Any(t => t.TeacherUserId == tid));
-        }
-
-        // 👤 Менеджер
-        if (!string.IsNullOrWhiteSpace(vm.ManagerId))
-        {
-            var mid = vm.ManagerId.Trim();
-            q = q.Where(c => c.ManagerUserId == mid);
-        }
-
-        // 👥 К-ть учнів (точна цифра)
-        if (vm.StudentsCount.HasValue)
-        {
-            var count = vm.StudentsCount.Value;
-            q = q.Where(c => c.Students.Count() == count);
-        }
-
-        // витягуємо дані
         var items = await q
             .OrderBy(c => c.Title)
             .Select(c => new
@@ -99,7 +61,6 @@ public class TeacherGroupsController : Controller
             })
             .ToListAsync();
 
-        // мапимо імена users
         var teacherIds = items.Select(x => x.TeacherId).Where(x => x != null).Distinct().ToList()!;
         var managerIds = items.Select(x => x.ManagerUserId).Where(x => x != null).Distinct().ToList()!;
 
@@ -123,275 +84,437 @@ public class TeacherGroupsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Success(Guid id, Guid? lessonId)
+    public async Task<IActionResult> Details(Guid id, Guid? lessonId = null)
     {
-        var teacherId = _userManager.GetUserId(User);
+        var teacherUserId = _userManager.GetUserId(User);
 
-        // курс існує і вчитель призначений на курс
+        var allowed = await _db.CourseTeachers
+            .AsNoTracking()
+            .AnyAsync(x => x.CourseId == id && x.TeacherUserId == teacherUserId);
+
+        if (!allowed) return Forbid();
+
         var course = await _db.Courses
             .AsNoTracking()
-            .Where(c => c.Id == id && c.Teachers.Any(t => t.TeacherUserId == teacherId))
-            .Select(c => new { c.Id, c.Title })
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(c => c.Id == id);
 
         if (course == null) return NotFound();
 
-        // уроки курсу
         var lessons = await _db.Lessons
             .AsNoTracking()
             .Where(l => l.CourseId == id)
             .OrderBy(l => l.Order)
-            .Select(l => new { l.Id, l.Title })
+            .Select(l => new { l.Id, l.Title, l.Order })
             .ToListAsync();
 
-        // студенти курсу
+        var selectedLessonId = lessonId ?? lessons.FirstOrDefault()?.Id;
+
+        var accessMap = await _db.LessonAccesses
+            .AsNoTracking()
+            .Where(x => x.CourseId == id)
+            .ToDictionaryAsync(x => x.LessonId, x => x.IsOpen);
+
+        var teacherId = await _db.CourseTeachers
+            .AsNoTracking()
+            .Where(x => x.CourseId == id)
+            .Select(x => x.TeacherUserId)
+            .FirstOrDefaultAsync();
+
+        var managerId = course.ManagerUserId;
+
+        var schedules = await _db.CourseSchedules
+            .AsNoTracking()
+            .Where(s => s.CourseId == id)
+            .OrderBy(s => s.DayOfWeek)
+            .ThenBy(s => s.StartTime)
+            .Select(s => new { s.DayOfWeek, s.StartTime, s.Duration })
+            .ToListAsync();
+
+        string scheduleText = schedules.Count == 0
+            ? "—"
+            : string.Join(", ", schedules.Select(s =>
+                $"{s.DayOfWeek} {s.StartTime:hh\\:mm} ({s.Duration:hh\\:mm})"));
+
         var studentIds = await _db.CourseStudents
             .AsNoTracking()
             .Where(cs => cs.CourseId == id)
             .Select(cs => cs.StudentUserId)
             .ToListAsync();
 
-        // всі published tasks курсу (для підрахунку прогресу)
+        var peopleIds = new List<string>();
+        if (!string.IsNullOrWhiteSpace(teacherId)) peopleIds.Add(teacherId!);
+        if (!string.IsNullOrWhiteSpace(managerId)) peopleIds.Add(managerId!);
+        peopleIds.AddRange(studentIds);
+        peopleIds = peopleIds.Distinct().ToList();
+
+        var people = await _db.Users
+            .AsNoTracking()
+            .Where(u => peopleIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => new
+            {
+                Name = Display(u),
+                u.Email,
+                u.Age
+            });
+
+        static string Initials(string? fullName)
+        {
+            if (string.IsNullOrWhiteSpace(fullName)) return "•";
+            var parts = fullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 1) return parts[0].Substring(0, 1).ToUpperInvariant();
+            return (parts[0].Substring(0, 1) + parts[1].Substring(0, 1)).ToUpperInvariant();
+        }
+
+        var studentsVm = studentIds
+            .Select(sid =>
+            {
+                people.TryGetValue(sid, out var p);
+                return new TeacherGroupStudentRowVm
+                {
+                    UserId = sid,
+                    FullName = p?.Name ?? "—",
+                    Email = p?.Email,
+                    Age = p?.Age
+                };
+            })
+            .OrderBy(x => x.FullName)
+            .ToList();
+
         var tasks = await _db.LessonTasks
             .AsNoTracking()
             .Where(t => t.Lesson.CourseId == id && t.IsPublished)
             .Select(t => new { t.Id, t.LessonId })
             .ToListAsync();
 
-        // якщо lessonId не передали — вибираємо перший урок
-        var selectedLessonId = lessonId ?? lessons.FirstOrDefault()?.Id;
-
-        // прогрес (тільки completed, щоб не тягнути зайве)
-        var taskIds = tasks.Select(t => t.Id).ToList();
-
-        var completed = await _db.StudentTaskProgresses
-            .AsNoTracking()
-            .Where(p =>
-                studentIds.Contains(p.StudentUserId) &&
-                taskIds.Contains(p.TaskId) &&
-                p.IsCompleted)
-            .Select(p => new { p.StudentUserId, p.TaskId })
-            .ToListAsync();
-
-        // ---------- підрахунки ----------
-        var studentsCount = studentIds.Count;
-
         var tasksByLesson = tasks
-            .GroupBy(x => x.LessonId)
+            .GroupBy(t => t.LessonId)
             .ToDictionary(g => g.Key, g => g.Select(x => x.Id).ToList());
 
-        // completed по taskId -> lessonId (через map)
-        var taskToLesson = tasks.ToDictionary(x => x.Id, x => x.LessonId);
+        var taskIds = tasks.Select(t => t.Id).ToList();
 
-        // completed count per lesson (всього)
-        var completedPerLesson = new Dictionary<Guid, int>();
-        foreach (var c in completed)
+        var progresses = await _db.StudentTaskProgresses
+            .AsNoTracking()
+            .Where(p => studentIds.Contains(p.StudentUserId) && taskIds.Contains(p.TaskId))
+            .Select(p => new { p.StudentUserId, p.TaskId, p.IsCompleted })
+            .ToListAsync();
+
+        var completedSet = progresses
+            .Where(x => x.IsCompleted)
+            .Select(x => (x.StudentUserId, x.TaskId))
+            .ToHashSet();
+
+        var successLessons = new List<TeacherGroupDetailsVm.SuccessLessonVm>();
+        var successStudents = new List<TeacherGroupDetailsVm.SuccessStudentVm>();
+
+        foreach (var lesson in lessons)
         {
-            if (!taskToLesson.TryGetValue(c.TaskId, out var lId)) continue;
-            completedPerLesson[lId] = completedPerLesson.TryGetValue(lId, out var v) ? v + 1 : 1;
-        }
+            tasksByLesson.TryGetValue(lesson.Id, out var lessonTaskIds);
+            lessonTaskIds ??= new List<Guid>();
+            var taskCount = lessonTaskIds.Count;
 
-        // список уроків з % (середній прогрес групи по уроку)
-        var lessonCards = new List<LessonSuccessVm>();
-        foreach (var l in lessons)
-        {
-            tasksByLesson.TryGetValue(l.Id, out var lessonTaskIds);
-            var totalTasks = lessonTaskIds?.Count ?? 0;
+            var isOpen = accessMap.TryGetValue(lesson.Id, out var openFlag) && openFlag;
 
-            int percent = 0;
-            if (studentsCount > 0 && totalTasks > 0)
+            if (taskCount == 0 || studentIds.Count == 0)
             {
-                completedPerLesson.TryGetValue(l.Id, out var done);
-                var total = studentsCount * totalTasks;
-                percent = (int)Math.Round(done * 100.0 / total);
+                successLessons.Add(new TeacherGroupDetailsVm.SuccessLessonVm
+                {
+                    LessonId = lesson.Id,
+                    Title = lesson.Title,
+                    DateText = "",
+                    Percent = 0,
+                    IsSelected = selectedLessonId.HasValue && selectedLessonId.Value == lesson.Id,
+                    IsOpen = isOpen
+                });
+
+                foreach (var sid in studentIds)
+                {
+                    people.TryGetValue(sid, out var p);
+                    var name = p?.Name ?? "—";
+
+                    successStudents.Add(new TeacherGroupDetailsVm.SuccessStudentVm
+                    {
+                        LessonId = lesson.Id,
+                        StudentName = name,
+                        Initials = Initials(name),
+                        SubText = p?.Email ?? "",
+                        Percent = 0
+                    });
+                }
+
+                continue;
             }
 
-            lessonCards.Add(new LessonSuccessVm
+            var perStudentPercents = new List<int>();
+
+            foreach (var sid in studentIds)
             {
-                LessonId = l.Id,
-                Title = l.Title,
-                Percent = Math.Clamp(percent, 0, 100),
-                TasksCount = totalTasks
+                var completed = 0;
+                foreach (var tid in lessonTaskIds)
+                {
+                    if (completedSet.Contains((sid, tid)))
+                        completed++;
+                }
+
+                var percent = (int)Math.Round((completed * 100.0) / taskCount);
+                perStudentPercents.Add(percent);
+
+                people.TryGetValue(sid, out var p);
+                var name = p?.Name ?? "—";
+
+                successStudents.Add(new TeacherGroupDetailsVm.SuccessStudentVm
+                {
+                    LessonId = lesson.Id,
+                    StudentName = name,
+                    Initials = Initials(name),
+                    SubText = p?.Email ?? "",
+                    Percent = percent
+                });
+            }
+
+            var lessonPercent = (int)Math.Round(perStudentPercents.Average());
+
+            successLessons.Add(new TeacherGroupDetailsVm.SuccessLessonVm
+            {
+                LessonId = lesson.Id,
+                Title = lesson.Title,
+                DateText = "",
+                Percent = lessonPercent,
+                IsSelected = selectedLessonId.HasValue && selectedLessonId.Value == lesson.Id,
+                IsOpen = isOpen
             });
         }
 
-        // учні + імена
-        var users = await _db.Users
+        var attendanceRows = await _db.StudentLessonAttendances
             .AsNoTracking()
-            .Where(u => studentIds.Contains(u.Id))
-            .Select(u => new { u.Id, u.FirstName, u.LastName, u.Email, u.UserName })
+            .Where(a => a.CourseId == id && studentIds.Contains(a.StudentUserId))
+            .Select(a => new { a.StudentUserId, a.LessonId, a.Status })
             .ToListAsync();
 
-        string DisplayName(dynamic u)
+        var attendanceMap = attendanceRows.ToDictionary(
+            x => (x.StudentUserId, x.LessonId),
+            x => (int)x.Status);
+
+        var attendanceLessons = lessons.Select(l => new TeacherGroupDetailsVm.AttendanceLessonVm
         {
-            var first = (u.FirstName ?? "").Trim();
-            var last = (u.LastName ?? "").Trim();
-            if (!string.IsNullOrWhiteSpace(first) && !string.IsNullOrWhiteSpace(last)) return $"{first} {last}";
-            if (!string.IsNullOrWhiteSpace(first)) return first;
-            return u.Email ?? u.UserName ?? u.Id;
-        }
+            LessonId = l.Id,
+            Order = l.Order,
+            Title = l.Title
+        }).ToList();
 
-        var nameById = users.ToDictionary(x => x.Id, x => DisplayName(x));
-
-        // прогрес по вибраному уроку
-        var studentRows = new List<StudentSuccessRowVm>();
-
-        var selectedTasks = (selectedLessonId != null && tasksByLesson.TryGetValue(selectedLessonId.Value, out var list))
-            ? list
-            : new List<Guid>();
-
-        // completed by student for selected lesson
-        var doneByStudent = new Dictionary<string, int>();
-        if (selectedTasks.Count > 0)
-        {
-            var selectedSet = selectedTasks.ToHashSet();
-            foreach (var c in completed)
-            {
-                if (!selectedSet.Contains(c.TaskId)) continue;
-                doneByStudent[c.StudentUserId] = doneByStudent.TryGetValue(c.StudentUserId, out var v) ? v + 1 : 1;
-            }
-        }
+        var attendanceStudents = new List<TeacherGroupDetailsVm.AttendanceStudentVm>();
 
         foreach (var sid in studentIds)
         {
-            var done = doneByStudent.TryGetValue(sid, out var v) ? v : 0;
-            var total = selectedTasks.Count;
+            people.TryGetValue(sid, out var p);
+            var name = p?.Name ?? "—";
 
-            var percent = (total > 0) ? (int)Math.Round(done * 100.0 / total) : 0;
-
-            studentRows.Add(new StudentSuccessRowVm
+            var statuses = new List<int>(attendanceLessons.Count);
+            foreach (var les in attendanceLessons)
             {
-                StudentId = sid,
-                StudentName = nameById.TryGetValue(sid, out var n) ? n : sid,
-                Percent = Math.Clamp(percent, 0, 100)
+                if (attendanceMap.TryGetValue((sid, les.LessonId), out var st))
+                    statuses.Add(st);
+                else
+                    statuses.Add(0);
+            }
+
+            attendanceStudents.Add(new TeacherGroupDetailsVm.AttendanceStudentVm
+            {
+                StudentUserId = sid,
+                StudentName = name,
+                Initials = Initials(name),
+                SubText = p?.Email ?? "",
+                Statuses = statuses
             });
         }
 
-        // відсортуємо: найвищі зверху
-        studentRows = studentRows.OrderByDescending(x => x.Percent).ThenBy(x => x.StudentName).ToList();
-
-        var vm = new TeacherGroupSuccessVm
-        {
-            CourseId = course.Id,
-            CourseTitle = course.Title,
-            SelectedLessonId = selectedLessonId,
-            Lessons = lessonCards,
-            Students = studentRows
-        };
-
-        return View(vm);
-    }
-
-    // GET: /TeacherGroups/Details/{id}
-    [HttpGet]
-    public async Task<IActionResult> Details(Guid id)
-    {
-        var currentTeacherId = _userManager.GetUserId(User);
-
-        // доступ: лише якщо teacher призначений на курс
-        var allowed = await _db.CourseTeachers
-            .AsNoTracking()
-            .AnyAsync(ct => ct.CourseId == id && ct.TeacherUserId == currentTeacherId);
-
-        if (!allowed) return Forbid();
-
-        var course = await _db.Courses
-            .AsNoTracking()
-            .Where(c => c.Id == id)
-            .Select(c => new
-            {
-                c.Id,
-                c.Title,
-                c.Description,
-                c.IsPublished,
-                c.CreatedAt,
-                c.ManagerUserId,
-                TeacherId = c.Teachers.Select(t => t.TeacherUserId).FirstOrDefault(),
-                StudentsCount = c.Students.Count(),
-                Schedules = c.Schedules
-                    .OrderBy(s => s.DayOfWeek)
-                    .ThenBy(s => s.StartTime)
-                    .Select(s => new { s.DayOfWeek, s.StartTime, s.Duration })
-                    .ToList()
-            })
-            .FirstOrDefaultAsync();
-
-        if (course == null) return NotFound();
-
-        // students list
-        var studentIds = await _db.CourseStudents
-            .AsNoTracking()
-            .Where(cs => cs.CourseId == id)
-            .Select(cs => cs.StudentUserId)
-            .ToListAsync();
-
-        var students = await _db.Users
-            .AsNoTracking()
-            .Where(u => studentIds.Contains(u.Id))
-            .Select(u => new TeacherGroupStudentRowVm
-            {
-                UserId = u.Id,
-                FullName = (u.FirstName + " " + u.LastName).Trim(),
-                Email = u.Email,
-                Age = u.Age
-            })
-            .OrderBy(x => x.FullName)
-            .ToListAsync();
-
-        // resolve names teacher/manager
-        var ids = new List<string>();
-        if (!string.IsNullOrWhiteSpace(course.TeacherId)) ids.Add(course.TeacherId!);
-        if (!string.IsNullOrWhiteSpace(course.ManagerUserId)) ids.Add(course.ManagerUserId!);
-
-        var people = await _db.Users
-            .AsNoTracking()
-            .Where(u => ids.Contains(u.Id))
-            .ToDictionaryAsync(u => u.Id, u => Display(u));
-
-        var teacherName = (!string.IsNullOrWhiteSpace(course.TeacherId) && people.TryGetValue(course.TeacherId!, out var tn))
-            ? tn
-            : "—";
-
-        var managerName = (!string.IsNullOrWhiteSpace(course.ManagerUserId) && people.TryGetValue(course.ManagerUserId!, out var mn))
-            ? mn
-            : null;
-
-        static string DayUa(DayOfWeek d) => d switch
-        {
-            DayOfWeek.Monday => "Пн",
-            DayOfWeek.Tuesday => "Вт",
-            DayOfWeek.Wednesday => "Ср",
-            DayOfWeek.Thursday => "Чт",
-            DayOfWeek.Friday => "Пт",
-            DayOfWeek.Saturday => "Сб",
-            DayOfWeek.Sunday => "Нд",
-            _ => d.ToString()
-        };
-
-        var scheduleText = (course.Schedules?.Count ?? 0) == 0
-            ? "—"
-            : string.Join(" • ", course.Schedules.Select(s =>
-                $"{DayUa(s.DayOfWeek)} {s.StartTime:hh\\:mm} ({s.Duration:hh\\:mm})"));
+        attendanceStudents = attendanceStudents.OrderBy(x => x.StudentName).ToList();
 
         var vm = new TeacherGroupDetailsVm
         {
             CourseId = course.Id,
             Title = course.Title,
-            Description = course.Description ?? "",
+            Description = course.Description,
             IsPublished = course.IsPublished,
             Format = "Онлайн",
 
-            StudentsCount = course.StudentsCount,
-
-            TeacherName = teacherName,
-            ManagerName = managerName,
-
-            CreatedAtUtc = course.CreatedAt,
+            StudentsCount = studentIds.Count,
+            TeacherName = (!string.IsNullOrWhiteSpace(teacherId) && people.TryGetValue(teacherId!, out var tP)) ? tP.Name : "—",
+            ManagerName = (!string.IsNullOrWhiteSpace(managerId) && people.TryGetValue(managerId!, out var mP)) ? mP.Name : null,
             ScheduleText = scheduleText,
+            CreatedAtUtc = course.CreatedAt,
 
-            Students = students
+            Students = studentsVm,
+            SuccessLessons = successLessons,
+            SuccessStudents = successStudents,
+            AttendanceLessons = attendanceLessons,
+            AttendanceStudents = attendanceStudents
         };
 
         return View(vm);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleLessonAccess(Guid courseId, Guid lessonId)
+    {
+        var userId = _userManager.GetUserId(User);
+
+        var allowed = await _db.CourseTeachers
+            .AnyAsync(x => x.CourseId == courseId && x.TeacherUserId == userId);
+
+        if (!allowed) return Forbid();
+
+        var gate = await _db.LessonAccesses
+            .FirstOrDefaultAsync(x => x.CourseId == courseId && x.LessonId == lessonId);
+
+        if (gate == null)
+        {
+            gate = new LessonAccess
+            {
+                CourseId = courseId,
+                LessonId = lessonId,
+                IsOpen = true,
+                OpenedAtUtc = DateTime.UtcNow,
+                OpenedByUserId = userId
+            };
+            _db.LessonAccesses.Add(gate);
+        }
+        else
+        {
+            gate.IsOpen = !gate.IsOpen;
+            gate.OpenedAtUtc = gate.IsOpen ? DateTime.UtcNow : null;
+            gate.OpenedByUserId = gate.IsOpen ? userId : null;
+        }
+
+        await _db.SaveChangesAsync();
+        return RedirectToAction(nameof(Details), new { id = courseId });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> StudentTasksPanel(Guid courseId, string studentUserId)
+    {
+        var teacherUserId = _userManager.GetUserId(User);
+
+        var allowed = await _db.CourseTeachers
+            .AsNoTracking()
+            .AnyAsync(x => x.CourseId == courseId && x.TeacherUserId == teacherUserId);
+
+        if (!allowed) return Forbid();
+
+        var studentInCourse = await _db.CourseStudents
+            .AsNoTracking()
+            .AnyAsync(x => x.CourseId == courseId && x.StudentUserId == studentUserId);
+
+        if (!studentInCourse) return NotFound();
+
+        var student = await _db.Users
+            .AsNoTracking()
+            .Where(u => u.Id == studentUserId)
+            .Select(u => new { Name = Display(u) })
+            .FirstOrDefaultAsync();
+
+        var lessons = await _db.Lessons
+            .AsNoTracking()
+            .Where(l => l.CourseId == courseId && l.IsPublished)
+            .OrderBy(l => l.Order)
+            .Select(l => new { l.Id, l.Order, l.Title })
+            .ToListAsync();
+
+        var tasks = await _db.LessonTasks
+            .AsNoTracking()
+            .Where(t => t.Lesson.CourseId == courseId && t.IsPublished)
+            .OrderBy(t => t.Lesson.Order)
+            .ThenBy(t => t.Order)
+            .Select(t => new { t.Id, t.LessonId, t.Order, t.Title })
+            .ToListAsync();
+
+        var taskIds = tasks.Select(t => t.Id).ToList();
+
+        var completed = await _db.StudentTaskProgresses
+            .AsNoTracking()
+            .Where(p =>
+                p.StudentUserId == studentUserId &&
+                p.IsCompleted &&
+                taskIds.Contains(p.TaskId))
+            .Select(p => p.TaskId)
+            .ToListAsync();
+
+        var completedSet = completed.ToHashSet();
+
+        var tasksByLesson = tasks
+            .GroupBy(t => t.LessonId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var vm = new TeacherStudentTasksVm
+        {
+            CourseId = courseId,
+            StudentUserId = studentUserId,
+            StudentName = student?.Name ?? "—",
+            Lessons = lessons.Select(l =>
+            {
+                tasksByLesson.TryGetValue(l.Id, out var taskList);
+
+                var squares = new List<TeacherStudentTasksVm.TaskSquareVm>();
+                if (taskList != null)
+                {
+                    squares = taskList.Select(t => new TeacherStudentTasksVm.TaskSquareVm
+                    {
+                        TaskId = t.Id,
+                        Order = t.Order,
+                        Title = t.Title ?? "", 
+                        IsCompleted = completedSet.Contains(t.Id)
+                    }).ToList();
+                }
+
+                return new TeacherStudentTasksVm.LessonBlockVm
+                {
+                    LessonId = l.Id,
+                    Order = l.Order,
+                    Title = l.Title,
+                    Tasks = squares
+                };
+            }).ToList()
+        };
+
+        return PartialView("_StudentTasksPanel", vm);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetAttendanceAjax(Guid courseId, Guid lessonId, string studentUserId, int status)
+    {
+        var teacherId = _userManager.GetUserId(User);
+
+        var allowed = await _db.CourseTeachers
+            .AnyAsync(x => x.CourseId == courseId && x.TeacherUserId == teacherId);
+
+        if (!allowed) return Forbid();
+
+        var row = await _db.StudentLessonAttendances
+            .FirstOrDefaultAsync(x => x.CourseId == courseId && x.LessonId == lessonId && x.StudentUserId == studentUserId);
+
+        if (row == null)
+        {
+            row = new StudentLessonAttendance
+            {
+                Id = Guid.NewGuid(),
+                CourseId = courseId,
+                LessonId = lessonId,
+                StudentUserId = studentUserId,
+                Status = (AttendanceStatus)status,
+                UpdatedByTeacherUserId = teacherId!,
+                UpdatedAtUtc = DateTime.UtcNow
+            };
+            _db.StudentLessonAttendances.Add(row);
+        }
+        else
+        {
+            row.Status = (AttendanceStatus)status;
+            row.UpdatedByTeacherUserId = teacherId!;
+            row.UpdatedAtUtc = DateTime.UtcNow;
+        }
+
+        await _db.SaveChangesAsync();
+        return Json(new { ok = true, status });
     }
 }

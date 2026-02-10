@@ -76,6 +76,17 @@ public class StudentController : Controller
     {
         var userId = _userManager.GetUserId(User);
 
+        // (опц.) перевірка що студент у курсі
+        var allowed = await _db.CourseStudents.AnyAsync(x => x.CourseId == courseId && x.StudentUserId == userId);
+        if (!allowed) return Forbid();
+
+        // ✅ дістаємо open/closed для уроків цього курсу з LessonAccesses
+        // якщо запису нема -> урок вважаємо закритим
+        var gates = await _db.LessonAccesses
+            .Where(g => g.CourseId == courseId)
+            .Select(g => new { g.LessonId, g.IsOpen })
+            .ToDictionaryAsync(x => x.LessonId, x => x.IsOpen);
+
         var lessons = await _db.Lessons
             .Where(l => l.CourseId == courseId && l.IsPublished)
             .OrderBy(l => l.Order)
@@ -93,7 +104,10 @@ public class StudentController : Controller
                     p.Task.IsPublished &&
                     p.Task.LessonId == l.Id),
 
-                ProgressPercent = 0
+                ProgressPercent = 0,
+
+                // ✅ заповнимо після ToList
+                IsOpen = false
             })
             .ToListAsync();
 
@@ -102,6 +116,9 @@ public class StudentController : Controller
             l.ProgressPercent = l.TasksCount == 0
                 ? 0
                 : (int)Math.Round((double)l.CompletedTasks * 100 / l.TasksCount);
+
+            // ✅ open/closed
+            l.IsOpen = gates.TryGetValue(l.LessonId, out var open) && open;
         }
 
         ViewBag.CourseId = courseId;
@@ -119,6 +136,27 @@ public class StudentController : Controller
             .Where(l => l.Id == lessonId)
             .Select(l => l.CourseId)
             .FirstOrDefaultAsync();
+
+        if (courseId == Guid.Empty) return NotFound();
+
+        // (опц.) перевірка що студент у курсі
+        var allowed = await _db.CourseStudents.AnyAsync(x =>
+            x.CourseId == courseId &&
+            x.StudentUserId == userId);
+
+        if (!allowed) return Forbid();
+
+        // ✅ gate через LessonAccesses (якщо запису нема -> false)
+        var isOpen = await _db.LessonAccesses
+            .Where(x => x.CourseId == courseId && x.LessonId == lessonId)
+            .Select(x => x.IsOpen)
+            .FirstOrDefaultAsync();
+
+        if (!isOpen)
+        {
+            TempData["Error"] = "Цей урок зараз закритий викладачем.";
+            return RedirectToAction(nameof(Lessons), new { courseId });
+        }
 
         var tasks = await _db.LessonTasks
             .Where(t => t.LessonId == lessonId && t.IsPublished)
@@ -380,6 +418,7 @@ public class StudentController : Controller
     public async Task<IActionResult> Practice(Guid taskId)
     {
         var userId = _userManager.GetUserId(User);
+
 
         var taskInfo = await _db.LessonTasks
             .Where(t => t.Id == taskId && t.IsPublished)

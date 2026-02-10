@@ -26,20 +26,40 @@ public class TeacherGroupDetailsVm
     {
         public Guid LessonId { get; set; }
         public string Title { get; set; } = "";
-        public string DateText { get; set; } = "";   // "пн, 10.11.2025, 19:00" (або просто "")
+        public string DateText { get; set; } = "";   
         public int Percent { get; set; }
         public bool IsSelected { get; set; }
+        public bool IsOpen { get; set; }
     }
 
     public class SuccessStudentVm
     {
-        public Guid LessonId { get; set; }           // важливо для фільтра справа
+        public Guid LessonId { get; set; }           
         public string StudentName { get; set; } = "";
         public string Initials { get; set; } = "A";
-        public string SubText { get; set; } = "";    // optional
+        public string SubText { get; set; } = "";   
         public int Percent { get; set; }
     }
     public List<SuccessLessonVm> SuccessLessons { get; set; } = new();
     public List<SuccessStudentVm> SuccessStudents { get; set; } = new();
+
+    public class AttendanceLessonVm
+    {
+        public Guid LessonId { get; set; }
+        public int Order { get; set; }
+        public string Title { get; set; } = "";
+    }
+
+    public class AttendanceStudentVm
+    {
+        public string StudentUserId { get; set; } = "";
+        public string StudentName { get; set; } = "—";
+        public string Initials { get; set; } = "•";
+        public string? SubText { get; set; }
+        public List<int> Statuses { get; set; } = new(); 
+    }
+
+    public List<AttendanceLessonVm> AttendanceLessons { get; set; } = new();
+    public List<AttendanceStudentVm> AttendanceStudents { get; set; } = new();
 
 }

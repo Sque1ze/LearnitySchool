@@ -1,0 +1,62 @@
+﻿@model LearnitySchool.Web.ViewModels.Teacher.Groups.TeacherLessonAccessVm
+@{
+    ViewData["Title"] = "Доступ до уроків";
+}
+
+<link rel="stylesheet" href="~/css/teacher/group-lessons-access.css" asp-append-version="true" />
+
+<div class="page-head">
+    <div class="kicker">TEACHER</div>
+    <h1 class="h1">@Model.CourseTitle</h1>
+    <div class="sub">Відкривай/закривай уроки. Закриті уроки студенти бачать, але зайти не можуть.</div>
+
+    <div class="head-actions">
+        <a class="btn btn-ghost" asp-controller="TeacherGroups" asp-action="Details" asp-route-id="@Model.CourseId">← Назад до групи</a>
+    </div>
+</div>
+
+<div class="panel">
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="width:70px;">#</th>
+                <th>Урок</th>
+                <th style="width:120px;">Tasks</th>
+                <th style="width:140px;">Статус</th>
+                <th style="width:220px;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var l in Model.Lessons)
+            {
+                <tr>
+                    <td class="muted">@l.Order</td>
+                    <td class="strong">@l.Title</td>
+                    <td>@l.TasksCount</td>
+                    <td>
+                        <span class="pill @(l.IsOpen ? "pill-success" : "pill-muted")">
+                            @(l.IsOpen ? "Відкритий" : "Закритий")
+                        </span>
+                    </td>
+                    <td class="actions">
+                        <form method="post" asp-action="ToggleLessonAccess" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="CourseId" value="@Model.CourseId" />
+                            <input type="hidden" name="LessonId" value="@l.LessonId" />
+                            <input type="hidden" name="IsOpen" value="@(l.IsOpen ? "false" : "true")" />
+
+                            @if (l.IsOpen)
+                            {
+                                <button class="btn btn-danger" type="submit">Закрити</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-primary" type="submit">Відкрити</button>
+                            }
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

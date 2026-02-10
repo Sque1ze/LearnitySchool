@@ -1,0 +1,231 @@
+﻿:root {
+    --bg: #020617;
+    --card: #07101f;
+    --border: #1f2933;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --shadow: 0 18px 45px rgba(0,0,0,.35);
+    --radius: 18px;
+    --accent: rgba(56,189,248,.35);
+    --accent-bg: rgba(56,189,248,.08);
+    --ok: rgba(34,197,94,.45);
+    --ok-bg: rgba(34,197,94,.12);
+}
+
+/* page */
+.lessons-page {
+    padding-bottom: 18px;
+}
+
+/* header */
+.lessons-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.kicker {
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.h1 {
+    margin: 0;
+    font-size: 34px;
+    line-height: 1.1;
+    color: var(--text);
+}
+
+.sub {
+    margin-top: 8px;
+    color: var(--muted);
+    max-width: 90ch;
+}
+
+/* panel */
+.panel {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.table-panel {
+    margin-top: 14px;
+}
+
+/* alert */
+.alert {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.03);
+    color: var(--text);
+}
+
+.alert-error {
+    border-color: rgba(239,68,68,.35);
+    background: rgba(239,68,68,.08);
+}
+
+.alert-success {
+    border-color: rgba(34,197,94,.35);
+    background: rgba(34,197,94,.08);
+}
+
+/* buttons */
+.btn {
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.03);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 12px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+    .btn:hover {
+        background: rgba(255,255,255,0.06);
+    }
+
+    .btn:disabled {
+        cursor: not-allowed;
+        opacity: .55;
+    }
+
+.btn-ghost {
+    background: transparent;
+}
+
+.btn-primary {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+}
+
+/* table */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .table thead th {
+        text-align: left;
+        font-size: 12px;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        padding: 12px 12px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(255,255,255,0.02);
+    }
+
+    .table tbody td {
+        padding: 14px 12px;
+        border-bottom: 1px solid rgba(31,41,51,.65);
+        color: var(--text);
+        vertical-align: middle;
+    }
+
+    .table tbody tr:hover td {
+        background: rgba(56,189,248,.06);
+    }
+
+.empty {
+    padding: 18px 12px;
+    color: var(--muted);
+}
+
+/* row states */
+.row-locked td {
+    opacity: .62;
+}
+
+.row-locked:hover td {
+    background: rgba(255,255,255,0.02);
+}
+
+/* cells */
+.strong {
+    font-weight: 800;
+}
+
+.cell-muted {
+    color: var(--muted);
+}
+
+/* title + pills */
+.title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* pills */
+.pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text);
+    background: rgba(255,255,255,0.03);
+}
+
+.pill-muted {
+    color: var(--muted);
+}
+
+.pill-success {
+    border-color: var(--ok);
+    background: var(--ok-bg);
+}
+
+.pill-lock {
+    border-color: rgba(148,163,184,.35);
+    background: rgba(148,163,184,.08);
+}
+
+.pill-open {
+    opacity: .95;
+}
+
+/* progress */
+.progress-top {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+.progress-bar {
+    height: 10px;
+    background: rgba(31,41,51,.85);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 10px;
+    background: rgba(34,197,94,.95);
+    border-radius: 999px;
+}
+
+/* actions */
+.actions {
+    text-align: right;
+}

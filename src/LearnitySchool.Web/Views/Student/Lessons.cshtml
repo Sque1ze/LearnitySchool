@@ -5,73 +5,111 @@
     var courseId = (Guid)ViewBag.CourseId;
 }
 
-<div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-    <div>
-        <h2 style="margin:0;">Lessons</h2>
-        <div style="opacity:.75; margin-top:4px;">Оберіть урок і дивіться завдання + прогрес</div>
+<link rel="stylesheet" href="~/css/student/lessons.css" asp-append-version="true" />
+
+<div class="lessons-page">
+
+    <div class="lessons-head">
+        <div>
+            <div class="kicker">STUDENT</div>
+            <h1 class="h1">Уроки</h1>
+            <div class="sub">Оберіть урок і дивіться завдання + прогрес</div>
+        </div>
+
+        <a asp-action="Index" class="btn btn-ghost">← Back to courses</a>
     </div>
 
-    <a asp-action="Index" class="dropdown-btn">← Back to courses</a>
-</div>
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-error">@TempData["Error"]</div>
+    }
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
 
-<div style="margin-top:16px; overflow:auto;">
-    <table style="width:100%; border-collapse:collapse;">
-        <thead>
-            <tr>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">#</th>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Title</th>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Tasks</th>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Done</th>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Progress</th>
-                <th style="padding:10px; border-bottom:1px solid #1F2933;"></th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @if (Model == null || Model.Count == 0)
-            {
+    <div class="panel table-panel">
+        <table class="table">
+            <thead>
                 <tr>
-                    <td colspan="6" style="padding:14px; opacity:.75;">Немає уроків</td>
+                    <th style="width:70px;">#</th>
+                    <th>Title</th>
+                    <th style="width:110px;">Tasks</th>
+                    <th style="width:130px;">Done</th>
+                    <th style="width:280px;">Progress</th>
+                    <th style="width:170px;"></th>
                 </tr>
-            }
-            else
-            {
-                @foreach (var l in Model)
+            </thead>
+
+            <tbody>
+                @if (Model == null || Model.Count == 0)
                 {
                     <tr>
-                        <td style="padding:10px; border-bottom:1px solid #1F2933;">@l.Order</td>
-
-                        <td style="padding:10px; border-bottom:1px solid #1F2933; font-weight:600;">
-                            @l.Title
-                        </td>
-
-                        <td style="padding:10px; border-bottom:1px solid #1F2933;">@l.TasksCount</td>
-
-                        <td style="padding:10px; border-bottom:1px solid #1F2933;">
-                            @l.CompletedTasks / @l.TasksCount
-                        </td>
-
-                        <td style="padding:10px; border-bottom:1px solid #1F2933; min-width:200px;">
-                            <div style="display:flex; justify-content:space-between; font-size:13px; opacity:.85;">
-                                <span>@l.ProgressPercent%</span>
-                            </div>
-
-                            <div style="height:10px; background:#1F2933; border-radius:999px; overflow:hidden; margin-top:6px;">
-                                <div style="height:10px; width:@l.ProgressPercent%; background:#22C55E;"></div>
-                            </div>
-                        </td>
-
-                        <td style="padding:10px; border-bottom:1px solid #1F2933; white-space:nowrap;">
-                            <a asp-controller="Student"
-                               asp-action="Tasks"
-                               asp-route-lessonId="@l.LessonId"
-                               class="dropdown-btn">
-                                Open tasks
-                            </a>
-                        </td>
+                        <td colspan="6" class="empty">Немає уроків</td>
                     </tr>
                 }
-            }
-        </tbody>
-    </table>
+                else
+                {
+                    foreach (var l in Model)
+                    {
+                        var locked = !l.IsOpen;
+
+                        <tr class="row @(locked ? "row-locked" : "")">
+                            <td class="cell-muted">@l.Order</td>
+
+                            <td class="strong">
+                                <div class="title-wrap">
+                                    <span>@l.Title</span>
+
+                                    @if (locked)
+                                    {
+                                        <span class="pill pill-muted pill-lock">🔒 Закритий</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="pill pill-success pill-open">Відкритий</span>
+                                    }
+                                </div>
+                            </td>
+
+                            <td>@l.TasksCount</td>
+
+                            <td class="cell-muted">
+                                @l.CompletedTasks / @l.TasksCount
+                            </td>
+
+                            <td>
+                                <div class="progress-top">
+                                    <span class="cell-muted">@l.ProgressPercent%</span>
+                                </div>
+
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width:@l.ProgressPercent%;"></div>
+                                </div>
+                            </td>
+
+                            <td class="actions">
+                                @if (!locked)
+                                {
+                                    <a asp-controller="Student"
+                                       asp-action="Tasks"
+                                       asp-route-lessonId="@l.LessonId"
+                                       class="btn btn-primary">
+                                        Open tasks
+                                    </a>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-ghost" disabled title="Урок закритий викладачем">
+                                        Недоступно
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
 </div>

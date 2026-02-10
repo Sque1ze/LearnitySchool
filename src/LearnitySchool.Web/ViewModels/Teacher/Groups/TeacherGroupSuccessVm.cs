@@ -18,7 +18,7 @@ public class LessonSuccessVm
 {
     public Guid LessonId { get; set; }
     public string Title { get; set; } = "";
-    public int Percent { get; set; } // 0..100
+    public int Percent { get; set; } 
     public int TasksCount { get; set; }
 }
 
@@ -26,5 +26,5 @@ public class StudentSuccessRowVm
 {
     public string StudentId { get; set; } = "";
     public string StudentName { get; set; } = "";
-    public int Percent { get; set; } // 0..100
+    public int Percent { get; set; } 
 }

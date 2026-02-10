@@ -1,5 +1,4 @@
 ﻿(() => {
-    // ===== elements =====
     const tabs = Array.from(document.querySelectorAll(".tab"));
     const panes = Array.from(document.querySelectorAll(".tab-pane"));
 
@@ -20,14 +19,12 @@
     const previewTabBtn = document.getElementById("previewTabBtn");
     const referenceTabBtn = document.getElementById("referenceTabBtn");
 
-    // submit
     const submitBtn = document.getElementById("submitBtn");
     const submitHtml = document.getElementById("submitHtml");
     const submitCss = document.getElementById("submitCss");
     const submitJs = document.getElementById("submitJs");
     const submitSimilarity = document.getElementById("submitSimilarity");
 
-    // draft
     const draftStatus = document.getElementById("draftStatus");
     const anti = document.querySelector('input[name="__RequestVerificationToken"]');
     const token = anti ? anti.value : null;
@@ -37,7 +34,6 @@
 
     const threshold = submitBtn ? Number(submitBtn.dataset.threshold || "0") : 0;
 
-    // ===== reference from hidden textareas (read once) =====
     const refHtml = document.getElementById("refHtml")?.value || "";
     const refCss = document.getElementById("refCss")?.value || "";
     const refJs = document.getElementById("refJs")?.value || "";
@@ -47,12 +43,10 @@
         (refCss.trim().length > 0) ||
         (refJs.trim().length > 0);
 
-    // ===== starter original (for Reset) =====
     const starterHtml = document.getElementById("starterHtml")?.value ?? "";
     const starterCss = document.getElementById("starterCss")?.value ?? "";
     const starterJs = document.getElementById("starterJs")?.value ?? "";
 
-    // ===== editor tabs =====
     function setTab(name) {
         tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === name));
         panes.forEach(p => p.classList.toggle("active", p.dataset.pane === name));
@@ -60,7 +54,6 @@
     tabs.forEach(t => t.addEventListener("click", () => setTab(t.dataset.tab)));
     setTab("html");
 
-    // ===== iframe doc =====
     function buildDoc(html, css, js) {
         return `<!doctype html>
 <html>
@@ -117,7 +110,6 @@ ${html || ""}
         showMyPreview();
     });
 
-    // ===== similarity =====
     function normalize(s) {
         return (s || "")
             .replace(/\r\n/g, "\n")
@@ -132,7 +124,6 @@ ${html || ""}
         return new Set(m || []);
     }
 
-    // if ref is empty => null => ignore part
     function similarityPercent(refText, curText) {
         const refSet = tokenSet(refText);
         if (refSet.size === 0) return null;
@@ -145,7 +136,6 @@ ${html || ""}
     }
 
     function updateSubmitState(avg) {
-        // payload for submit
         submitHtml && (submitHtml.value = htmlEl.value);
         submitCss && (submitCss.value = cssEl.value);
         submitJs && (submitJs.value = jsEl.value);
@@ -184,7 +174,6 @@ ${html || ""}
 
     checkBtn?.addEventListener("click", check);
 
-    // ===== draft autosave =====
     let saveTimer = null;
     let saving = false;
 
@@ -244,7 +233,6 @@ ${html || ""}
     cssEl.addEventListener("input", scheduleSave);
     jsEl.addEventListener("input", scheduleSave);
 
-    // ===== reset =====
     function resetToStarter() {
         const ok = confirm("Reset code to starter version?");
         if (!ok) return;
@@ -253,7 +241,6 @@ ${html || ""}
         cssEl.value = starterCss;
         jsEl.value = starterJs;
 
-        // reset badge + submit
         if (badge) {
             badge.classList.remove("badge-info");
             badge.classList.add("badge-muted");
@@ -267,16 +254,12 @@ ${html || ""}
         renderMyPreview();
         showMyPreview();
 
-        // save as draft after reset
         scheduleSave();
         setDraftBadge("Draft: saving…", true);
     }
 
     resetBtn?.addEventListener("click", resetToStarter);
 
-    // ===== init =====
     renderMyPreview();
     showMyPreview();
-    // reference iframe will render on click (or you can pre-render if you want):
-    // if (hasReference) renderReferencePreview();
 })();

@@ -1,2 +1,97 @@
-<h1>Teacher dashboard</h1>
-<p>Тут буде кабінет вчителя: групи, уроки, перевірка домашніх.</p>
+@model LearnitySchool.Web.ViewModels.Teacher.TeacherStaffVm
+
+@{
+    ViewData["Title"] = "Працівники";
+}
+
+<link rel="stylesheet" href="~/css/teacher/staff.css" asp-append-version="true" />
+
+<div class="page-head">
+    <div class="page-sub">Усі працівники школи (викладачі та менеджери)</div>
+</div>
+
+<form method="get" class="panel filter-panel">
+    <div class="filter-grid">
+
+        <div class="field">
+            <div class="label">Імʼя / Прізвище</div>
+            <input name="Q" value="@Model.Q" class="input" placeholder="Імʼя або прізвище" />
+        </div>
+
+        <div class="field">
+            <div class="label">Логін</div>
+            <input name="Login" value="@Model.Login" class="input" placeholder="Логін" />
+        </div>
+
+        <div class="field">
+            <div class="label">Телефон</div>
+            <input name="Phone" value="@Model.Phone" class="input" placeholder="Номер телефону" />
+        </div>
+
+        <div class="field">
+            <div class="label">Email</div>
+            <input name="Email" value="@Model.Email" class="input" placeholder="Email" />
+        </div>
+
+        <div class="field">
+            <div class="label">Роль</div>
+            <select name="Role" class="input">
+                <option value="">Усі</option>
+                <option value="Teacher" selected="@(Model.Role == "Teacher")">Викладач</option>
+                <option value="Manager" selected="@(Model.Role == "Manager")">Менеджер</option>
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button class="btn btn-primary">Filter</button>
+            <a asp-controller="Teacher" asp-action="Index" class="btn btn-ghost">Reset</a>
+        </div>
+
+    </div>
+</form>
+
+<div class="panel table-panel">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ПІБ</th>
+                <th>Email</th>
+                <th>Телефон</th>
+                <th>Логін</th>
+                <th style="width:140px;">Роль</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (!Model.Items.Any())
+            {
+                <tr>
+                    <td colspan="5" class="empty">Нічого не знайдено</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var u in Model.Items)
+                {
+                    <tr>
+                        <td class="strong">@u.FullName</td>
+                        <td>@(u.Email ?? "—")</td>
+                        <td>@(u.Phone ?? "—")</td>
+                        <td>@u.Login</td>
+                        <td>
+                            @{
+                                var roleClass = (u.Role ?? "").ToLower() switch
+                                {
+                                    "manager" => "pill-manager",
+                                    "teacher" => "pill-teacher",
+                                    _ => "pill-role"
+                                };
+                            }
+                            <span class="pill @roleClass">@u.Role</span>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

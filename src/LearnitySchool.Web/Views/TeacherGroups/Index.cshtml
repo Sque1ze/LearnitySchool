@@ -1,20 +1,18 @@
 ﻿@model LearnitySchool.Web.ViewModels.Teacher.Groups.TeacherGroupsVm
 
 @{
-    ViewData["Title"] = "Groups";
+    ViewData["Title"] = "Групи";
 }
 
 <link rel="stylesheet" href="~/css/teacher/groups.css" asp-append-version="true" />
 
 <div class="page-head">
-    <h1 class="page-title">Групи</h1>
     <div class="page-sub">Перелік груп (курси) з учнями, викладачем та менеджером</div>
 </div>
 
 <form method="get" class="panel filter-panel">
     <div class="filter-grid">
 
-        <!-- 1) Назва групи -->
         <div class="field">
             <div class="label">Назва групи</div>
             <input name="Q"
@@ -23,7 +21,6 @@
                    placeholder="Пошук..." />
         </div>
 
-        <!-- 2) К-ть учнів (одне число) -->
         <div class="field">
             <div class="label">К-ть учнів</div>
             <input name="StudentsCount"
@@ -34,7 +31,6 @@
                    placeholder="наприклад 8" />
         </div>
 
-        <!-- 3) Викладач -->
         <div class="field">
             <div class="label">Викладач</div>
             <select name="TeacherId" class="dropdown-btn input">
@@ -48,7 +44,6 @@
             </select>
         </div>
 
-        <!-- 4) Менеджер -->
         <div class="field">
             <div class="label">Менеджер</div>
             <select name="ManagerId" class="dropdown-btn input">
@@ -62,7 +57,6 @@
             </select>
         </div>
 
-        <!-- 5) Кнопки -->
         <div class="filter-actions">
             <button type="submit" class="btn btn-primary">Filter</button>
             <a class="btn btn-ghost" href="@Url.Action("Index")">Reset</a>
@@ -96,7 +90,6 @@
                 foreach (var row in Model.Items)
                 {
                     <tr>
-                        <!-- 👇 КЛІКАБЕЛЬНА НАЗВА ГРУПИ -->
                         <td class="strong">
                             <a class="row-link"
                                asp-controller="TeacherGroups"
