@@ -14,6 +14,27 @@
 </head>
 <body>
     <main class="auth">
+        <div class="fx" aria-hidden="true">
+            <div class="fx__stars"></div>
+            <div class="fx__stars fx__stars--2"></div>
+
+            <div class="fx__container">
+                <div class="fx__content">
+                    <div class="fx__numbers">
+                        <div class="fx__number"></div>
+                        <div class="fx__number"></div>
+                        <div class="fx__number"></div>
+                        <div class="fx__number"></div>
+                        <div class="fx__number"></div>
+                        <div class="fx__number"></div>
+                        <div class="fx__number"></div>
+                        <div class="fx__number"></div>
+                        <div class="fx__number"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <section class="card">
             <div class="card__header">
                 <div class="brand">
@@ -25,7 +46,6 @@
                 <p class="subtitle">Створи акаунт за хвилину</p>
             </div>
 
-            @* Summary тільки якщо є загальні помилки *@
             @if (!ViewData.ModelState.IsValid)
             {
                 <div class="alert alert--validation">
@@ -39,38 +59,56 @@
 
                 <div class="grid">
                     <div class="field @(ViewData.ModelState.ContainsKey(nameof(Model.FirstName))
-                                             && ViewData.ModelState[nameof(Model.FirstName)]!.Errors.Count > 0 ? "field--invalid" : "")">
+                                                                                           && ViewData.ModelState[nameof(Model.FirstName)]!.Errors.Count > 0 ? "field--invalid" : "")">
                         <label class="label" asp-for="FirstName">Імʼя</label>
-                        <input class="input" asp-for="FirstName" autocomplete="given-name" placeholder="Оксана" />
+                        <input class="input"
+                               asp-for="FirstName"
+                               autocomplete="given-name"
+                               placeholder="Оксана" />
                         <span class="validation" asp-validation-for="FirstName"></span>
                     </div>
 
                     <div class="field @(ViewData.ModelState.ContainsKey(nameof(Model.LastName))
-                                             && ViewData.ModelState[nameof(Model.LastName)]!.Errors.Count > 0 ? "field--invalid" : "")">
+                                                                                           && ViewData.ModelState[nameof(Model.LastName)]!.Errors.Count > 0 ? "field--invalid" : "")">
                         <label class="label" asp-for="LastName">Прізвище</label>
-                        <input class="input" asp-for="LastName" autocomplete="family-name" placeholder="Леторак" />
+                        <input class="input"
+                               asp-for="LastName"
+                               autocomplete="family-name"
+                               placeholder="Леторак" />
                         <span class="validation" asp-validation-for="LastName"></span>
                     </div>
                 </div>
 
                 <div class="field @(ViewData.ModelState.ContainsKey(nameof(Model.Email))
-                                     && ViewData.ModelState[nameof(Model.Email)]!.Errors.Count > 0 ? "field--invalid" : "")">
+                                                                               && ViewData.ModelState[nameof(Model.Email)]!.Errors.Count > 0 ? "field--invalid" : "")">
                     <label class="label" asp-for="Email">Email</label>
-                    <input class="input" asp-for="Email" type="email" autocomplete="email" placeholder="name@example.com" />
+                    <input class="input"
+                           asp-for="Email"
+                           type="email"
+                           autocomplete="email"
+                           placeholder="name@example.com" />
                     <span class="validation" asp-validation-for="Email"></span>
                 </div>
 
                 <div class="field @(ViewData.ModelState.ContainsKey(nameof(Model.Password))
-                                     && ViewData.ModelState[nameof(Model.Password)]!.Errors.Count > 0 ? "field--invalid" : "")">
+                                                                               && ViewData.ModelState[nameof(Model.Password)]!.Errors.Count > 0 ? "field--invalid" : "")">
                     <label class="label" asp-for="Password">Пароль</label>
-                    <input class="input" asp-for="Password" type="password" autocomplete="new-password" placeholder="мінімум 6 символів" />
+                    <input class="input"
+                           asp-for="Password"
+                           type="password"
+                           autocomplete="new-password"
+                           placeholder="мінімум 6 символів" />
                     <span class="validation" asp-validation-for="Password"></span>
                 </div>
 
                 <div class="field @(ViewData.ModelState.ContainsKey(nameof(Model.ConfirmPassword))
-                                     && ViewData.ModelState[nameof(Model.ConfirmPassword)]!.Errors.Count > 0 ? "field--invalid" : "")">
+                                                                               && ViewData.ModelState[nameof(Model.ConfirmPassword)]!.Errors.Count > 0 ? "field--invalid" : "")">
                     <label class="label" asp-for="ConfirmPassword">Підтвердження пароля</label>
-                    <input class="input" asp-for="ConfirmPassword" type="password" autocomplete="new-password" placeholder="повтори пароль" />
+                    <input class="input"
+                           asp-for="ConfirmPassword"
+                           type="password"
+                           autocomplete="new-password"
+                           placeholder="повтори пароль" />
                     <span class="validation" asp-validation-for="ConfirmPassword"></span>
                 </div>
 
@@ -86,8 +124,6 @@
         <div class="bg-glow"></div>
     </main>
 
-    @section Scripts {
-        <partial name="_ValidationScriptsPartial" />
-    }
+    <partial name="_ValidationScriptsPartial" />
 </body>
 </html>

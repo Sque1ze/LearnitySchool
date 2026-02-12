@@ -14,6 +14,27 @@
 </head>
 <body>
     <main class="auth">
+        <div class="fx" aria-hidden="true">
+            <div class="fx__stars"></div>
+            <div class="fx__stars fx__stars--2"></div>
+
+            <div class="fx__container">
+                <div class="fx__content">
+                    <div class="fx__numbers">
+                        <div class="fx__number"></div>
+                        <div class="fx__number"></div>
+                        <div class="fx__number"></div>
+                        <div class="fx__number"></div>
+                        <div class="fx__number"></div>
+                        <div class="fx__number"></div>
+                        <div class="fx__number"></div>
+                        <div class="fx__number"></div>
+                        <div class="fx__number"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <section class="card">
             <div class="card__header">
                 <div class="brand">
@@ -25,13 +46,6 @@
                 <p class="subtitle">Увійди, щоб продовжити</p>
             </div>
 
-            @* Загальна помилка (якщо ти кладеш її в ViewBag.Error) *@
-            @if (ViewBag.Error is not null)
-            {
-                <div class="alert alert--validation">@ViewBag.Error</div>
-            }
-
-            @* Показуємо summary тільки коли є помилки не прив’язані до конкретного поля *@
             @if (!ViewData.ModelState.IsValid)
             {
                 <div class="alert alert--validation">
@@ -44,16 +58,24 @@
                 @Html.AntiForgeryToken()
 
                 <div class="field @(ViewData.ModelState.ContainsKey(nameof(Model.Email))
-                                     && ViewData.ModelState[nameof(Model.Email)]!.Errors.Count > 0 ? "field--invalid" : "")">
+                                                                               && ViewData.ModelState[nameof(Model.Email)]!.Errors.Count > 0 ? "field--invalid" : "")">
                     <label class="label" asp-for="Email">Email</label>
-                    <input class="input" asp-for="Email" type="email" autocomplete="email" placeholder="name@example.com" />
+                    <input class="input"
+                           asp-for="Email"
+                           type="email"
+                           autocomplete="email"
+                           placeholder="name@example.com" />
                     <span class="validation" asp-validation-for="Email"></span>
                 </div>
 
                 <div class="field @(ViewData.ModelState.ContainsKey(nameof(Model.Password))
-                                     && ViewData.ModelState[nameof(Model.Password)]!.Errors.Count > 0 ? "field--invalid" : "")">
+                                                                               && ViewData.ModelState[nameof(Model.Password)]!.Errors.Count > 0 ? "field--invalid" : "")">
                     <label class="label" asp-for="Password">Пароль</label>
-                    <input class="input" asp-for="Password" type="password" autocomplete="current-password" placeholder="••••••••" />
+                    <input class="input"
+                           asp-for="Password"
+                           type="password"
+                           autocomplete="current-password"
+                           placeholder="••••••••" />
                     <span class="validation" asp-validation-for="Password"></span>
                 </div>
 
@@ -76,10 +98,6 @@
         <div class="bg-glow"></div>
     </main>
 
-    @* Якщо хочеш клієнтську валідацію – залиш.
-   Якщо не хочеш jQuery – видали цей блок. *@
-    @section Scripts {
-        <partial name="_ValidationScriptsPartial" />
-    }
+    <partial name="_ValidationScriptsPartial" />
 </body>
 </html>

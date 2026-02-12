@@ -21,6 +21,7 @@ public class AccountController : Controller
     public IActionResult Register() => View(new RegisterVm());
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(RegisterVm vm)
     {
         if (!ModelState.IsValid) return View(vm);
@@ -38,32 +39,49 @@ public class AccountController : Controller
         {
             foreach (var e in result.Errors)
                 ModelState.AddModelError("", e.Description);
+
             return View(vm);
         }
 
-        // ✅ роль за замовчуванням Student
         await _users.AddToRoleAsync(user, RoleNames.Student);
 
         await _signIn.SignInAsync(user, isPersistent: false);
-        return RedirectToAction("Index", "Home"); // Home зробить редірект по ролі
+        return RedirectToAction("Index", "Home");
     }
 
     [HttpGet]
-    public IActionResult Login() => View(new LoginVm());
+    public IActionResult Login(string? returnUrl = null)
+    {
+        ViewBag.ReturnUrl = returnUrl;
+        return View(new LoginVm());
+    }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginVm vm, string? returnUrl = null)
     {
         if (!ModelState.IsValid) return View(vm);
 
-        var result = await _signIn.PasswordSignInAsync(vm.Email, vm.Password, vm.RememberMe, lockoutOnFailure: false);
+        var user = await _users.FindByEmailAsync(vm.Email);
+        if (user is null)
+        {
+            ModelState.AddModelError("", "Невірна пошта або пароль");
+            return View(vm);
+        }
+
+        var result = await _signIn.PasswordSignInAsync(
+            user,
+            vm.Password,
+            vm.RememberMe,
+            lockoutOnFailure: false
+        );
+
         if (!result.Succeeded)
         {
             ModelState.AddModelError("", "Невірна пошта або пароль");
             return View(vm);
         }
 
-        // якщо є returnUrl — повертаємо
         if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl);
 
@@ -71,6 +89,7 @@ public class AccountController : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
         await _signIn.SignOutAsync();

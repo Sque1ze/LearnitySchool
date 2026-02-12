@@ -21,9 +21,65 @@ html, body {
 
 body {
     margin: 0;
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
     color: var(--text);
-    background: radial-gradient(900px 600px at 20% 10%, rgba(56,189,248,0.20), transparent 60%), radial-gradient(900px 600px at 80% 30%, rgba(34,197,94,0.16), transparent 60%), var(--bg);
+    background-color: #000;
+    background-image: radial-gradient(#0000, #0a123a), linear-gradient(180deg, #2000587d, #000, #9c27b02b), linear-gradient(0deg, #ff980054, #000, #009688ba);
+    background-size: 100vw 100vh;
+    box-shadow: 0 0 180vmin 12vmin #000 inset;
+}
+
+
+    body::before,
+    body::after {
+        content: "";
+        position: fixed;
+        inset: -50vh -50vw;
+        border-radius: 999px;
+        pointer-events: none;
+        z-index: 0;
+        opacity: 0;
+        background-image: repeating-conic-gradient(#fff8 0%, transparent 0.0002%, transparent 0.075%, transparent 0.65%), repeating-conic-gradient(#fff 0%, transparent 0.0004%, transparent 0.05%, transparent 0.495%);
+        background-size: 100% 100%;
+        transform: translateZ(-40vmin);
+        animation: starsPulse 4s ease-out infinite reverse;
+    }
+
+    body::after {
+        animation-name: starsPulse2;
+        animation-delay: 2s;
+    }
+
+@keyframes starsPulse {
+    0% {
+        transform: translateZ(-40vmin);
+        opacity: 0;
+    }
+
+    30%, 70% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateZ(40vmin);
+        opacity: 0;
+    }
+}
+
+@keyframes starsPulse2 {
+    0% {
+        transform: translateZ(-40vmin) rotate(180deg);
+        opacity: 0;
+    }
+
+    30%, 70% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateZ(40vmin) rotate(180deg);
+        opacity: 0;
+    }
 }
 
 .auth {
@@ -34,6 +90,7 @@ body {
     padding: 28px 16px;
     position: relative;
     overflow: hidden;
+    z-index: 1;
 }
 
 .bg-glow {
@@ -43,6 +100,7 @@ body {
     filter: blur(18px);
     pointer-events: none;
 }
+
 
 .card {
     width: 100%;
@@ -67,6 +125,7 @@ body {
     align-items: center;
     gap: 10px;
     margin-bottom: 10px;
+    justify-content: center;
 }
 
 .brand__dot {
@@ -78,15 +137,16 @@ body {
 }
 
 .brand__text {
-    font-weight: 700;
-    letter-spacing: 0.2px;
-    color: rgba(229,231,235,0.92);
+    font-weight: 900;
+    letter-spacing: 0.8px;
+    font-size: 26px;
+    color: rgba(229,231,235,0.98);
+    text-shadow: 0 0 18px rgba(56,189,248,0.35); 
 }
 
 .title {
     margin: 0;
     font-size: 26px;
-    letter-spacing: 0.2px;
 }
 
 .subtitle {
@@ -112,13 +172,13 @@ body {
 
 .input {
     width: 100%;
-    padding: 12px 12px;
+    padding: 12px;
     border-radius: 12px;
     border: 1px solid rgba(148,163,184,0.22);
     background: rgba(2, 6, 23, 0.55);
     color: var(--text);
     outline: none;
-    transition: border-color .15s ease, box-shadow .15s ease, transform .05s ease;
+    transition: border-color .15s ease, box-shadow .15s ease;
 }
 
     .input::placeholder {
@@ -143,8 +203,7 @@ body {
     border: 0;
     cursor: pointer;
     font-weight: 700;
-    letter-spacing: 0.2px;
-    transition: transform .05s ease, filter .15s ease, box-shadow .15s ease;
+    transition: transform .05s ease, filter .15s ease;
 }
 
     .btn:active {
@@ -154,11 +213,10 @@ body {
 .btn--primary {
     background: linear-gradient(135deg, rgba(56,189,248,0.95), rgba(34,197,94,0.90));
     color: #031018;
-    box-shadow: 0 14px 34px rgba(56,189,248,0.14);
 }
 
     .btn--primary:hover {
-        filter: brightness(1.03);
+        filter: brightness(1.05);
     }
 
 .footer {
@@ -183,61 +241,16 @@ body {
         text-decoration: underline;
     }
 
-.alert {
-    padding: 10px 12px;
-    border-radius: 12px;
-    font-size: 13px;
-    margin: 12px 0;
-    border: 1px solid rgba(148,163,184,0.20);
-    background: rgba(2, 6, 23, 0.55);
-}
-
-.alert--error {
-    border-color: rgba(251,113,133,0.35);
-    background: rgba(251,113,133,0.10);
-    color: rgba(254,226,226,0.95);
-}
-
-@media (max-width: 420px) {
-    .grid {
-        grid-template-columns: 1fr;
-    }
-
-    .card {
-        padding: 18px;
-    }
-}
-
-/* ---------- Validation styles ---------- */
 
 .validation {
-    display: none; /* за замовчуванням приховано */
+    display: none;
     margin-top: 8px;
     color: rgba(254,226,226,0.92);
     font-size: 12.5px;
-    line-height: 1.35;
-    gap: 8px;
-    align-items: flex-start;
 }
 
 .field--invalid .validation {
-    display: flex; /* показуємо тільки якщо поле invalid */
-}
-
-.validation::before {
-    content: "!";
-    width: 18px;
-    height: 18px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 12px;
-    background: rgba(251,113,133,0.18);
-    border: 1px solid rgba(251,113,133,0.40);
-    color: rgba(254,226,226,0.95);
-    flex: 0 0 auto;
+    display: block;
 }
 
 .field--invalid .input {
@@ -248,10 +261,23 @@ body {
 .field--invalid .label {
     color: rgba(254,226,226,0.92);
 }
+
 .alert--validation {
-    border-color: rgba(251,113,133,0.60);
+    border: 1px solid rgba(251,113,133,0.60);
     background: rgba(251,113,133,0.16);
     color: rgba(254,226,226,0.98);
-    box-shadow: 0 0 0 4px rgba(251,113,133,0.10);
+    padding: 10px 12px;
+    border-radius: 12px;
+    margin-bottom: 12px;
 }
 
+
+@media (max-width: 420px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .card {
+        padding: 18px;
+    }
+}

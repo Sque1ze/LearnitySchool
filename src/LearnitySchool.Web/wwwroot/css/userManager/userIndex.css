@@ -1,8 +1,4 @@
-﻿/* =========================
-   Manager Users — Dark-first
-   ========================= */
-
-:root {
+﻿:root {
     --bg: #020617;
     --surface: #020617;
     --card: #020617;
@@ -13,12 +9,10 @@
     --border: #1F2933;
 }
 
-/* Page */
 .users-page {
     color: var(--text);
 }
 
-/* Header */
 .users-header {
     display: flex;
     align-items: center;
@@ -31,7 +25,6 @@
     font-weight: 600;
 }
 
-/* Card */
 .card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -40,7 +33,6 @@
     margin-bottom: 16px;
 }
 
-/* Buttons */
 .btn {
     background: transparent;
     border: 1px solid var(--border);
@@ -65,7 +57,6 @@
     color: var(--muted);
 }
 
-/* Filters */
 .users-filters {
     display: flex;
     gap: 10px;
@@ -87,7 +78,6 @@
         color: var(--muted);
     }
 
-/* Table */
 .users-table {
     width: 100%;
     border-collapse: collapse;
@@ -111,7 +101,6 @@
         background: rgba(56, 189, 248, 0.05);
     }
 
-/* Roles */
 .role-badge {
     padding: 4px 10px;
     border-radius: 999px;
@@ -135,7 +124,6 @@
         border-color: var(--secondary);
     }
 
-/* Actions */
 .actions a {
     color: var(--primary);
     text-decoration: none;
@@ -151,7 +139,6 @@
     margin: 0 4px;
 }
 
-/* Empty state */
 .empty {
     padding: 20px;
     text-align: center;
