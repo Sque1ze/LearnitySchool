@@ -7,52 +7,65 @@
     var questionText = (string)ViewBag.QuestionText;
 }
 
-<div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-    <div>
-        <h2 style="margin:0;">Options</h2>
-        <div style="opacity:.75; margin-top:4px;">@questionText</div>
+<link rel="stylesheet" href="~/css/userManager/quiz.css" asp-append-version="true" />
+
+<div class="users-page">
+
+    <div class="users-header">
+        <div>
+            <h2 class="users-title">Options</h2>
+            <div class="sub">@questionText</div>
+        </div>
+
+        <div class="header-actions">
+            <a asp-action="Quiz" asp-route-taskId="@taskId" class="btn btn-muted">← Back</a>
+            <a asp-action="CreateOption" asp-route-questionId="@questionId" class="btn btn-primary">+ Add option</a>
+        </div>
     </div>
 
-    <div style="display:flex; gap:10px;">
-        <a asp-action="Quiz" asp-route-taskId="@taskId" class="dropdown-btn">← Back</a>
-        <a asp-action="CreateOption" asp-route-questionId="@questionId" class="dropdown-btn">+ Add option</a>
-    </div>
-</div>
-
-<div style="margin-top:16px; overflow:auto;">
-    <table style="width:100%; border-collapse:collapse;">
-        <thead>
-            <tr>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">#</th>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Text</th>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Correct</th>
-                <th style="padding:10px; border-bottom:1px solid #1F2933;"></th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @if (Model == null || Model.Count == 0)
-            {
+    <div class="card" style="max-width:none;">
+        <table class="table">
+            <thead>
                 <tr>
-                    <td colspan="4" style="padding:14px; opacity:.75;">Опцій ще немає</td>
+                    <th style="width:90px;">#</th>
+                    <th>Text</th>
+                    <th style="width:140px;">Correct</th>
+                    <th style="width:220px;"></th>
                 </tr>
-            }
-            else
-            {
-                foreach (var o in Model)
+            </thead>
+
+            <tbody>
+                @if (Model == null || Model.Count == 0)
                 {
-                    <tr>
-                        <td style="padding:10px; border-bottom:1px solid #1F2933;">@o.Order</td>
-                        <td style="padding:10px; border-bottom:1px solid #1F2933;">@o.Text</td>
-                        <td style="padding:10px; border-bottom:1px solid #1F2933;">@(o.IsCorrect ? "✅" : "—")</td>
-                        <td style="padding:10px; border-bottom:1px solid #1F2933; white-space:nowrap;">
-                            <a asp-action="EditOption" asp-route-id="@o.Id">Edit</a>
-                            <span style="opacity:.5;"> | </span>
-                            <a asp-action="DeleteOption" asp-route-id="@o.Id">Delete</a>
-                        </td>
-                    </tr>
+                    <tr><td colspan="4" class="empty">Опцій ще немає</td></tr>
                 }
-            }
-        </tbody>
-    </table>
+                else
+                {
+                    foreach (var o in Model)
+                    {
+                        <tr>
+                            <td class="cell-muted">@o.Order</td>
+                            <td>@o.Text</td>
+                            <td>
+                                @if (o.IsCorrect)
+                                {
+                                    <span class="pill pill-success">✅ Correct</span>
+                                }
+                                else
+                                {
+                                    <span class="pill pill-muted">—</span>
+                                }
+                            </td>
+                            <td class="actions">
+                                <a asp-action="EditOption" asp-route-id="@o.Id">Edit</a>
+                                <span>·</span>
+                                <a asp-action="DeleteOption" asp-route-id="@o.Id">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
 </div>

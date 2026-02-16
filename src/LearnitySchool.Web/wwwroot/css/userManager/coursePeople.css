@@ -1,0 +1,142 @@
+﻿:root {
+    --bg: #020617;
+    --surface: #020617;
+    --card: #020617;
+    --primary: #38BDF8;
+    --secondary: #22C55E;
+    --text: #E5E7EB;
+    --muted: #9CA3AF;
+    --border: #1F2933;
+}
+
+.users-page {
+    color: var(--text);
+}
+
+.users-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.users-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.muted {
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.sub {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+    max-width: 860px;
+}
+
+.btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+    .btn:hover {
+        border-color: var(--primary);
+    }
+
+.btn-primary {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-muted {
+    color: var(--muted);
+}
+
+.form-grid {
+    display: grid;
+    gap: 14px;
+}
+
+.field {
+    display: grid;
+    gap: 8px;
+}
+
+.label {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 10px;
+    width: 100%;
+    outline: none;
+}
+
+    .select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12);
+    }
+
+.select-multi {
+    height: auto;
+    padding: 8px;
+}
+
+    .select-multi option {
+        padding: 8px 10px;
+        border-radius: 8px;
+    }
+
+        .select-multi option:checked {
+            background: rgba(56, 189, 248, 0.18);
+        }
+
+.hint {
+    color: var(--muted);
+    font-size: 13px;
+    opacity: .95;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.validation {
+    color: rgba(248,113,113,.95);
+    font-size: 13px;
+}
+
+    .validation ul {
+        margin: 6px 0 0;
+        padding-left: 18px;
+    }

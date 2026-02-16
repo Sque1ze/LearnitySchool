@@ -4,33 +4,64 @@
     ViewData["Title"] = "Edit Task";
 }
 
-<h2 style="margin:0;">Edit Task — @Model.LessonTitle</h2>
+<link rel="stylesheet" href="~/css/userManager/tasks.css" asp-append-version="true" />
 
-<form asp-action="Edit" method="post" style="max-width:860px; display:grid; gap:12px; margin-top:14px;">
-    @Html.AntiForgeryToken()
+<div class="users-page">
 
-    <input type="hidden" name="Id" value="@Model.Id" />
-    <input type="hidden" name="LessonId" value="@Model.LessonId" />
+    <div class="users-header">
+        <div>
+            <h2 class="users-title">Edit Task — <span class="muted">@Model.LessonTitle</span></h2>
+            <div class="sub">Оновіть завдання і збережіть</div>
+        </div>
 
-    <input name="Order" value="@Model.Order" placeholder="Order" class="dropdown-btn" />
-    <input name="Title" value="@Model.Title" placeholder="Title" class="dropdown-btn" />
-
-    <select name="Type" class="dropdown-btn">
-        <option value="@((int)LessonTaskType.Quiz)" selected="@(Model.Type == LessonTaskType.Quiz)">Quiz</option>
-        <option value="@((int)LessonTaskType.Practice)" selected="@(Model.Type == LessonTaskType.Practice)">Practice</option>
-    </select>
-
-    <textarea name="Description" placeholder="Description" class="dropdown-btn" rows="6">@Model.Description</textarea>
-
-    <label style="display:flex; gap:10px; align-items:center;">
-        <input type="checkbox" name="IsPublished" value="true" @(Model.IsPublished ? "checked" : "") />
-        Published
-    </label>
-
-    <div style="display:flex; gap:10px;">
-        <button type="submit" class="dropdown-btn">Save</button>
-        <a asp-action="Index" asp-route-lessonId="@Model.LessonId" class="dropdown-btn">Back</a>
+        <a asp-action="Index" asp-route-lessonId="@Model.LessonId" class="btn btn-muted">← Back</a>
     </div>
 
-    <div asp-validation-summary="All"></div>
-</form>
+    <form asp-action="Edit" method="post" class="card">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" name="Id" value="@Model.Id" />
+        <input type="hidden" name="LessonId" value="@Model.LessonId" />
+
+        <div class="form-grid">
+            <div class="grid-2">
+                <div class="field">
+                    <label class="label">Order</label>
+                    <input name="Order" value="@Model.Order" placeholder="Напр. 1" class="input" />
+                </div>
+
+                <div class="field">
+                    <label class="label">Title</label>
+                    <input name="Title" value="@Model.Title" placeholder="Назва завдання" class="input" />
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label">Type</label>
+                <select name="Type" class="select">
+                    <option value="@((int)LessonTaskType.Quiz)" selected="@(Model.Type == LessonTaskType.Quiz)">Quiz</option>
+                    <option value="@((int)LessonTaskType.Practice)" selected="@(Model.Type == LessonTaskType.Practice)">Practice</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label class="label">Description</label>
+                <textarea name="Description" placeholder="Опис завдання" class="textarea" rows="6">@Model.Description</textarea>
+            </div>
+
+            <label class="check">
+                <input type="checkbox" name="IsPublished" value="true" @(Model.IsPublished ? "checked" : "") />
+                <span class="check__box" aria-hidden="true"></span>
+                <span class="check__text">Published</span>
+            </label>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a asp-action="Index" asp-route-lessonId="@Model.LessonId" class="btn">Back</a>
+            </div>
+
+            <div asp-validation-summary="All" class="validation"></div>
+        </div>
+    </form>
+
+</div>

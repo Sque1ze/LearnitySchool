@@ -1,29 +1,53 @@
 ﻿@model LearnitySchool.Web.ViewModels.Manager.Quiz.QuizOptionEditVm
-
 @{
     ViewData["Title"] = "Edit option";
 }
 
-<h2>Edit option</h2>
+<link rel="stylesheet" href="~/css/userManager/quiz.css" asp-append-version="true" />
 
-<form asp-action="EditOption" method="post" style="max-width:720px; display:grid; gap:12px;">
-    @Html.AntiForgeryToken()
+<div class="users-page">
 
-    <input type="hidden" name="Id" value="@Model.Id" />
-    <input type="hidden" name="QuestionId" value="@Model.QuestionId" />
+    <div class="users-header">
+        <div>
+            <h2 class="users-title">Edit option</h2>
+            <div class="sub">Оновіть варіант відповіді</div>
+        </div>
 
-    <input name="Order" value="@Model.Order" class="dropdown-btn" placeholder="Order (1..)" />
-    <input name="Text" value="@Model.Text" class="dropdown-btn" placeholder="Option text" />
-
-    <label style="display:flex; gap:8px; align-items:center; opacity:.9;">
-        <input type="checkbox" name="IsCorrect" value="true" @(Model.IsCorrect ? "checked" : "") />
-        Correct answer
-    </label>
-
-    <div style="display:flex; gap:10px;">
-        <button type="submit" class="dropdown-btn">Save</button>
-        <a asp-action="Options" asp-route-questionId="@Model.QuestionId" class="dropdown-btn">Back</a>
+        <a asp-action="Options" asp-route-questionId="@Model.QuestionId" class="btn btn-muted">← Back</a>
     </div>
 
-    <div asp-validation-summary="All"></div>
-</form>
+    <form asp-action="EditOption" method="post" class="card">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" name="Id" value="@Model.Id" />
+        <input type="hidden" name="QuestionId" value="@Model.QuestionId" />
+
+        <div class="form-grid">
+            <div class="grid-2">
+                <div class="field">
+                    <label class="label">Order</label>
+                    <input name="Order" value="@Model.Order" class="input" placeholder="1.." />
+                </div>
+
+                <div class="field">
+                    <label class="label">Option text</label>
+                    <input name="Text" value="@Model.Text" class="input" placeholder="Option text" />
+                </div>
+            </div>
+
+            <label class="check">
+                <input type="checkbox" name="IsCorrect" value="true" @(Model.IsCorrect ? "checked" : "") />
+                <span class="check__box" aria-hidden="true"></span>
+                <span class="check__text">Correct answer</span>
+            </label>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a asp-action="Options" asp-route-questionId="@Model.QuestionId" class="btn">Back</a>
+            </div>
+
+            <div asp-validation-summary="All" class="validation"></div>
+        </div>
+    </form>
+
+</div>

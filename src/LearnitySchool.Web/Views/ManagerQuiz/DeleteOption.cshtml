@@ -1,19 +1,34 @@
 ﻿@model LearnitySchool.Web.ViewModels.Manager.Quiz.QuizOptionEditVm
-
 @{
     ViewData["Title"] = "Delete option";
 }
 
-<h2>Delete option</h2>
+<link rel="stylesheet" href="~/css/userManager/quiz.css" asp-append-version="true" />
 
-<div style="border:1px solid #1F2933; border-radius:12px; padding:14px; max-width:720px;">
-    <div style="opacity:.8;">Are you sure?</div>
-    <div style="margin-top:8px;"><strong>@Model.Order.</strong> @Model.Text</div>
+<div class="users-page">
 
-    <form asp-action="DeleteOptionConfirmed" method="post" style="margin-top:14px; display:flex; gap:10px;">
-        @Html.AntiForgeryToken()
-        <input type="hidden" name="id" value="@Model.Id" />
-        <button type="submit" class="dropdown-btn">Delete</button>
-        <a asp-action="Options" asp-route-questionId="@Model.QuestionId" class="dropdown-btn">Cancel</a>
-    </form>
+    <div class="users-header">
+        <div>
+            <h2 class="users-title">Delete option</h2>
+            <div class="sub">Підтвердження видалення</div>
+        </div>
+
+        <a asp-action="Options" asp-route-questionId="@Model.QuestionId" class="btn btn-muted">← Back</a>
+    </div>
+
+    <div class="card">
+        <div class="cell-muted">Are you sure?</div>
+        <div style="margin-top:8px;"><strong>@Model.Order.</strong> @Model.Text</div>
+
+        <div class="danger-box">⚠️ Опція буде видалена.</div>
+
+        <form asp-action="DeleteOptionConfirmed" method="post" class="form-actions" style="margin-top:14px;">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+
+            <button type="submit" class="btn btn-danger">Delete</button>
+            <a asp-action="Options" asp-route-questionId="@Model.QuestionId" class="btn">Cancel</a>
+        </form>
+    </div>
+
 </div>

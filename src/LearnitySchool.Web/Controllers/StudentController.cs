@@ -1,4 +1,4 @@
-using LearnitySchool.Application.Common;          // RoleNames (важливо: тільки одне!)
+using LearnitySchool.Application.Common;          
 using LearnitySchool.Domain.Entities;
 using LearnitySchool.Domain.Enums;
 using LearnitySchool.Infrastructure.Identity;
@@ -22,10 +22,6 @@ public class StudentController : Controller
         _db = db;
         _userManager = userManager;
     }
-
-    // =========================
-    // MY COURSES + PROGRESS
-    // =========================
     public async Task<IActionResult> Index()
     {
         var userId = _userManager.GetUserId(User);
@@ -69,19 +65,13 @@ public class StudentController : Controller
         return View(courses);
     }
 
-    // =========================
-    // LESSONS OF COURSE + PROGRESS
-    // =========================
     public async Task<IActionResult> Lessons(Guid courseId)
     {
         var userId = _userManager.GetUserId(User);
 
-        // (опц.) перевірка що студент у курсі
         var allowed = await _db.CourseStudents.AnyAsync(x => x.CourseId == courseId && x.StudentUserId == userId);
         if (!allowed) return Forbid();
 
-        // ✅ дістаємо open/closed для уроків цього курсу з LessonAccesses
-        // якщо запису нема -> урок вважаємо закритим
         var gates = await _db.LessonAccesses
             .Where(g => g.CourseId == courseId)
             .Select(g => new { g.LessonId, g.IsOpen })
@@ -106,7 +96,6 @@ public class StudentController : Controller
 
                 ProgressPercent = 0,
 
-                // ✅ заповнимо після ToList
                 IsOpen = false
             })
             .ToListAsync();
@@ -117,7 +106,6 @@ public class StudentController : Controller
                 ? 0
                 : (int)Math.Round((double)l.CompletedTasks * 100 / l.TasksCount);
 
-            // ✅ open/closed
             l.IsOpen = gates.TryGetValue(l.LessonId, out var open) && open;
         }
 
@@ -125,9 +113,6 @@ public class StudentController : Controller
         return View(lessons);
     }
 
-    // =========================
-    // TASKS OF LESSON
-    // =========================
     public async Task<IActionResult> Tasks(Guid lessonId)
     {
         var userId = _userManager.GetUserId(User);
@@ -139,14 +124,12 @@ public class StudentController : Controller
 
         if (courseId == Guid.Empty) return NotFound();
 
-        // (опц.) перевірка що студент у курсі
         var allowed = await _db.CourseStudents.AnyAsync(x =>
             x.CourseId == courseId &&
             x.StudentUserId == userId);
 
         if (!allowed) return Forbid();
 
-        // ✅ gate через LessonAccesses (якщо запису нема -> false)
         var isOpen = await _db.LessonAccesses
             .Where(x => x.CourseId == courseId && x.LessonId == lessonId)
             .Select(x => x.IsOpen)
@@ -181,9 +164,6 @@ public class StudentController : Controller
         return View(tasks);
     }
 
-    // =========================
-    // COMPLETE TASK (POST) - manual mark (може лишитись)
-    // =========================
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CompleteTask(Guid taskId, Guid lessonId)
@@ -231,9 +211,6 @@ public class StudentController : Controller
         return RedirectToAction(nameof(Tasks), new { lessonId });
     }
 
-    // =========================
-    // TaskDetails -> redirect Quiz/Practice
-    // =========================
     public async Task<IActionResult> TaskDetails(Guid taskId)
     {
         var userId = _userManager.GetUserId(User);
@@ -267,9 +244,6 @@ public class StudentController : Controller
         return BadRequest("Unknown task type.");
     }
 
-    // =========================
-    // QUIZ
-    // =========================
     public async Task<IActionResult> Quiz(Guid taskId)
     {
         var userId = _userManager.GetUserId(User);
@@ -412,9 +386,6 @@ public class StudentController : Controller
         return RedirectToAction(nameof(Quiz), new { taskId = vm.TaskId });
     }
 
-    // =========================
-    // PRACTICE (✅ FIXED)
-    // =========================
     public async Task<IActionResult> Practice(Guid taskId)
     {
         var userId = _userManager.GetUserId(User);
@@ -443,7 +414,6 @@ public class StudentController : Controller
 
         if (!allowed) return Forbid();
 
-        // ===== Practice task =====
         var practice = await _db.PracticeTasks
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.LessonTaskId == taskId);
@@ -452,22 +422,17 @@ public class StudentController : Controller
         var starterCss = practice?.StarterCss ?? "/* write your CSS here */";
         var starterJs = practice?.StarterJs ?? "// write your JS here";
 
-        // ===== Reference =====
         var referenceHtml = practice?.ReferenceHtml;
         var referenceCss = practice?.ReferenceCss;
         var referenceJs = practice?.ReferenceJs;
 
-        // ===== Threshold =====
         var threshold = practice?.SimilarityThreshold ?? 80;
-
-        // ===== Draft =====
         var draft = await _db.StudentPracticeDrafts
             .AsNoTracking()
             .FirstOrDefaultAsync(d =>
                 d.LessonTaskId == taskId &&
                 d.StudentUserId == userId);
 
-        // ===== ViewModel (ОДИН РАЗ) =====
         var vm = new StudentPracticeVm
         {
             TaskId = taskId,
@@ -477,7 +442,6 @@ public class StudentController : Controller
             Title = taskInfo.Title,
             Description = taskInfo.Description ?? "",
 
-            // якщо є draft — показуємо його, інакше starter
             StarterHtml = draft?.Html ?? starterHtml,
             StarterCss = draft?.Css ?? starterCss,
             StarterJs = draft?.Js ?? starterJs,
@@ -501,7 +465,6 @@ public class StudentController : Controller
     {
         var userId = _userManager.GetUserId(User);
 
-        // task + access
         var taskInfo = await _db.LessonTasks
             .Where(t => t.Id == vm.TaskId && t.IsPublished)
             .Select(t => new { t.Id, t.LessonId, CourseId = t.Lesson.CourseId, t.Type })
@@ -525,7 +488,6 @@ public class StudentController : Controller
             return RedirectToAction(nameof(Practice), new { taskId = vm.TaskId });
         }
 
-        // ✅ серверна перевірка similarity
         int Calc(string refText, string curText)
         {
             string Normalize(string s) =>
@@ -536,7 +498,7 @@ public class StudentController : Controller
                 .Select(m => m.Value)
                 .ToHashSet();
 
-            if (refTokens.Count == 0) return -1; // не враховуємо
+            if (refTokens.Count == 0) return -1; 
 
             var curTokens = System.Text.RegularExpressions.Regex
                 .Matches(Normalize(curText), @"[a-z0-9_\-#\.]+")
@@ -566,7 +528,6 @@ public class StudentController : Controller
             return RedirectToAction(nameof(Practice), new { taskId = vm.TaskId });
         }
 
-        // ✅ mark completed
         var progress = await _db.StudentTaskProgresses
             .FirstOrDefaultAsync(p => p.TaskId == vm.TaskId && p.StudentUserId == userId);
 
@@ -600,7 +561,6 @@ public class StudentController : Controller
     {
         var userId = _userManager.GetUserId(User);
 
-        // доступ + тип задачі
         var taskInfo = await _db.LessonTasks
             .Where(t => t.Id == vm.TaskId && t.IsPublished)
             .Select(t => new { t.Id, t.Type, CourseId = t.Lesson.CourseId })
@@ -638,9 +598,6 @@ public class StudentController : Controller
         return Json(new { ok = true, updatedAt = draft.UpdatedAt });
     }
 
-    // =========================
-    // PROFILE
-    // =========================
     public async Task<IActionResult> Profile()
     {
         var user = await _userManager.GetUserAsync(User);

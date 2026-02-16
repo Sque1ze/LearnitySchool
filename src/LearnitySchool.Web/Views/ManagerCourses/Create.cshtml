@@ -3,24 +3,46 @@
     ViewData["Title"] = "Створити курс";
 }
 
-<h2>Створити курс</h2>
+<link rel="stylesheet" href="~/css/userManager/courseCreate.css" asp-append-version="true" />
 
-<form asp-action="Create" method="post" style="max-width:720px; display:grid; gap:12px; margin-top:14px;">
-    @Html.AntiForgeryToken()
+<div class="users-page">
 
-    <input name="Title" value="@Model.Title" placeholder="Назва курсу" class="dropdown-btn" />
+    <div class="users-header">
+        <div>
+            <h2 class="users-title">Створити курс</h2>
+            <div class="sub">Заповніть основні дані курсу</div>
+        </div>
 
-    <textarea name="Description" placeholder="Опис (опційно)" class="dropdown-btn" rows="5">@Model.Description</textarea>
-
-    <label style="display:flex; gap:10px; align-items:center;">
-        <input type="checkbox" name="IsPublished" value="true" @(Model.IsPublished ? "checked" : "") />
-        Опублікувати курс
-    </label>
-
-    <div style="display:flex; gap:10px;">
-        <button type="submit" class="dropdown-btn">Create</button>
-        <a asp-action="Index" class="dropdown-btn">Cancel</a>
+        <a asp-action="Index" class="btn btn-muted">← Назад</a>
     </div>
 
-    <div asp-validation-summary="All"></div>
-</form>
+    <form asp-action="Create" method="post" class="card course-form">
+        @Html.AntiForgeryToken()
+
+        <div class="form-grid">
+            <div class="field">
+                <label class="label">Назва курсу</label>
+                <input name="Title" value="@Model.Title" placeholder="Напр. C# для початківців" class="input" />
+            </div>
+
+            <div class="field">
+                <label class="label">Опис (опційно)</label>
+                <textarea name="Description" placeholder="Коротко: що буде в курсі" class="textarea" rows="6">@Model.Description</textarea>
+            </div>
+
+            <label class="check">
+                <input type="checkbox" name="IsPublished" value="true" @(Model.IsPublished ? "checked" : "") />
+                <span class="check__box" aria-hidden="true"></span>
+                <span class="check__text">Опублікувати курс</span>
+            </label>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Create</button>
+                <a asp-action="Index" class="btn">Cancel</a>
+            </div>
+
+            <div asp-validation-summary="All" class="validation"></div>
+        </div>
+    </form>
+
+</div>

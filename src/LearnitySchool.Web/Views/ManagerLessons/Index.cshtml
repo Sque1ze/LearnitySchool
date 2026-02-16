@@ -5,68 +5,80 @@
     var courseTitle = (string)ViewBag.CourseTitle;
 }
 
-<div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-    <div>
-        <h2 style="margin:0;">Lessons — @courseTitle</h2>
-        <div style="opacity:.75; margin-top:4px;">Керуйте уроками цього курсу</div>
+<link rel="stylesheet" href="~/css/userManager/lessonsIndex.css" asp-append-version="true" />
+
+<div class="users-page">
+
+    <div class="users-header">
+        <div>
+            <h2 class="users-title">Lessons — <span class="muted">@courseTitle</span></h2>
+            <div class="sub">Керуйте уроками цього курсу</div>
+        </div>
+
+        <div class="header-actions">
+            <a asp-controller="ManagerCourses" asp-action="Index" class="btn btn-muted">← Back</a>
+            <a asp-action="Create" asp-route-courseId="@courseId" class="btn btn-primary">+ Add lesson</a>
+        </div>
     </div>
 
-    <div style="display:flex; gap:10px;">
-        <a asp-controller="ManagerCourses" asp-action="Index" class="dropdown-btn">Back</a>
-        <a asp-action="Create" asp-route-courseId="@courseId" class="dropdown-btn">+ Add lesson</a>
-    </div>
-</div>
-
-<div style="margin-top:16px; overflow:auto;">
-    <table style="width:100%; border-collapse:collapse;">
-        <thead>
-            <tr>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Order</th>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Title</th>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Published</th>
-                <th style="padding:10px; border-bottom:1px solid #1F2933;"></th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @if (Model == null || Model.Count == 0)
-            {
+    <div class="card">
+        <table class="users-table">
+            <thead>
                 <tr>
-                    <td colspan="4" style="padding:14px; opacity:.75;">Немає уроків</td>
+                    <th style="width:90px;">Order</th>
+                    <th>Title</th>
+                    <th style="width:160px;">Published</th>
+                    <th style="width:260px;"></th>
                 </tr>
-            }
-            else
-            {
-                foreach (var l in Model)
+            </thead>
+
+            <tbody>
+                @if (Model == null || Model.Count == 0)
                 {
                     <tr>
-                        <td style="padding:10px; border-bottom:1px solid #1F2933;">@l.Order</td>
-
-                        <td style="padding:10px; border-bottom:1px solid #1F2933; font-weight:600;">
-                            @l.Title
-                        </td>
-
-                        <td style="padding:10px; border-bottom:1px solid #1F2933;">
-                            @(l.IsPublished ? "✅" : "—")
-                        </td>
-
-                        <!-- ✅ Ось тут кнопка TASKS -->
-                        <td style="padding:10px; border-bottom:1px solid #1F2933; white-space:nowrap;">
-                            <a asp-controller="ManagerTasks"
-                               asp-action="Index"
-                               asp-route-lessonId="@l.Id">
-                                Tasks
-                            </a>
-                            <span style="opacity:.5;"> | </span>
-
-                            <a asp-action="Edit" asp-route-id="@l.Id">Edit</a>
-                            <span style="opacity:.5;"> | </span>
-
-                            <a asp-action="Delete" asp-route-id="@l.Id">Delete</a>
-                        </td>
+                        <td colspan="4" class="empty">Немає уроків</td>
                     </tr>
                 }
-            }
-        </tbody>
-    </table>
+                else
+                {
+                    foreach (var l in Model)
+                    {
+                        <tr>
+                            <td class="cell-muted">@l.Order</td>
+
+                            <td>
+                                <div class="lesson-title">@l.Title</div>
+                            </td>
+
+                            <td>
+                                @if (l.IsPublished)
+                                {
+                                    <span class="pill pill-success">✅ Published</span>
+                                }
+                                else
+                                {
+                                    <span class="pill pill-muted">— Draft</span>
+                                }
+                            </td>
+
+                            <td class="actions">
+                                <a asp-controller="ManagerTasks"
+                                       asp-action="Index"
+                                       asp-route-lessonId="@l.Id">
+                                    Tasks
+                                </a>
+                                <span>·</span>
+
+                                <a asp-action="Edit" asp-route-id="@l.Id">Edit</a>
+                                <span>·</span>
+
+                                <a asp-action="Delete" asp-route-id="@l.Id">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
 </div>

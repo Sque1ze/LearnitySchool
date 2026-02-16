@@ -1,7 +1,7 @@
 ﻿@model List<LearnitySchool.Web.ViewModels.Student.StudentLessonVm>
 
 @{
-    ViewData["Title"] = "Lessons";
+    ViewData["Title"] = "Уроки";
     var courseId = (Guid)ViewBag.CourseId;
 }
 
@@ -11,12 +11,11 @@
 
     <div class="lessons-head">
         <div>
-            <div class="kicker">STUDENT</div>
             <h1 class="h1">Уроки</h1>
             <div class="sub">Оберіть урок і дивіться завдання + прогрес</div>
         </div>
 
-        <a asp-action="Index" class="btn btn-ghost">← Back to courses</a>
+        <a asp-action="Index" class="btn btn-ghost">← Назад до курсів</a>
     </div>
 
     @if (TempData["Error"] != null)
@@ -33,10 +32,10 @@
             <thead>
                 <tr>
                     <th style="width:70px;">#</th>
-                    <th>Title</th>
-                    <th style="width:110px;">Tasks</th>
-                    <th style="width:130px;">Done</th>
-                    <th style="width:280px;">Progress</th>
+                    <th>Назва уроку</th>
+                    <th style="width:110px;">Завдання</th>
+                    <th style="width:130px;">Виконано</th>
+                    <th style="width:280px;">Прогрес</th>
                     <th style="width:170px;"></th>
                 </tr>
             </thead>
@@ -95,7 +94,7 @@
                                        asp-action="Tasks"
                                        asp-route-lessonId="@l.LessonId"
                                        class="btn btn-primary">
-                                        Open tasks
+                                        Відкрити завдання
                                     </a>
                                 }
                                 else

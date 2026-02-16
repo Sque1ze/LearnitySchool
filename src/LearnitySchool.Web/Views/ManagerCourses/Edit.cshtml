@@ -3,26 +3,50 @@
     ViewData["Title"] = "Редагувати курс";
 }
 
-<h2>Редагувати курс</h2>
+<link rel="stylesheet" href="~/css/userManager/courseEdit.css" asp-append-version="true" />
 
-<form asp-action="Edit" method="post" style="max-width:720px; display:grid; gap:12px; margin-top:14px;">
-    @Html.AntiForgeryToken()
-    <input type="hidden" name="Id" value="@Model.Id" />
+<div class="users-page">
 
-    <input name="Title" value="@Model.Title" placeholder="Назва курсу" class="dropdown-btn" />
+    <div class="users-header">
+        <div>
+            <h2 class="users-title">Редагувати курс</h2>
+            <div class="sub">Оновіть дані та збережіть зміни</div>
+        </div>
 
-    <textarea name="Description" placeholder="Опис (опційно)" class="dropdown-btn" rows="5">@Model.Description</textarea>
-
-    <label style="display:flex; gap:10px; align-items:center;">
-        <input type="checkbox" name="IsPublished" value="true" @(Model.IsPublished ? "checked" : "") />
-        Опублікований
-    </label>
-
-    <div style="display:flex; gap:10px;">
-        <button type="submit" class="dropdown-btn">Save</button>
-        <a asp-action="Index" class="dropdown-btn">Back</a>
-        <a asp-action="People" asp-route-id="@Model.Id" class="dropdown-btn">People</a>
+        <a asp-action="Index" class="btn btn-muted">← Назад</a>
     </div>
 
-    <div asp-validation-summary="All"></div>
-</form>
+    <form asp-action="Edit" method="post" class="card course-form">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" name="Id" value="@Model.Id" />
+
+        <div class="form-grid">
+
+            <div class="field">
+                <label class="label">Назва курсу</label>
+                <input name="Title" value="@Model.Title" placeholder="Назва курсу" class="input" />
+            </div>
+
+            <div class="field">
+                <label class="label">Опис (опційно)</label>
+                <textarea name="Description" placeholder="Опис (опційно)" class="textarea" rows="6">@Model.Description</textarea>
+            </div>
+
+            <label class="check">
+                <input type="checkbox" name="IsPublished" value="true" @(Model.IsPublished ? "checked" : "") />
+                <span class="check__box" aria-hidden="true"></span>
+                <span class="check__text">Опублікований</span>
+            </label>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a asp-action="Index" class="btn">Back</a>
+                <a asp-action="People" asp-route-id="@Model.Id" class="btn">People</a>
+            </div>
+
+            <div asp-validation-summary="All" class="validation"></div>
+        </div>
+    </form>
+
+</div>

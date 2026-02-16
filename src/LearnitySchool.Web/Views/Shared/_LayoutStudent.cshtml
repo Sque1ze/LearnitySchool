@@ -42,7 +42,6 @@
 
     <div class="layout">
 
-        <!-- ===== SIDEBAR ===== -->
         <aside class="sidebar">
             <a asp-controller="Home" asp-action="Index" class="logo">
                 <span class="logo-icon">L</span>
@@ -50,28 +49,26 @@
             </a>
 
             <nav class="menu">
-                <a asp-controller="Student" asp-action="Index" class="menu-item">
-                    Dashboard
-                </a>
-
-                <a asp-controller="Groups" asp-action="Index" class="menu-item">
-                    Groups
-                </a>
-
-                <a asp-controller="Teacher" asp-action="Index" class="menu-item">
-                    Teachers
-                </a>
-
                 <a asp-controller="Home" asp-action="Index" class="menu-item">
-                    Home
+                    Домашня сторінка
+                </a>
+
+                <a asp-controller="Student" asp-action="Index" class="menu-item">
+                    Мої Групи
+                </a>
+
+                <a asp-controller="Wallet" asp-action="Index" class="menu-item">
+                    Гаманець
+                </a>
+
+                <a asp-controller="Contact" asp-action="Index" class="menu-item">
+                    Контакти
                 </a>
             </nav>
         </aside>
 
-        <!-- ===== CONTENT ===== -->
         <div class="content">
 
-            <!-- ===== TOP HEADER ===== -->
             <header class="top-header">
 
                 <div class="header-left">
@@ -80,7 +77,6 @@
 
                 <div class="header-right">
 
-                    <!-- Language dropdown -->
                     <div class="dropdown" id="langDropdown">
                         <button type="button"
                                 class="dropdown-btn"
@@ -94,7 +90,6 @@
                         </div>
                     </div>
 
-                    <!-- User dropdown -->
                     <div class="dropdown" id="userDropdown">
                         <button type="button"
                                 class="dropdown-btn avatar-btn"
@@ -143,7 +138,6 @@
                 </div>
             </header>
 
-            <!-- ===== PAGE CONTENT ===== -->
             <main class="main-content">
                 @RenderBody()
             </main>

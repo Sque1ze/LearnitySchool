@@ -1,47 +1,61 @@
 ﻿@model LearnitySchool.Web.ViewModels.Manager.Courses.CoursePeopleVm
 @{
-    ViewData["Title"] = "People";
+    ViewData["Title"] = "Люди";
 }
 
-<h2 style="margin:0;">People — @Model.CourseTitle</h2>
-<div style="opacity:.75; margin:6px 0 16px 0;">Признач викладача та додай учнів на курс</div>
+<link rel="stylesheet" href="~/css/userManager/coursePeople.css" asp-append-version="true" />
 
-<form asp-action="People" method="post" style="max-width:860px; display:grid; gap:14px;">
-    @Html.AntiForgeryToken()
-    <input type="hidden" name="CourseId" value="@Model.CourseId" />
+<div class="users-page">
 
-    <div style="display:grid; gap:8px;">
-        <div style="font-weight:600;">Teacher</div>
-        <select name="TeacherUserId" class="dropdown-btn">
-            <option value="">— Без викладача —</option>
-            @foreach (var t in Model.Teachers)
-            {
-                <option value="@t.Value" selected="@(Model.TeacherUserId == t.Value)">@t.Text</option>
-            }
-        </select>
-    </div>
-
-    <div style="display:grid; gap:8px;">
-        <div style="font-weight:600;">Students</div>
-
-        <!-- simple multi-select -->
-        <select name="SelectedStudentIds" multiple size="12" class="dropdown-btn" style="height:auto;">
-            @foreach (var s in Model.Students)
-            {
-                var selected = Model.SelectedStudentIds.Contains(s.Value ?? "");
-                <option value="@s.Value" selected="@(selected ? "selected" : null)">@s.Text</option>
-            }
-        </select>
-
-        <div style="opacity:.7; font-size:13px;">
-            Порада: щоб вибрати декількох — тримай Ctrl (Windows) / Cmd (Mac)
+    <div class="users-header">
+        <div>
+            <h2 class="users-title">People — <span class="muted">@Model.CourseTitle</span></h2>
+            <div class="sub">Признач викладача та додай учнів на курс</div>
         </div>
+
+        <a asp-action="Index" class="btn btn-muted">← Back</a>
     </div>
 
-    <div style="display:flex; gap:10px;">
-        <button type="submit" class="dropdown-btn">Save</button>
-        <a asp-action="Index" class="dropdown-btn">Back</a>
-    </div>
+    <form asp-action="People" method="post" class="card people-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="CourseId" value="@Model.CourseId" />
 
-    <div asp-validation-summary="All"></div>
-</form>
+        <div class="form-grid">
+
+            <div class="field">
+                <label class="label">Teacher</label>
+                <select name="TeacherUserId" class="select">
+                    <option value="">— Без викладача —</option>
+                    @foreach (var t in Model.Teachers)
+                    {
+                        <option value="@t.Value" selected="@(Model.TeacherUserId == t.Value)">@t.Text</option>
+                    }
+                </select>
+            </div>
+
+            <div class="field">
+                <label class="label">Students</label>
+
+                <select name="SelectedStudentIds" multiple size="12" class="select select-multi">
+                    @foreach (var s in Model.Students)
+                    {
+                        var selected = Model.SelectedStudentIds.Contains(s.Value ?? "");
+                        <option value="@s.Value" selected="@(selected ? "selected" : null)">@s.Text</option>
+                    }
+                </select>
+
+                <div class="hint">
+                    Порада: щоб вибрати декількох — тримай <b>Ctrl</b> (Windows) / <b>Cmd</b> (Mac)
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a asp-action="Index" class="btn">Back</a>
+            </div>
+
+            <div asp-validation-summary="All" class="validation"></div>
+        </div>
+    </form>
+
+</div>

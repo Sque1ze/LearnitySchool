@@ -1,0 +1,294 @@
+﻿:root {
+    --bg: #020617;
+    --surface: #020617;
+    --card: #020617;
+    --primary: #38BDF8;
+    --secondary: #22C55E;
+    --text: #E5E7EB;
+    --muted: #9CA3AF;
+    --border: #1F2933;
+    --danger: #ef4444;
+}
+
+.users-page {
+    color: var(--text);
+}
+
+.users-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.users-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.muted {
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.sub {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+    max-width: 860px;
+}
+
+.btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+    .btn:hover {
+        border-color: var(--primary);
+    }
+
+.btn-primary {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-muted {
+    color: var(--muted);
+}
+
+.btn-danger {
+    border-color: rgba(239,68,68,.75);
+    color: rgba(239,68,68,.95);
+}
+
+    .btn-danger:hover {
+        border-color: rgba(239,68,68,.95);
+        background: rgba(239,68,68,.06);
+    }
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 820px;
+}
+
+    .table th {
+        text-align: left;
+        padding: 10px;
+        color: var(--muted);
+        border-bottom: 1px solid var(--border);
+        font-weight: 500;
+    }
+
+    .table td {
+        padding: 10px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+    }
+
+    .table tr:hover td {
+        background: rgba(56,189,248,.05);
+    }
+
+.empty {
+    padding: 20px;
+    text-align: center;
+    color: var(--muted);
+}
+
+.actions {
+    white-space: nowrap;
+}
+
+    .actions a {
+        color: var(--primary);
+        text-decoration: none;
+        font-size: 13px;
+    }
+
+        .actions a:hover {
+            text-decoration: underline;
+        }
+
+    .actions span {
+        color: var(--muted);
+        margin: 0 4px;
+    }
+
+.cell-muted {
+    color: var(--muted);
+}
+
+.strong {
+    font-weight: 600;
+}
+
+.pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+}
+
+.pill-success {
+    color: var(--secondary);
+    border-color: var(--secondary);
+}
+
+.pill-muted {
+    color: var(--muted);
+}
+
+.pill-primary {
+    color: var(--primary);
+    border-color: rgba(56,189,248,.55);
+}
+
+.form-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 12px;
+}
+
+@media (max-width: 720px) {
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.field {
+    display: grid;
+    gap: 6px;
+}
+
+.label {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.input, .textarea, .select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 10px;
+    width: 100%;
+    outline: none;
+}
+
+    .input::placeholder, .textarea::placeholder {
+        color: var(--muted);
+    }
+
+    .input:focus, .textarea:focus, .select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(56,189,248,.12);
+    }
+
+.textarea-lg {
+    min-height: 140px;
+}
+
+.check {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    margin-top: 4px;
+}
+
+    .check input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+.check__box {
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+    box-shadow: inset 0 0 0 3px rgba(2,6,23,.9);
+    position: relative;
+}
+
+.check__text {
+    font-size: 14px;
+    color: rgba(229,231,235,.92);
+}
+
+.check:has(input:checked) .check__box {
+    border-color: rgba(56,189,248,.8);
+}
+
+    .check:has(input:checked) .check__box::after {
+        content: "";
+        position: absolute;
+        inset: 3px;
+        border-radius: 4px;
+        background: var(--primary);
+        box-shadow: 0 0 14px rgba(56,189,248,.25);
+    }
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.validation {
+    color: rgba(248,113,113,.95);
+    font-size: 13px;
+}
+
+    .validation ul {
+        margin: 6px 0 0;
+        padding-left: 18px;
+    }
+
+.danger-box {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(239,68,68,.35);
+    background: rgba(239,68,68,.06);
+    color: rgba(229,231,235,.95);
+    line-height: 1.4;
+}

@@ -3,29 +3,62 @@
     ViewData["Title"] = "Create Lesson";
 }
 
-<h2 style="margin:0;">Create Lesson — @Model.CourseTitle</h2>
+<link rel="stylesheet" href="~/css/userManager/lessonCreate.css" asp-append-version="true" />
 
-<form asp-action="Create" method="post" style="max-width:860px; display:grid; gap:12px; margin-top:14px;">
-    @Html.AntiForgeryToken()
+<div class="users-page">
 
-    <input type="hidden" name="CourseId" value="@Model.CourseId" />
+    <div class="users-header">
+        <div>
+            <h2 class="users-title">Create Lesson — <span class="muted">@Model.CourseTitle</span></h2>
+            <div class="sub">Створіть урок і додайте контент</div>
+        </div>
 
-    <input name="Order" value="@Model.Order" placeholder="Order (1..10)" class="dropdown-btn" />
-    <input name="Title" value="@Model.Title" placeholder="Title" class="dropdown-btn" />
-
-    <textarea name="Description" placeholder="Description (опційно)" class="dropdown-btn" rows="3">@Model.Description</textarea>
-
-    <textarea name="Content" placeholder="Content (markdown / текст / посилання)" class="dropdown-btn" rows="10">@Model.Content</textarea>
-
-    <label style="display:flex; gap:10px; align-items:center;">
-        <input type="checkbox" name="IsPublished" value="true" @(Model.IsPublished ? "checked" : "") />
-        Опублікувати урок
-    </label>
-
-    <div style="display:flex; gap:10px;">
-        <button type="submit" class="dropdown-btn">Create</button>
-        <a asp-action="Index" asp-route-courseId="@Model.CourseId" class="dropdown-btn">Cancel</a>
+        <a asp-action="Index" asp-route-courseId="@Model.CourseId" class="btn btn-muted">← Back</a>
     </div>
 
-    <div asp-validation-summary="All"></div>
-</form>
+    <form asp-action="Create" method="post" class="card lesson-form">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" name="CourseId" value="@Model.CourseId" />
+
+        <div class="form-grid">
+
+            <div class="grid-2">
+                <div class="field">
+                    <label class="label">Order</label>
+                    <input name="Order" value="@Model.Order" placeholder="Напр. 1" class="input" />
+                </div>
+
+                <div class="field">
+                    <label class="label">Title</label>
+                    <input name="Title" value="@Model.Title" placeholder="Назва уроку" class="input" />
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label">Description (опційно)</label>
+                <textarea name="Description" placeholder="Короткий опис" class="textarea" rows="3">@Model.Description</textarea>
+            </div>
+
+            <div class="field">
+                <label class="label">Content</label>
+                <textarea name="Content" placeholder="Markdown / текст / посилання" class="textarea textarea-lg" rows="12">@Model.Content</textarea>
+                <div class="hint">Порада: можна вставляти посилання, чек-листи, markdown.</div>
+            </div>
+
+            <label class="check">
+                <input type="checkbox" name="IsPublished" value="true" @(Model.IsPublished ? "checked" : "") />
+                <span class="check__box" aria-hidden="true"></span>
+                <span class="check__text">Опублікувати урок</span>
+            </label>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Create</button>
+                <a asp-action="Index" asp-route-courseId="@Model.CourseId" class="btn">Cancel</a>
+            </div>
+
+            <div asp-validation-summary="All" class="validation"></div>
+        </div>
+    </form>
+
+</div>

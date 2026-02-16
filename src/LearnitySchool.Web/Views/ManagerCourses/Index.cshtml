@@ -3,66 +3,76 @@
     ViewData["Title"] = "Курси";
 }
 
-<div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-    <h2 style="margin:0;">Курси</h2>
-    <a asp-action="Create" class="dropdown-btn">+ Створити курс</a>
-</div>
+<link rel="stylesheet" href="~/css/userManager/courseIndex.css" asp-append-version="true" />
 
-<div style="margin-top:16px; overflow:auto;">
-    <table style="width:100%; border-collapse:collapse;">
-        <thead>
-            <tr>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Title</th>
-                <th style="text-align:left; padding:10px; border-bottom:1px solid #1F2933;">Published</th>
-                <th style="padding:10px; border-bottom:1px solid #1F2933;"></th>
-            </tr>
-        </thead>
+<div class="users-page">
+    <div class="users-header">
+        <h2 class="users-title">Курси</h2>
+        <a asp-action="Create" class="btn btn-primary">+ Створити курс</a>
+    </div>
 
-        <tbody>
-            @if (Model == null || Model.Count == 0)
-            {
+    <div class="card">
+        <table class="users-table courses-table">
+            <thead>
                 <tr>
-                    <td colspan="3" style="padding:14px; opacity:.75;">
-                        Немає курсів
-                    </td>
+                    <th>Title</th>
+                    <th style="width:140px;">Published</th>
+                    <th style="width:320px;"></th>
                 </tr>
-            }
-            else
-            {
-                foreach (var c in Model)
+            </thead>
+
+            <tbody>
+                @if (Model == null || Model.Count == 0)
                 {
                     <tr>
-                        <td style="padding:10px; border-bottom:1px solid #1F2933;">
-                            <div style="font-weight:600;">@c.Title</div>
-
-                            @if (!string.IsNullOrWhiteSpace(c.Description))
-                            {
-                                <div style="opacity:.75; margin-top:4px;">@c.Description</div>
-                            }
-                        </td>
-
-                        <td style="padding:10px; border-bottom:1px solid #1F2933;">
-                            @(c.IsPublished ? "✅" : "—")
-                        </td>
-
-                        <td style="padding:10px; border-bottom:1px solid #1F2933; white-space:nowrap;">
-                            <a asp-action="People" asp-route-id="@c.Id">People</a>
-                            <span style="opacity:.5;"> | </span>
-
-                            <a asp-controller="ManagerLessons"
-                               asp-action="Index"
-                               asp-route-courseId="@c.Id">
-                                Lessons
-                            </a>
-                            <span style="opacity:.5;"> | </span>
-
-                            <a asp-action="Edit" asp-route-id="@c.Id">Edit</a>
-                            <span style="opacity:.5;"> | </span>
-                            <a asp-action="Delete" asp-route-id="@c.Id">Delete</a>
-                        </td>
+                        <td colspan="3" class="empty">Немає курсів</td>
                     </tr>
                 }
-            }
-        </tbody>
-    </table>
+                else
+                {
+                    foreach (var c in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="course-title">@c.Title</div>
+
+                                @if (!string.IsNullOrWhiteSpace(c.Description))
+                                {
+                                    <div class="course-desc">@c.Description</div>
+                                }
+                            </td>
+
+                            <td>
+                                @if (c.IsPublished)
+                                {
+                                    <span class="pill pill-success">✅ Published</span>
+                                }
+                                else
+                                {
+                                    <span class="pill pill-muted">— Draft</span>
+                                }
+                            </td>
+
+                            <td class="actions">
+                                <a asp-action="People" asp-route-id="@c.Id">People</a>
+                                <span>·</span>
+
+                                <a asp-controller="ManagerLessons"
+                                       asp-action="Index"
+                                       asp-route-courseId="@c.Id">
+                                    Lessons
+                                </a>
+                                <span>·</span>
+
+                                <a asp-action="Edit" asp-route-id="@c.Id">Edit</a>
+                                <span>·</span>
+
+                                <a asp-action="Delete" asp-route-id="@c.Id">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
 </div>

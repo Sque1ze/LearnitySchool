@@ -1,51 +1,64 @@
 @model List<LearnitySchool.Web.ViewModels.Student.StudentCourseVm>
 
 @{
-    ViewData["Title"] = "My Courses";
+    ViewData["Title"] = "Мої Курси";
 }
+<link rel="stylesheet" href="~/css/student/student-courses.css" asp-append-version="true" />
+<section class="sc-page">
+    <header class="sc-head">
+        <h1 class="sc-title">Мої курси</h1>
+        <div class="sc-subtitle">Ваші курси та прогрес</div>
+    </header>
 
-<h2 style="margin:0;">My Courses</h2>
-<div style="opacity:.75; margin-top:4px;">Ваші курси та прогрес</div>
-
-@if (Model == null || Model.Count == 0)
-{
-    <div style="opacity:.7; margin-top:16px;">Ви ще не записані на курси</div>
-}
-else
-{
-    <div style="margin-top:16px; display:grid; gap:12px;">
-        @foreach (var c in Model)
-        {
-            <div style="border:1px solid #1F2933; border-radius:12px; padding:14px;">
-                <div style="font-weight:700; font-size:16px;">@c.Title</div>
-
-                @if (!string.IsNullOrWhiteSpace(c.Description))
-                {
-                    <div style="opacity:.75; margin-top:6px;">@c.Description</div>
-                }
-
-                <div style="margin-top:10px; opacity:.85;">
-                    Lessons: <strong>@c.LessonsCount</strong>
-                </div>
-
-                <div style="margin-top:10px;">
-                    <div style="display:flex; justify-content:space-between; font-size:13px; opacity:.85;">
-                        <span>@c.CompletedTasks / @c.TotalTasks tasks</span>
-                        <span>@c.ProgressPercent%</span>
+    @if (Model == null || Model.Count == 0)
+    {
+        <div class="sc-empty">
+            <div class="sc-empty__icon">📚</div>
+            <div class="sc-empty__title">Ви ще не записані на курси</div>
+            <div class="sc-empty__text">Коли менеджер додасть курс — він з’явиться тут, і ви побачите прогрес.</div>
+        </div>
+    }
+    else
+    {
+        <div class="sc-grid">
+            @foreach (var c in Model)
+            {
+                <article class="sc-card">
+                    <div class="sc-card__top">
+                        <div class="sc-card__title">@c.Title</div>
+                        <div class="sc-badge">
+                            <span class="sc-badge__dot"></span>
+                            <span>@c.LessonsCount Уроки</span>
+                        </div>
                     </div>
 
-                    <div style="height:10px; background:#1F2933; border-radius:999px; overflow:hidden; margin-top:6px;">
-                        <div style="height:10px; width:@c.ProgressPercent%; background:#22C55E;"></div>
-                    </div>
-                </div>
+                    @if (!string.IsNullOrWhiteSpace(c.Description))
+                    {
+                        <div class="sc-card__desc">@c.Description</div>
+                    }
 
-                <a asp-action="Lessons"
-                   asp-route-courseId="@c.CourseId"
-                   class="dropdown-btn"
-                   style="margin-top:12px; display:inline-block;">
-                    Open
-                </a>
-            </div>
-        }
-    </div>
-}
+                    <div class="sc-progress">
+                        <div class="sc-progress__meta">
+                            <span class="sc-progress__left">@c.CompletedTasks / @c.TotalTasks tasks</span>
+                            <span class="sc-progress__right">@c.ProgressPercent%</span>
+                        </div>
+
+                        <div class="sc-progress__track" role="progressbar"
+                             aria-valuenow="@c.ProgressPercent" aria-valuemin="0" aria-valuemax="100">
+                            <div class="sc-progress__fill" style="width:@c.ProgressPercent%"></div>
+                        </div>
+                    </div>
+
+                    <div class="sc-actions">
+                        <a asp-action="Lessons"
+                               asp-route-courseId="@c.CourseId"
+                               class="sc-btn sc-btn--primary">
+                            Відкрити
+                            <span class="sc-btn__arrow">→</span>
+                        </a>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>

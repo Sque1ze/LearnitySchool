@@ -1,78 +1,95 @@
 ﻿@model LearnitySchool.Web.ViewModels.Student.StudentQuizVm
 
 @{
-    ViewData["Title"] = "Quiz";
+    ViewData["Title"] = "Тести";
 }
+<link rel="stylesheet" href="~/css/student/student-quiz.css" asp-append-version="true" />
 
-<div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
-    <div>
-        <h2 style="margin:0;">Quiz — @Model.Title</h2>
-        <div style="opacity:.75; margin-top:6px;">Оберіть відповіді та натисніть Submit</div>
-    </div>
-
-    <div style="display:flex; gap:10px;">
-        <a asp-action="Tasks" asp-route-lessonId="@Model.LessonId" class="dropdown-btn">← Back to tasks</a>
-        <a asp-action="Lessons" asp-route-courseId="@Model.CourseId" class="dropdown-btn">← Back to lessons</a>
-    </div>
-</div>
-
-@if (Model.HasResult)
-{
-    <div style="margin-top:14px; border:1px solid #1F2933; border-radius:12px; padding:12px;">
-        <div style="font-weight:800;">
-            Result: @Model.ScorePercent% (@Model.Correct / @Model.Total)
-            @if (Model.Passed)
-            {
-                <span style="color:#22C55E; margin-left:8px;">✅ Passed</span>
-            }
-            else
-            {
-                <span style="color:#E5E7EB; opacity:.8; margin-left:8px;">Not passed (need 70%)</span>
-            }
+<section class="sq-page">
+    <header class="sq-head">
+        <div class="sq-head__left">
+            <h1 class="sq-title">Quiz — <span class="sq-title__muted">@Model.Title</span></h1>
+            <div class="sq-subtitle">Оберіть відповіді та натисніть Submit</div>
         </div>
-    </div>
-}
 
-@if (Model.Questions == null || Model.Questions.Count == 0)
-{
-    <div style="margin-top:14px; opacity:.8;">
-        Немає питань для цього Quiz (менеджер ще не додав).
-    </div>
-}
-else
-{
-    <form asp-action="SubmitQuiz" method="post" style="margin-top:14px;">
-        @Html.AntiForgeryToken()
+        <div class="sq-head__actions">
+            <a asp-action="Tasks" asp-route-lessonId="@Model.LessonId" class="sq-btn sq-btn--ghost">
+                <span class="sq-btn__arrow">←</span> Назад до завдань
+            </a>
+            <a asp-action="Lessons" asp-route-courseId="@Model.CourseId" class="sq-btn sq-btn--ghost">
+                <span class="sq-btn__arrow">←</span> Назад до уроку
+            </a>
+        </div>
+    </header>
 
-        <input type="hidden" name="TaskId" value="@Model.TaskId" />
-        <input type="hidden" name="LessonId" value="@Model.LessonId" />
-
-        <div style="display:grid; gap:12px;">
-            @foreach (var q in Model.Questions)
-            {
-                <div style="border:1px solid #1F2933; border-radius:12px; padding:12px;">
-                    <div style="font-weight:800;">
-                        @q.Order. @q.Text
-                    </div>
-
-                    <div style="margin-top:10px; display:grid; gap:8px;">
-                        @foreach (var o in q.Options)
-                        {
-                            <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; opacity:.95;">
-                                <input type="radio"
-                                       name="Answers[@q.QuestionId]"
-                                       value="@o.OptionId"
-                                       style="margin-top:4px;" />
-                                <span>@o.Text</span>
-                            </label>
-                        }
-                    </div>
+    @if (Model.HasResult)
+    {
+        <div class="sq-result">
+            <div class="sq-result__row">
+                <div class="sq-result__title">
+                    Result: <span class="sq-result__score">@Model.ScorePercent%</span>
+                    <span class="sq-result__meta">(@Model.Correct / @Model.Total)</span>
                 </div>
-            }
-        </div>
 
-        <button type="submit" class="dropdown-btn" style="margin-top:14px;">
-            Submit quiz
-        </button>
-    </form>
-}
+                @if (Model.Passed)
+                {
+                    <span class="sq-pill sq-pill--ok">✅ Passed</span>
+                }
+                else
+                {
+                    <span class="sq-pill sq-pill--muted">Not passed (need 70%)</span>
+                }
+            </div>
+        </div>
+    }
+
+    @if (Model.Questions == null || Model.Questions.Count == 0)
+    {
+        <div class="sq-empty">
+            <div class="sq-empty__icon">❓</div>
+            <div class="sq-empty__title">Немає питань для цього Quiz</div>
+            <div class="sq-empty__text">Менеджер ще не додав питання — спробуйте пізніше.</div>
+        </div>
+    }
+    else
+    {
+        <form asp-action="SubmitQuiz" method="post" class="sq-form">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" name="TaskId" value="@Model.TaskId" />
+            <input type="hidden" name="LessonId" value="@Model.LessonId" />
+
+            <div class="sq-questions">
+                @foreach (var q in Model.Questions)
+                {
+                    <article class="sq-card">
+                        <div class="sq-q">
+                            <div class="sq-q__num">@q.Order</div>
+                            <div class="sq-q__text">@q.Text</div>
+                        </div>
+
+                        <div class="sq-options">
+                            @foreach (var o in q.Options)
+                            {
+                                <label class="sq-option">
+                                    <input class="sq-radio"
+                                           type="radio"
+                                           name="Answers[@q.QuestionId]"
+                                           value="@o.OptionId" />
+                                    <span class="sq-option__box" aria-hidden="true"></span>
+                                    <span class="sq-option__text">@o.Text</span>
+                                </label>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+
+            <div class="sq-footer">
+                <button type="submit" class="sq-btn sq-btn--primary">
+                    Submit quiz <span class="sq-btn__arrow">→</span>
+                </button>
+            </div>
+        </form>
+    }
+</section>
