@@ -47,12 +47,32 @@
     const starterCss = document.getElementById("starterCss")?.value ?? "";
     const starterJs = document.getElementById("starterJs")?.value ?? "";
 
+    // =========================
+    // LEFT TABS (HTML/CSS/JS)
+    // =========================
     function setTab(name) {
         tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === name));
         panes.forEach(p => p.classList.toggle("active", p.dataset.pane === name));
     }
     tabs.forEach(t => t.addEventListener("click", () => setTab(t.dataset.tab)));
     setTab("html");
+
+    // =========================
+    // PREVIEW / REFERENCE TOGGLE + ACTIVE UI
+    // =========================
+    function setPreviewMode(mode) {
+        // mode: "preview" | "reference"
+        const isPreview = mode === "preview";
+        const isRef = mode === "reference";
+
+        // frames
+        previewFrame.style.display = isPreview ? "block" : "none";
+        if (referenceFrame) referenceFrame.style.display = isRef ? "block" : "none";
+
+        // buttons active state
+        if (previewTabBtn) previewTabBtn.classList.toggle("active", isPreview);
+        if (referenceTabBtn) referenceTabBtn.classList.toggle("active", isRef);
+    }
 
     function buildDoc(html, css, js) {
         return `<!doctype html>
@@ -91,25 +111,36 @@ ${html || ""}
     }
 
     function showMyPreview() {
-        previewFrame.style.display = "block";
-        if (referenceFrame) referenceFrame.style.display = "none";
+        setPreviewMode("preview");
     }
 
     function showReference() {
         if (!hasReference || !referenceFrame) return;
         renderReferencePreview();
-        previewFrame.style.display = "none";
-        referenceFrame.style.display = "block";
+        setPreviewMode("reference");
     }
 
+    // Click handlers for preview buttons
     previewTabBtn?.addEventListener("click", showMyPreview);
     referenceTabBtn?.addEventListener("click", showReference);
 
+    // ✅ Default state on page load: My preview active
+    setPreviewMode("preview");
+
+    // =========================
+    // RUN
+    // =========================
     runBtn?.addEventListener("click", () => {
         renderMyPreview();
-        showMyPreview();
+        showMyPreview(); // ✅ and highlight My preview
     });
 
+    // Render initial preview
+    renderMyPreview();
+
+    // =========================
+    // SIMILARITY / CHECK
+    // =========================
     function normalize(s) {
         return (s || "")
             .replace(/\r\n/g, "\n")
@@ -136,10 +167,10 @@ ${html || ""}
     }
 
     function updateSubmitState(avg) {
-        submitHtml && (submitHtml.value = htmlEl.value);
-        submitCss && (submitCss.value = cssEl.value);
-        submitJs && (submitJs.value = jsEl.value);
-        submitSimilarity && (submitSimilarity.value = String(avg));
+        if (submitHtml) submitHtml.value = htmlEl.value;
+        if (submitCss) submitCss.value = cssEl.value;
+        if (submitJs) submitJs.value = jsEl.value;
+        if (submitSimilarity) submitSimilarity.value = String(avg);
 
         if (submitBtn) {
             const ok = avg >= threshold;
@@ -174,6 +205,9 @@ ${html || ""}
 
     checkBtn?.addEventListener("click", check);
 
+    // =========================
+    // AUTOSAVE DRAFT
+    // =========================
     let saveTimer = null;
     let saving = false;
 
@@ -233,6 +267,9 @@ ${html || ""}
     cssEl.addEventListener("input", scheduleSave);
     jsEl.addEventListener("input", scheduleSave);
 
+    // =========================
+    // RESET
+    // =========================
     function resetToStarter() {
         const ok = confirm("Reset code to starter version?");
         if (!ok) return;
@@ -252,7 +289,7 @@ ${html || ""}
         }
 
         renderMyPreview();
-        showMyPreview();
+        showMyPreview(); // ✅ highlight preview again
 
         scheduleSave();
         setDraftBadge("Draft: saving…", true);
@@ -260,6 +297,6 @@ ${html || ""}
 
     resetBtn?.addEventListener("click", resetToStarter);
 
-    renderMyPreview();
+    // Ensure preview shown on load
     showMyPreview();
 })();

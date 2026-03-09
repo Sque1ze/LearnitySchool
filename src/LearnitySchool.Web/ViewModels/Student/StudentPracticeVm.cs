@@ -8,6 +8,7 @@ public class StudentPracticeVm
 
     public string Title { get; set; } = "";
     public string? Description { get; set; }
+    public string Statement { get; set; } = string.Empty;
 
     // starter
     public string StarterHtml { get; set; } = "";

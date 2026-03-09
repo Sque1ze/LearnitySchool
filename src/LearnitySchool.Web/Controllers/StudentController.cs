@@ -441,6 +441,7 @@ public class StudentController : Controller
 
             Title = taskInfo.Title,
             Description = taskInfo.Description ?? "",
+            Statement = practice?.Statement ?? "",
 
             StarterHtml = draft?.Html ?? starterHtml,
             StarterCss = draft?.Css ?? starterCss,

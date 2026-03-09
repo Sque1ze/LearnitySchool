@@ -18,11 +18,19 @@
             }
         </div>
 
+        @if (!string.IsNullOrWhiteSpace(Model.Statement))
+        {
+            <div class="practice-statement">
+                <div class="statement-title">Умова завдання</div>
+                <div class="statement-text">@Model.Statement</div>
+            </div>
+        }
+
         <div class="practice-actions">
             <a asp-controller="Student"
-               asp-action="Tasks"
-               asp-route-lessonId="@Model.LessonId"
-               class="btn btn-ghost">
+                   asp-action="Tasks"
+                   asp-route-lessonId="@Model.LessonId"
+                   class="btn btn-ghost">
                 ← Back
             </a>
 
@@ -33,7 +41,6 @@
                 Reset ↺
             </button>
 
-            <!-- ✅ SUBMIT (enabled after Check when similarity >= threshold) -->
             <form id="submitForm"
                   asp-controller="Student"
                   asp-action="SubmitPractice"
@@ -87,8 +94,8 @@
                 <div class="tab-right">
                     <span id="draftStatus" class="badge badge-muted">
                         @(Model.HasDraft
-                                                ? $"Draft: saved {Model.DraftUpdatedAt?.ToLocalTime():HH:mm:ss}"
-                                                : "Draft: —")
+                            ? $"Draft: saved {Model.DraftUpdatedAt?.ToLocalTime():HH:mm:ss}"
+                            : "Draft: —")
                     </span>
 
                     <span id="similarityBadge" class="badge badge-muted">
@@ -132,14 +139,14 @@
         <!-- ===== RIGHT: PREVIEW ===== -->
         <section class="panel preview-panel">
 
-            <div class="preview-head" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <div class="preview-head">
                 <div>
                     <div class="preview-title">Preview</div>
                     <div class="preview-sub">iframe sandbox</div>
                 </div>
 
-                <div style="display:flex; gap:8px;">
-                    <button type="button" class="btn btn-ghost" id="previewTabBtn">My preview</button>
+                <div class="preview-tabs">
+                    <button type="button" class="btn btn-ghost active" id="previewTabBtn">My preview</button>
 
                     @if (Model.HasReference)
                     {
@@ -182,10 +189,8 @@
     </div>
 </div>
 
-<!-- ✅ meta for autosave -->
 <div id="taskMeta" data-taskid="@Model.TaskId" style="display:none;"></div>
 
-<!-- ✅ Reference payload for JS -->
 @if (Model.HasReference)
 {
     <textarea id="refHtml" style="display:none;">@Model.ReferenceHtml</textarea>
@@ -193,7 +198,6 @@
     <textarea id="refJs" style="display:none;">@Model.ReferenceJs</textarea>
 }
 
-<!-- ✅ Starter (ORIGINAL task starter, not draft) for Reset -->
 <textarea id="starterHtml" style="display:none;">@Model.InitialHtml</textarea>
 <textarea id="starterCss" style="display:none;">@Model.InitialCss</textarea>
 <textarea id="starterJs" style="display:none;">@Model.InitialJs</textarea>

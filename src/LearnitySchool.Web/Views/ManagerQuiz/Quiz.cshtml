@@ -4,6 +4,7 @@
     ViewData["Title"] = "Quiz Questions";
     var taskId = (Guid)ViewBag.TaskId;
     var taskTitle = (string)ViewBag.TaskTitle;
+    var lessonId = (Guid)ViewBag.LessonId;
 }
 
 <link rel="stylesheet" href="~/css/userManager/quiz.css" asp-append-version="true" />
@@ -16,7 +17,13 @@
             <div class="sub">Питання для цього Quiz</div>
         </div>
 
-        <a asp-action="CreateQuestion" asp-route-taskId="@taskId" class="btn btn-primary">+ Add question</a>
+        <div class="header-actions">
+            <a asp-controller="ManagerTasks"
+               asp-action="Index"
+               asp-route-lessonId="@lessonId"
+               class="btn btn-muted">← Back</a>
+            <a asp-action="CreateQuestion" asp-route-taskId="@taskId" class="btn btn-primary">+ Add question</a>
+        </div>
     </div>
 
     <div class="card" style="max-width:none;">
