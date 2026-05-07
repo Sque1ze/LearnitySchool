@@ -70,13 +70,14 @@
 
     @if (TempData["Error"] != null)
     {
-        <div style="margin:10px 0; padding:10px; border:1px solid #1F2933; border-radius:12px; opacity:.9;">
+        <div class="flash flash-error">
             ❌ @TempData["Error"]
         </div>
     }
+
     @if (TempData["Success"] != null)
     {
-        <div style="margin:10px 0; padding:10px; border:1px solid #1F2933; border-radius:12px; opacity:.9;">
+        <div class="flash flash-success">
             ✅ @TempData["Success"]
         </div>
     }
@@ -106,15 +107,15 @@
 
             <div class="tab-content">
                 <div class="tab-pane active" data-pane="html">
-                    <textarea id="htmlEditor" class="code-area" spellcheck="false">@Model.StarterHtml</textarea>
+                    <div id="htmlEditor" class="monaco-host"></div>
                 </div>
 
                 <div class="tab-pane" data-pane="css">
-                    <textarea id="cssEditor" class="code-area" spellcheck="false">@Model.StarterCss</textarea>
+                    <div id="cssEditor" class="monaco-host"></div>
                 </div>
 
                 <div class="tab-pane" data-pane="js">
-                    <textarea id="jsEditor" class="code-area" spellcheck="false">@Model.StarterJs</textarea>
+                    <div id="jsEditor" class="monaco-host"></div>
                 </div>
             </div>
 
@@ -123,6 +124,7 @@
                 <div>
                     <div class="hint-title">Порада</div>
                     <div class="hint-text">
+                        Тут уже працює редактор Monaco: підказки, автозакриття тегів, дужок і лапок.
                         Натисни <b>Run</b> — щоб побачити результат.
                         Натисни <b>Check</b> — щоб порахувати %.
                         Кнопка <b>Submit</b> стане активною коли % ≥ @Model.SimilarityThreshold%.
@@ -189,7 +191,20 @@
     </div>
 </div>
 
-<div id="taskMeta" data-taskid="@Model.TaskId" style="display:none;"></div>
+<div id="taskMeta"
+     data-taskid="@Model.TaskId"
+     data-threshold="@Model.SimilarityThreshold"
+     style="display:none;"></div>
+
+<!-- Поточні значення для старту редактора -->
+<textarea id="editorHtmlValue" style="display:none;">@Model.StarterHtml</textarea>
+<textarea id="editorCssValue" style="display:none;">@Model.StarterCss</textarea>
+<textarea id="editorJsValue" style="display:none;">@Model.StarterJs</textarea>
+
+<!-- Оригінальний starter для Reset -->
+<textarea id="starterHtml" style="display:none;">@Model.InitialHtml</textarea>
+<textarea id="starterCss" style="display:none;">@Model.InitialCss</textarea>
+<textarea id="starterJs" style="display:none;">@Model.InitialJs</textarea>
 
 @if (Model.HasReference)
 {
@@ -197,10 +212,6 @@
     <textarea id="refCss" style="display:none;">@Model.ReferenceCss</textarea>
     <textarea id="refJs" style="display:none;">@Model.ReferenceJs</textarea>
 }
-
-<textarea id="starterHtml" style="display:none;">@Model.InitialHtml</textarea>
-<textarea id="starterCss" style="display:none;">@Model.InitialCss</textarea>
-<textarea id="starterJs" style="display:none;">@Model.InitialJs</textarea>
 
 @section Scripts {
     <script src="~/js/student/practice.js" asp-append-version="true"></script>
