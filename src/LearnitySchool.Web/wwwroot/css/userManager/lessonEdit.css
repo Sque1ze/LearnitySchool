@@ -1,12 +1,12 @@
 ﻿:root {
-    --bg: #020617;
-    --surface: #020617;
-    --card: #020617;
-    --primary: #38BDF8;
-    --secondary: #22C55E;
-    --text: #E5E7EB;
-    --muted: #9CA3AF;
-    --border: #1F2933;
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --card: #FFFFFF;
+    --primary: #2563EB;
+    --secondary: #14B8A6;
+    --text: #0F172A;
+    --muted: #64748B;
+    --border: #DDE7F0;
 }
 
 .users-page {
@@ -121,7 +121,7 @@
     .input:focus,
     .textarea:focus {
         border-color: var(--primary);
-        box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
     }
 
 .textarea-lg {
@@ -154,18 +154,18 @@
     height: 18px;
     border-radius: 6px;
     border: 1px solid var(--border);
-    background: rgba(255,255,255,0.02);
-    box-shadow: inset 0 0 0 3px rgba(2,6,23,.9);
+    background: #FFFFFF;
+    box-shadow: inset 0 0 0 3px rgba(248,250,252,.9);
     position: relative;
 }
 
 .check__text {
-    color: rgba(229,231,235,.92);
+    color: var(--text);
     font-size: 14px;
 }
 
 .check:has(input:checked) .check__box {
-    border-color: rgba(56,189,248,.8);
+    border-color: rgba(37,99,235,.8);
 }
 
     .check:has(input:checked) .check__box::after {
@@ -174,7 +174,7 @@
         inset: 3px;
         border-radius: 4px;
         background: var(--primary);
-        box-shadow: 0 0 14px rgba(56,189,248,.25);
+        box-shadow: 0 0 14px rgba(37,99,235,.25);
     }
 
 .form-actions {

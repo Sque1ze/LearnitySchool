@@ -1,0 +1,54 @@
+@model LearnitySchool.Web.ViewModels.Notifications.NotificationsIndexVm
+@{
+    ViewData["Title"] = "Сповіщення";
+}
+<link rel="stylesheet" href="~/css/notifications.css" asp-append-version="true" />
+
+<section class="notif-page">
+    <header class="notif-head">
+        <div>
+            <div class="kicker">Notifications</div>
+            <h1>Сповіщення</h1>
+            <p>Останні події по роботах, оплатах і доступах.</p>
+        </div>
+        <form asp-action="MarkAllRead" method="post">
+            @Html.AntiForgeryToken()
+            <button class="nbtn" type="submit">Позначити всі як прочитані</button>
+        </form>
+    </header>
+
+    <div class="notif-list">
+        @if (!Model.Items.Any())
+        {
+            <div class="notif-empty">Сповіщень поки немає.</div>
+        }
+        else
+        {
+            foreach (var n in Model.Items)
+            {
+                <article class="notif-card @(n.IsRead ? "read" : "unread")">
+                    <div class="notif-icon">@(n.Type.ToString() switch { "Submission" => "🟡", "Review" => "✅", "Payment" => "💳", "Access" => "🔓", _ => "🔔" })</div>
+                    <div class="notif-body">
+                        <div class="notif-title">@n.Title</div>
+                        <div class="notif-text">@n.Message</div>
+                        <div class="notif-date">@n.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+                    </div>
+                    <div class="notif-actions">
+                        @if (!string.IsNullOrWhiteSpace(n.Url))
+                        {
+                            <a href="@n.Url" class="nbtn primary">Відкрити</a>
+                        }
+                        @if (!n.IsRead)
+                        {
+                            <form asp-action="MarkRead" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@n.Id" />
+                                <button class="nbtn" type="submit">Прочитано</button>
+                            </form>
+                        }
+                    </div>
+                </article>
+            }
+        }
+    </div>
+</section>

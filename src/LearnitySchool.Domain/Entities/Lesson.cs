@@ -23,7 +23,15 @@ public class Lesson
 
     public bool IsPublished { get; set; }
 
+    /// <summary>
+    /// 0 = безкоштовний урок. Якщо > 0, студент має оплатити урок перед доступом до завдань.
+    /// </summary>
+    public decimal PriceAmount { get; set; }
+
+    public string Currency { get; set; } = "UAH";
+
     // (наступним кроком тут будуть Tasks)
     public ICollection<LessonTask> Tasks { get; set; } = new List<LessonTask>();
+    public ICollection<LessonPayment> Payments { get; set; } = new List<LessonPayment>();
 
 }

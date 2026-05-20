@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch LearnitySchool.Web",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build LearnitySchool.Web",
+      "program": "${workspaceFolder}/src/LearnitySchool.Web/bin/Debug/net8.0/LearnitySchool.Web.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/LearnitySchool.Web",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  ]
+}

@@ -2,13 +2,38 @@
 
 @{
     ViewData["Title"] = "Мої Курси";
+    var totalCourses = Model?.Count ?? 0;
+    var totalTasks = Model?.Sum(x => x.TotalTasks) ?? 0;
+    var completedTasks = Model?.Sum(x => x.CompletedTasks) ?? 0;
+    var pendingReview = Model?.Sum(x => x.PendingReviewCount) ?? 0;
+    var unpaidLessons = Model?.Sum(x => x.UnpaidLessonsCount) ?? 0;
 }
 <link rel="stylesheet" href="~/css/student/student-courses.css" asp-append-version="true" />
 <section class="sc-page">
-    <header class="sc-head">
-        <h1 class="sc-title">Мої курси</h1>
-        <div class="sc-subtitle">Ваші курси та прогрес</div>
+    <header class="sc-head sc-head-row">
+        <div>
+            <h1 class="sc-title">Мої курси</h1>
+            <div class="sc-subtitle">Ваші курси, прогрес, оплати та роботи на перевірці</div>
+        </div>
+        <div class="sc-quick-actions">
+            <a asp-controller="StudentProjects" asp-action="Index" class="sc-btn sc-btn--soft">
+    <span class="sc-btn__icon">💼</span>
+    Мої проєкти
+</a>
+
+<a asp-action="Payments" class="sc-btn sc-btn--primary">
+    <span class="sc-btn__icon">💳</span>
+    Оплата
+</a>
+        </div>
     </header>
+
+    <div class="student-stats">
+        <div class="student-stat"><span>Курсів</span><strong>@totalCourses</strong></div>
+        <div class="student-stat"><span>Виконано задач</span><strong>@completedTasks / @totalTasks</strong></div>
+        <div class="student-stat"><span>Очікують перевірки</span><strong>@pendingReview</strong></div>
+        <div class="student-stat"><span>Неоплачені уроки</span><strong>@unpaidLessons</strong></div>
+    </div>
 
     @if (Model == null || Model.Count == 0)
     {
@@ -28,7 +53,7 @@
                         <div class="sc-card__title">@c.Title</div>
                         <div class="sc-badge">
                             <span class="sc-badge__dot"></span>
-                            <span>@c.LessonsCount Уроки</span>
+                            <span>@c.LessonsCount уроків</span>
                         </div>
                     </div>
 
@@ -36,6 +61,11 @@
                     {
                         <div class="sc-card__desc">@c.Description</div>
                     }
+
+                    <div class="sc-mini-row">
+                        <span>🟡 На перевірці: <b>@c.PendingReviewCount</b></span>
+                        <span>💳 Не оплачено: <b>@c.UnpaidLessonsCount</b></span>
+                    </div>
 
                     <div class="sc-progress">
                         <div class="sc-progress__meta">
@@ -51,8 +81,8 @@
 
                     <div class="sc-actions">
                         <a asp-action="Lessons"
-                               asp-route-courseId="@c.CourseId"
-                               class="sc-btn sc-btn--primary">
+                           asp-route-courseId="@c.CourseId"
+                           class="sc-btn sc-btn--primary">
                             Відкрити
                             <span class="sc-btn__arrow">→</span>
                         </a>

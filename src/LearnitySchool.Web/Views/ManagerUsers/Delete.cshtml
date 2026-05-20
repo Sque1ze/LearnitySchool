@@ -2,16 +2,24 @@
 @{
     ViewData["Title"] = "Видалити користувача";
 }
+<link rel="stylesheet" href="~/css/userManager/userIndex.css" asp-append-version="true" />
 
-<h2>Видалити користувача</h2>
+<section class="manager-user-page">
+    <header class="manager-user-head">
+        <div>
+            <h1>Видалити користувача</h1>
+            <p>Цю дію потрібно підтвердити.</p>
+        </div>
+        <a asp-action="Index" class="manager-user-btn">← Назад</a>
+    </header>
 
-<div style="max-width:520px;">
-    <p>Точно видалити <strong>@Model.Email</strong>?</p>
-
-    <form asp-action="DeleteConfirmed" method="post" style="display:flex; gap:10px;">
-        @Html.AntiForgeryToken()
-        <input type="hidden" name="id" value="@Model.Id" />
-        <button type="submit" class="dropdown-btn danger-btn">Delete</button>
-        <a asp-action="Index" class="dropdown-btn">Cancel</a>
-    </form>
-</div>
+    <div class="manager-user-card">
+        <p>Точно видалити <strong>@Model.Email</strong>?</p>
+        <form asp-action="DeleteConfirmed" method="post" class="manager-user-actions">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button type="submit" class="manager-user-btn danger">Delete</button>
+            <a asp-action="Index" class="manager-user-btn">Cancel</a>
+        </form>
+    </div>
+</section>

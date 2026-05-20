@@ -1,14 +1,14 @@
 ﻿:root {
-    --bg: #020617;
-    --card: #020617;
-    --text: #E5E7EB;
-    --muted: #9CA3AF;
-    --border: #1F2933;
-    --shadow: 0 10px 25px rgba(0,0,0,.35);
+    --bg: #F8FAFC;
+    --card: #FFFFFF;
+    --text: #0F172A;
+    --muted: #64748B;
+    --border: #DDE7F0;
+    --shadow: 0 10px 25px rgba(15,23,42,.08);
     --radius: 14px;
-    --teacher: #38BDF8;
+    --teacher: #2563EB;
     --manager: #EF4444;
-    --student: #22C55E;
+    --student: #14B8A6;
 }
 
 .page-sub {
@@ -83,7 +83,7 @@
     }
 
     .input:focus {
-        border-color: rgba(56,189,248,0.55);
+        border-color: rgba(37,99,235,0.55);
         background: rgba(255,255,255,0.06);
     }
 
@@ -113,7 +113,7 @@ select.input {
 
     .btn:hover {
         background: rgba(255,255,255,0.07);
-        border-color: rgba(56,189,248,0.45);
+        border-color: rgba(37,99,235,0.45);
     }
 
     .btn:active {
@@ -121,12 +121,12 @@ select.input {
     }
 
 .btn-primary {
-    border-color: rgba(56,189,248,0.65);
-    background: rgba(56,189,248,0.14);
+    border-color: rgba(37,99,235,0.65);
+    background: rgba(37,99,235,0.14);
 }
 
     .btn-primary:hover {
-        background: rgba(56,189,248,0.20);
+        background: rgba(37,99,235,0.20);
     }
 
 .btn-ghost {
@@ -165,7 +165,7 @@ select.input {
         text-transform: uppercase;
         color: var(--muted);
         border-bottom: 1px solid var(--border);
-        background: rgba(255,255,255,0.02);
+        background: #FFFFFF;
     }
 
     .table tbody td {
@@ -174,7 +174,7 @@ select.input {
     }
 
     .table tbody tr:hover td {
-        background: rgba(255,255,255,0.02);
+        background: #FFFFFF;
     }
 
 .strong {
@@ -195,13 +195,13 @@ select.input {
     font-size: 12px;
     font-weight: 900;
     border: 1px solid rgba(255,255,255,0.12);
-    background: rgba(255,255,255,0.03);
+    background: #FFFFFF;
     color: var(--text);
     line-height: 1;
 }
 
 .pill-role {
-    background: rgba(255,255,255,0.02);
+    background: #FFFFFF;
 }
 
 .pill-manager {
@@ -210,8 +210,8 @@ select.input {
 }
 
 .pill-teacher {
-    border-color: rgba(56,189,248,.65);
-    color: rgba(56,189,248,.95);
+    border-color: rgba(37,99,235,.65);
+    color: rgba(37,99,235,.95);
 }
 
 select.input {
@@ -220,14 +220,14 @@ select.input {
 }
 
     select.input option {
-        background-color: #020617;
+        background-color: #F8FAFC;
         color: var(--text);
     }
 
         select.input option:hover {
-            background-color: rgba(56,189,248,0.15);
+            background-color: rgba(37,99,235,0.15);
         }
 
         select.input option[value=""] {
-            color: rgba(229,231,235,0.85);
+            color: var(--text);
         }

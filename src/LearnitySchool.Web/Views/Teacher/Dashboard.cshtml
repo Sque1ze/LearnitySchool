@@ -1,0 +1,66 @@
+@model LearnitySchool.Web.ViewModels.Teacher.Dashboard.TeacherDashboardVm
+@{
+    ViewData["Title"] = "Teacher Dashboard";
+}
+<link rel="stylesheet" href="~/css/teacher/dashboard.css" asp-append-version="true" />
+
+<section class="tdash-page">
+    <header class="tdash-head">
+        <div>
+            <div class="kicker">Teacher panel</div>
+            <h1>Dashboard</h1>
+            <p>Швидкий огляд робіт, курсів і оплат.</p>
+        </div>
+        <a asp-controller="TeacherSubmissions" asp-action="Index" class="dash-btn primary">Перевірити роботи</a>
+    </header>
+
+    <div class="stats-grid">
+        <div class="stat-card pending"><span>Очікують перевірки</span><strong>@Model.PendingSubmissions</strong></div>
+        <div class="stat-card ok"><span>Зараховано</span><strong>@Model.ApprovedSubmissions</strong></div>
+        <div class="stat-card returned"><span>Повернуто</span><strong>@Model.ReturnedSubmissions</strong></div>
+        <div class="stat-card paid"><span>Оплачені уроки</span><strong>@Model.PaidLessonsCount</strong></div>
+        <div class="stat-card unpaid"><span>Неоплачені доступи</span><strong>@Model.UnpaidPaidRequiredCount</strong></div>
+    </div>
+
+    <div class="dash-grid">
+        <section class="dash-card">
+            <h2>Останні здані роботи</h2>
+            @if (!Model.RecentSubmissions.Any())
+            {
+                <div class="empty">Поки немає зданих робіт.</div>
+            }
+            else
+            {
+                <div class="dash-list">
+                    @foreach (var r in Model.RecentSubmissions)
+                    {
+                        <a asp-controller="TeacherSubmissions" asp-action="Details" asp-route-id="@r.SubmissionId" class="dash-row">
+                            <div><strong>@r.StudentName</strong><span>@r.CourseTitle → @r.LessonTitle</span></div>
+                            <em>@r.SubmittedAtUtc.ToLocalTime().ToString("dd.MM HH:mm")</em>
+                        </a>
+                    }
+                </div>
+            }
+        </section>
+
+        <section class="dash-card">
+            <h2>Мої курси</h2>
+            @if (!Model.Courses.Any())
+            {
+                <div class="empty">Курсів поки немає.</div>
+            }
+            else
+            {
+                <div class="dash-list">
+                    @foreach (var c in Model.Courses)
+                    {
+                        <a asp-controller="TeacherGroups" asp-action="Details" asp-route-id="@c.CourseId" class="dash-row">
+                            <div><strong>@c.Title</strong><span>@c.StudentsCount учнів · @c.LessonsCount уроків</span></div>
+                            <em>→</em>
+                        </a>
+                    }
+                </div>
+            }
+        </section>
+    </div>
+</section>

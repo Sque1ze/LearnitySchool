@@ -1,0 +1,76 @@
+@model LearnitySchool.Web.ViewModels.Teacher.Payments.TeacherPaymentsVm
+@{
+    ViewData["Title"] = "Оплати учнів";
+}
+<link rel="stylesheet" href="~/css/student/payments.css" asp-append-version="true" />
+
+<section class="pay-page">
+    <header class="pay-head">
+        <div>
+            <div class="pay-kicker">Teacher payments</div>
+            <h1>Оплати учнів</h1>
+            <p>Список платних уроків і статусів оплат.</p>
+        </div>
+    </header>
+
+    <form method="get" class="pay-card" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;">
+        <label style="display:grid;gap:6px;color:#64748B;">Курс
+            <select name="courseId" class="pay-btn" style="min-width:260px;justify-content:flex-start;">
+                <option value="">Усі курси</option>
+                @foreach (var c in Model.Courses)
+                {
+                    <option value="@c.Value" selected="@c.Selected">@c.Text</option>
+                }
+            </select>
+        </label>
+        <button class="pay-btn primary" type="submit">Фільтрувати</button>
+        <a asp-action="Index" class="pay-btn">Скинути</a>
+    </form>
+
+    <div class="pay-card">
+        <div class="pay-table-wrap">
+            <table class="pay-table">
+                <thead>
+                    <tr>
+                        <th>Учень</th>
+                        <th>Курс</th>
+                        <th>Урок</th>
+                        <th>Ціна</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (!Model.Items.Any())
+                {
+                    <tr><td colspan="5" class="empty">Платних уроків поки немає.</td></tr>
+                }
+                else
+                {
+                    foreach (var i in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@i.StudentName</strong>
+                                <div class="muted">@i.StudentEmail</div>
+                            </td>
+                            <td>@i.CourseTitle</td>
+                            <td>#@i.LessonOrder @i.LessonTitle</td>
+                            <td>@i.PriceAmount.ToString("0.##") @i.Currency</td>
+                            <td>
+                                @if (i.IsPaid)
+                                {
+                                    <span class="pill paid">✅ Оплачено</span>
+                                }
+                                else
+                                {
+                                    <span class="pill unpaid">🔒 Не оплачено</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

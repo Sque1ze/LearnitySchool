@@ -18,4 +18,8 @@ public class LessonTask
     public LessonTaskType Type { get; set; }
 
     public bool IsPublished { get; set; }
+
+    public TaskAssessmentMode AssessmentMode { get; set; } = TaskAssessmentMode.AutoPercent;
+
+    public QuizType QuizType { get; set; } = QuizType.Standard;
 }

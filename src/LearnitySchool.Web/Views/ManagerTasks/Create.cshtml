@@ -35,12 +35,33 @@
                 </div>
             </div>
 
-            <div class="field">
-                <label class="label">Type</label>
-                <select name="Type" class="select">
-                    <option value="@((int)LessonTaskType.Quiz)" selected="@(Model.Type == LessonTaskType.Quiz)">Quiz</option>
-                    <option value="@((int)LessonTaskType.Practice)" selected="@(Model.Type == LessonTaskType.Practice)">Practice</option>
-                </select>
+            <div class="grid-2">
+                <div class="field">
+                    <label class="label">Type</label>
+                    <select name="Type" class="select">
+                        <option value="@((int)LessonTaskType.Quiz)" selected="@(Model.Type == LessonTaskType.Quiz)">Quiz</option>
+                        <option value="@((int)LessonTaskType.Practice)" selected="@(Model.Type == LessonTaskType.Practice)">Practice</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label class="label">Тип квіза</label>
+                    <select name="QuizType" class="select">
+                        <option value="@((int)QuizType.Standard)" selected="@(Model.QuizType == QuizType.Standard)">Standard — звичайний</option>
+                        <option value="@((int)QuizType.Matching)" selected="@(Model.QuizType == QuizType.Matching)">Matching — з’єднати пари</option>
+                        <option value="@((int)QuizType.FillBlank)" selected="@(Model.QuizType == QuizType.FillBlank)">FillBlank — пропуски</option>
+                    </select>
+                    <div class="hint">Використовується тільки для завдань типу Quiz.</div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Перевірка</label>
+                    <select name="AssessmentMode" class="select">
+                        <option value="@((int)TaskAssessmentMode.AutoPercent)" selected="@(Model.AssessmentMode == TaskAssessmentMode.AutoPercent)">Автоматично по %</option>
+                        <option value="@((int)TaskAssessmentMode.TeacherReview)" selected="@(Model.AssessmentMode == TaskAssessmentMode.TeacherReview)">На перевірку вчителю</option>
+                    </select>
+                    <div class="hint">Для Practice можна або рахувати %, або приймати роботу вручну.</div>
+                </div>
             </div>
 
             <div class="field">
@@ -64,3 +85,5 @@
     </form>
 
 </div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

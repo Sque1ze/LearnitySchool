@@ -1,5 +1,6 @@
 ﻿using LearnitySchool.Application.Common;
 using LearnitySchool.Domain.Entities;
+using LearnitySchool.Domain.Enums;
 using LearnitySchool.Infrastructure.Persistence;
 using LearnitySchool.Web.ViewModels.Manager.Quiz;
 using Microsoft.AspNetCore.Authorization;
@@ -18,6 +19,42 @@ public class ManagerQuizController : Controller
         _db = db;
     }
 
+    private async Task<int> GetNextQuestionOrderAsync(Guid taskId)
+    {
+        var max = await _db.QuizQuestions
+            .Where(q => q.TaskId == taskId)
+            .Select(q => (int?)q.Order)
+            .MaxAsync() ?? 0;
+
+        return max + 1;
+    }
+
+    private async Task<int> GetNextOptionOrderAsync(Guid questionId)
+    {
+        var max = await _db.QuizOptions
+            .Where(o => o.QuestionId == questionId)
+            .Select(o => (int?)o.Order)
+            .MaxAsync() ?? 0;
+
+        return max + 1;
+    }
+
+    private async Task<bool> QuestionOrderExistsAsync(Guid taskId, int order, Guid? exceptQuestionId = null)
+    {
+        return await _db.QuizQuestions.AnyAsync(q =>
+            q.TaskId == taskId &&
+            q.Order == order &&
+            (!exceptQuestionId.HasValue || q.Id != exceptQuestionId.Value));
+    }
+
+    private async Task<bool> OptionOrderExistsAsync(Guid questionId, int order, Guid? exceptOptionId = null)
+    {
+        return await _db.QuizOptions.AnyAsync(o =>
+            o.QuestionId == questionId &&
+            o.Order == order &&
+            (!exceptOptionId.HasValue || o.Id != exceptOptionId.Value));
+    }
+
     // =========================
     // QUESTIONS LIST
     // /ManagerQuiz/Quiz?taskId=...
@@ -27,7 +64,7 @@ public class ManagerQuizController : Controller
         var task = await _db.LessonTasks
             .AsNoTracking()
             .Where(t => t.Id == taskId)
-            .Select(t => new { t.Id, t.Title, t.LessonId })
+            .Select(t => new { t.Id, t.Title, t.LessonId, t.QuizType })
             .FirstOrDefaultAsync();
 
         if (task == null) return NotFound();
@@ -50,6 +87,7 @@ public class ManagerQuizController : Controller
         ViewBag.TaskId = taskId;
         ViewBag.TaskTitle = task.Title;
         ViewBag.LessonId = task.LessonId;
+        ViewBag.QuizType = task.QuizType;
 
         return View(questions);
     }
@@ -57,12 +95,12 @@ public class ManagerQuizController : Controller
     // =========================
     // CREATE QUESTION (GET)
     // =========================
-    public IActionResult CreateQuestion(Guid taskId)
+    public async Task<IActionResult> CreateQuestion(Guid taskId)
     {
         return View(new QuizQuestionEditVm
         {
             TaskId = taskId,
-            Order = 1,
+            Order = await GetNextQuestionOrderAsync(taskId),
             IsPublished = true
         });
     }
@@ -74,6 +112,11 @@ public class ManagerQuizController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateQuestion(QuizQuestionEditVm vm)
     {
+        if (await QuestionOrderExistsAsync(vm.TaskId, vm.Order))
+        {
+            ModelState.AddModelError(nameof(vm.Order), "Питання з таким порядковим номером уже існує в цьому завданні. Оберіть інший номер.");
+        }
+
         if (!ModelState.IsValid) return View(vm);
 
         var q = new QuizQuestion
@@ -116,6 +159,11 @@ public class ManagerQuizController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditQuestion(QuizQuestionEditVm vm)
     {
+        if (await QuestionOrderExistsAsync(vm.TaskId, vm.Order, vm.Id))
+        {
+            ModelState.AddModelError(nameof(vm.Order), "Питання з таким порядковим номером уже існує в цьому завданні. Оберіть інший номер.");
+        }
+
         if (!ModelState.IsValid) return View(vm);
 
         var q = await _db.QuizQuestions.FindAsync(vm.Id);
@@ -207,12 +255,15 @@ public class ManagerQuizController : Controller
     // =========================
     // CREATE OPTION (GET)
     // =========================
-    public IActionResult CreateOption(Guid questionId)
+    public async Task<IActionResult> CreateOption(Guid questionId)
     {
+        var questionExists = await _db.QuizQuestions.AnyAsync(q => q.Id == questionId);
+        if (!questionExists) return NotFound();
+
         return View(new QuizOptionEditVm
         {
             QuestionId = questionId,
-            Order = 1
+            Order = await GetNextOptionOrderAsync(questionId)
         });
     }
 
@@ -223,10 +274,22 @@ public class ManagerQuizController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateOption(QuizOptionEditVm vm)
     {
+        var question = await _db.QuizQuestions
+            .Where(q => q.Id == vm.QuestionId)
+            .Select(q => new { q.Id, q.Task.QuizType })
+            .FirstOrDefaultAsync();
+
+        if (question == null) return NotFound();
+
+        if (await OptionOrderExistsAsync(vm.QuestionId, vm.Order))
+        {
+            ModelState.AddModelError(nameof(vm.Order), "Опція з таким порядковим номером уже існує для цього питання. Наступний вільний номер можна побачити при повторному відкритті форми.");
+        }
+
         if (!ModelState.IsValid) return View(vm);
 
-        // якщо ставимо correct — скидаємо інші
-        if (vm.IsCorrect)
+        // Для Matching залишаємо одну правильну пару на питання. Для Standard/FillBlank можна кілька правильних варіантів.
+        if (vm.IsCorrect && question.QuizType == QuizType.Matching)
         {
             var others = await _db.QuizOptions
                 .Where(o => o.QuestionId == vm.QuestionId)
@@ -276,13 +339,24 @@ public class ManagerQuizController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditOption(QuizOptionEditVm vm)
     {
+        var question = await _db.QuizQuestions
+            .Where(q => q.Id == vm.QuestionId)
+            .Select(q => new { q.Id, q.Task.QuizType })
+            .FirstOrDefaultAsync();
+
+        if (question == null) return NotFound();
+
+        if (await OptionOrderExistsAsync(vm.QuestionId, vm.Order, vm.Id))
+        {
+            ModelState.AddModelError(nameof(vm.Order), "Опція з таким порядковим номером уже існує для цього питання. Оберіть інший номер.");
+        }
+
         if (!ModelState.IsValid) return View(vm);
 
         var o = await _db.QuizOptions.FindAsync(vm.Id);
         if (o == null) return NotFound();
 
-        // якщо ставимо correct — скидаємо інші
-        if (vm.IsCorrect)
+        if (vm.IsCorrect && question.QuizType == QuizType.Matching)
         {
             var others = await _db.QuizOptions
                 .Where(x => x.QuestionId == vm.QuestionId && x.Id != vm.Id)

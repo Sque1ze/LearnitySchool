@@ -16,7 +16,7 @@
     <div class="users-header">
         <div>
             <h2 class="users-title">Practice builder — <span class="muted">@Model.TaskTitle</span></h2>
-            <div class="sub">Умова + Starter + Reference (HTML/CSS/JS)</div>
+            <div class="sub">Умова + необовʼязковий Starter + необовʼязковий Reference (HTML/CSS/JS)</div>
         </div>
 
         <div class="header-actions">
@@ -47,12 +47,12 @@
             <section class="card threshold-card">
                 <div class="card-title">Threshold (%)</div>
                 <input name="SimilarityThreshold" value="@Model.SimilarityThreshold" class="input" />
-                <div class="hint">Рекомендовано: 70–90</div>
+                <div class="hint">Мінімум для зарахування: 95%. 100% — ідеально, 95%+ — проходить.</div>
             </section>
 
             <section class="practice-two">
                 <div class="card">
-                    <div class="card-title">Starter</div>
+                    <div class="card-title">Starter <span class="card-title-muted">(необовʼязково)</span></div>
 
                     <div class="tabs" data-group="starter">
                         <button type="button" class="tab is-active" data-tab="html">HTML</button>
@@ -72,7 +72,7 @@
                 </div>
 
                 <div class="card">
-                    <div class="card-title">Reference <span class="card-title-muted">(не показувати студенту)</span></div>
+                    <div class="card-title">Reference <span class="card-title-muted">(необовʼязково, не показувати студенту)</span></div>
 
                     <div class="tabs" data-group="ref">
                         <button type="button" class="tab is-active" data-tab="html">HTML</button>

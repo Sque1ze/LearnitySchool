@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualBasic.FileIO;
-
-namespace LearnitySchool.Domain.Entities;
+﻿namespace LearnitySchool.Domain.Entities;
 
 public class QuizQuestion
 {

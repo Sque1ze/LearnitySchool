@@ -22,5 +22,5 @@ public class PracticeTask
     public string ReferenceJs { get; set; } = "";
 
     // % для зарахування
-    public int SimilarityThreshold { get; set; } = 80;
+    public int SimilarityThreshold { get; set; } = 95;
 }

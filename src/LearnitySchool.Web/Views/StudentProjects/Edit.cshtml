@@ -1,0 +1,76 @@
+@model LearnitySchool.Web.ViewModels.Student.Projects.StudentProjectEditVm
+@{
+    ViewData["Title"] = Model.Id == Guid.Empty ? "Новий проєкт" : Model.Title;
+}
+<link rel="stylesheet" href="~/css/student/projects.css" asp-append-version="true" />
+
+<section class="proj-page editor-page">
+    <header class="proj-head">
+        <div>
+            <div class="kicker">Student project</div>
+            <h1>@(Model.Id == Guid.Empty ? "Новий проєкт" : Model.Title)</h1>
+            <p>Monaco Editor + живий preview.</p>
+        </div>
+        <div class="proj-actions">
+            <a asp-action="Index" class="proj-btn">← До проєктів</a>
+        </div>
+    </header>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="proj-alert success">@TempData["Success"]</div>
+    }
+
+    <form asp-action="Save" method="post" id="projectForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" id="projectId" />
+        <input type="hidden" asp-for="Html" id="submitHtml" />
+        <input type="hidden" asp-for="Css" id="submitCss" />
+        <input type="hidden" asp-for="Js" id="submitJs" />
+
+        <div class="proj-meta-card">
+            <label>Назва<input asp-for="Title" id="projectTitle" /></label>
+            <label>Опис<input asp-for="Description" id="projectDescription" /></label>
+            <div class="save-status" id="saveStatus">Autosave: —</div>
+        </div>
+
+        <div asp-validation-summary="All" class="validation"></div>
+
+        <div class="project-editor-grid">
+            <section class="project-panel">
+                <div class="tabs">
+                    <button class="tab active" type="button" data-tab="html">HTML</button>
+                    <button class="tab" type="button" data-tab="css">CSS</button>
+                    <button class="tab" type="button" data-tab="js">JS</button>
+                </div>
+                <div class="tab-content">
+                    <div class="tab-pane active" data-pane="html"><div id="htmlEditor" class="monaco-host"></div></div>
+                    <div class="tab-pane" data-pane="css"><div id="cssEditor" class="monaco-host"></div></div>
+                    <div class="tab-pane" data-pane="js"><div id="jsEditor" class="monaco-host"></div></div>
+                </div>
+            </section>
+            <section class="project-panel preview-panel">
+                <div class="preview-head"><strong>Preview</strong><button type="button" id="runBtn" class="proj-btn primary">Run ▶</button></div>
+                <iframe id="previewFrame" class="preview-frame" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+                <div class="project-console-panel">
+                    <div class="console-head"><strong>Console</strong><button type="button" id="clearProjectConsoleBtn" class="proj-btn">Clear</button></div>
+                    <div id="projectConsole" class="console-output"><div class="console-empty">Console output зʼявиться тут після Run.</div></div>
+                </div>
+            </section>
+        </div>
+
+        <div class="proj-actions bottom">
+            <button type="submit" class="proj-btn primary">Save</button>
+            <a asp-action="Index" class="proj-btn">Back</a>
+        </div>
+    </form>
+</section>
+
+<textarea id="editorHtmlValue" hidden>@Model.Html</textarea>
+<textarea id="editorCssValue" hidden>@Model.Css</textarea>
+<textarea id="editorJsValue" hidden>@Model.Js</textarea>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/student/projects.js" asp-append-version="true"></script>
+}

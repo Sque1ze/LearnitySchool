@@ -11,13 +11,18 @@
         <a asp-action="Create" class="btn btn-primary">+ Створити курс</a>
     </div>
 
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert-success">@TempData["Success"]</div>
+    }
+
     <div class="card">
         <table class="users-table courses-table">
             <thead>
                 <tr>
                     <th>Title</th>
                     <th style="width:140px;">Published</th>
-                    <th style="width:320px;"></th>
+                    <th style="width:380px;"></th>
                 </tr>
             </thead>
 
@@ -62,6 +67,9 @@
                                        asp-route-courseId="@c.Id">
                                     Lessons
                                 </a>
+                                <span>·</span>
+
+                                <a asp-action="Clone" asp-route-id="@c.Id">Copy</a>
                                 <span>·</span>
 
                                 <a asp-action="Edit" asp-route-id="@c.Id">Edit</a>

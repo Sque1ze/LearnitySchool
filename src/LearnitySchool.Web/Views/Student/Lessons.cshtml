@@ -36,6 +36,7 @@
                     <th style="width:110px;">Завдання</th>
                     <th style="width:130px;">Виконано</th>
                     <th style="width:280px;">Прогрес</th>
+                    <th style="width:150px;">Оплата</th>
                     <th style="width:170px;"></th>
                 </tr>
             </thead>
@@ -44,14 +45,14 @@
                 @if (Model == null || Model.Count == 0)
                 {
                     <tr>
-                        <td colspan="6" class="empty">Немає уроків</td>
+                        <td colspan="7" class="empty">Немає уроків</td>
                     </tr>
                 }
                 else
                 {
                     foreach (var l in Model)
                     {
-                        var locked = !l.IsOpen;
+                        var locked = !l.CanEnter;
 
                         <tr class="row @(locked ? "row-locked" : "")">
                             <td class="cell-muted">@l.Order</td>
@@ -87,8 +88,27 @@
                                 </div>
                             </td>
 
+                            <td>
+                                @if (l.IsFree)
+                                {
+                                    <span class="pill pill-info">Free</span>
+                                }
+                                else if (l.IsPaid)
+                                {
+                                    <span class="pill pill-success">Оплачено</span>
+                                }
+                                else
+                                {
+                                    <span class="pill pill-muted">Не оплачено</span>
+                                }
+                                @if (!l.IsFree)
+                                {
+                                    <div class="cell-muted" style="margin-top:4px;">@l.PriceAmount.ToString("0.##") @l.Currency</div>
+                                }
+                            </td>
+
                             <td class="actions">
-                                @if (!locked)
+                                @if (l.CanEnter)
                                 {
                                     <a asp-controller="Student"
                                        asp-action="Tasks"
@@ -97,11 +117,17 @@
                                         Відкрити завдання
                                     </a>
                                 }
-                                else
+                                else if (!l.IsOpen)
                                 {
                                     <button class="btn btn-ghost" disabled title="Урок закритий викладачем">
                                         Недоступно
                                     </button>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Student" asp-action="PaymentConfirm" asp-route-lessonId="@l.LessonId" class="btn btn-primary">
+                                        Оплатити
+                                    </a>
                                 }
                             </td>
                         </tr>

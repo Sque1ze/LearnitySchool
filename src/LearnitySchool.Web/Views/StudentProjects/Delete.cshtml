@@ -1,0 +1,18 @@
+@model LearnitySchool.Domain.Entities.StudentProject
+@{
+    ViewData["Title"] = "Видалити проєкт";
+}
+<link rel="stylesheet" href="~/css/student/projects.css" asp-append-version="true" />
+
+<section class="proj-page">
+    <div class="proj-card delete-card">
+        <h1>Видалити проєкт?</h1>
+        <p>“@Model.Title” буде видалено без можливості відновлення.</p>
+        <form asp-action="DeleteConfirmed" method="post" class="proj-actions">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button class="proj-btn danger" type="submit">Так, видалити</button>
+            <a asp-action="Index" class="proj-btn">Скасувати</a>
+        </form>
+    </div>
+</section>

@@ -28,6 +28,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
     public DbSet<StudentQuizAttempt> StudentQuizAttempts => Set<StudentQuizAttempt>();
     public DbSet<PracticeTask> PracticeTasks => Set<PracticeTask>();
     public DbSet<StudentPracticeDraft> StudentPracticeDrafts => Set<StudentPracticeDraft>();
+    public DbSet<StudentTaskSubmission> StudentTaskSubmissions => Set<StudentTaskSubmission>();
+    public DbSet<LessonPayment> LessonPayments => Set<LessonPayment>();
+    public DbSet<StudentProject> StudentProjects => Set<StudentProject>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     public DbSet<CourseLessonGate> CourseLessonGates => Set<CourseLessonGate>();
     public DbSet<StudentLessonAttendance> StudentLessonAttendances => Set<StudentLessonAttendance>();
@@ -109,6 +113,14 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
             // Content може бути великим => nvarchar(max)
             b.Property(x => x.Content);
 
+            b.Property(x => x.PriceAmount)
+                .HasColumnType("decimal(10,2)")
+                .IsRequired();
+
+            b.Property(x => x.Currency)
+                .HasMaxLength(8)
+                .IsRequired();
+
             b.Property(x => x.Order)
                 .IsRequired();
 
@@ -185,6 +197,12 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
             b.Property(x => x.Type)
                 .IsRequired();
 
+            b.Property(x => x.AssessmentMode)
+                .IsRequired();
+
+            b.Property(x => x.QuizType)
+                .IsRequired();
+
             b.HasOne(x => x.Lesson)
                 .WithMany(x => x.Tasks) // ✅ потрібна навігація в Lesson
                 .HasForeignKey(x => x.LessonId)
@@ -258,6 +276,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
         {
             b.Property(x => x.StudentUserId).HasMaxLength(450).IsRequired();
             b.Property(x => x.SubmittedAt).IsRequired();
+            b.Property(x => x.QuizType).IsRequired();
+            b.Property(x => x.AnswersJson);
             b.HasIndex(x => new { x.TaskId, x.StudentUserId }).IsUnique();
         });
 
@@ -306,6 +326,129 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
             // Корисні індекси для вибірок
             b.HasIndex(x => x.StudentUserId);
             b.HasIndex(x => x.LessonTaskId);
+        });
+
+
+        builder.Entity<StudentTaskSubmission>(b =>
+        {
+            b.HasKey(x => x.Id);
+
+            b.Property(x => x.StudentUserId)
+                .HasMaxLength(450)
+                .IsRequired();
+
+            b.Property(x => x.Html).IsRequired();
+            b.Property(x => x.Css).IsRequired();
+            b.Property(x => x.Js).IsRequired();
+
+            b.Property(x => x.Status).IsRequired();
+            b.Property(x => x.SubmittedAtUtc).IsRequired();
+
+            b.Property(x => x.ReviewedByTeacherUserId)
+                .HasMaxLength(450);
+
+            b.Property(x => x.TeacherComment)
+                .HasMaxLength(2000);
+
+            // 1 актуальна здача на 1 студента на 1 задачу.
+            // Якщо вчитель повернув роботу, студент перездає її в цей самий запис.
+            b.HasIndex(x => new { x.LessonTaskId, x.StudentUserId })
+                .IsUnique();
+
+            b.HasIndex(x => x.StudentUserId);
+            b.HasIndex(x => x.LessonTaskId);
+            b.HasIndex(x => x.Status);
+            b.HasIndex(x => x.SubmittedAtUtc);
+
+            b.HasOne(x => x.LessonTask)
+                .WithMany()
+                .HasForeignKey(x => x.LessonTaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<LessonPayment>(b =>
+        {
+            b.HasKey(x => x.Id);
+
+            b.Property(x => x.StudentId)
+                .HasMaxLength(450)
+                .IsRequired();
+
+            b.Property(x => x.Amount)
+                .HasColumnType("decimal(10,2)")
+                .IsRequired();
+
+            b.Property(x => x.Currency)
+                .HasMaxLength(8)
+                .IsRequired();
+
+            b.Property(x => x.Status)
+                .IsRequired();
+
+            b.Property(x => x.PaymentProvider)
+                .HasMaxLength(64)
+                .IsRequired();
+
+            b.Property(x => x.ProviderPaymentId)
+                .HasMaxLength(128);
+
+            b.HasIndex(x => new { x.StudentId, x.LessonId });
+            b.HasIndex(x => new { x.StudentId, x.LessonId, x.Status });
+            b.HasIndex(x => x.CreatedAtUtc);
+
+            b.HasOne(x => x.Lesson)
+                .WithMany(x => x.Payments)
+                .HasForeignKey(x => x.LessonId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<StudentProject>(b =>
+        {
+            b.HasKey(x => x.Id);
+
+            b.Property(x => x.StudentId)
+                .HasMaxLength(450)
+                .IsRequired();
+
+            b.Property(x => x.Title)
+                .HasMaxLength(160)
+                .IsRequired();
+
+            b.Property(x => x.Description)
+                .HasMaxLength(1000);
+
+            b.Property(x => x.CreatedAtUtc).IsRequired();
+            b.Property(x => x.UpdatedAtUtc).IsRequired();
+
+            b.HasIndex(x => x.StudentId);
+            b.HasIndex(x => new { x.StudentId, x.UpdatedAtUtc });
+        });
+
+        builder.Entity<Notification>(b =>
+        {
+            b.HasKey(x => x.Id);
+
+            b.Property(x => x.UserId)
+                .HasMaxLength(450)
+                .IsRequired();
+
+            b.Property(x => x.Title)
+                .HasMaxLength(160)
+                .IsRequired();
+
+            b.Property(x => x.Message)
+                .HasMaxLength(1000)
+                .IsRequired();
+
+            b.Property(x => x.Type).IsRequired();
+            b.Property(x => x.IsRead).IsRequired();
+            b.Property(x => x.CreatedAtUtc).IsRequired();
+
+            b.Property(x => x.Url)
+                .HasMaxLength(500);
+
+            b.HasIndex(x => new { x.UserId, x.IsRead });
+            b.HasIndex(x => x.CreatedAtUtc);
         });
 
         builder.Entity<CourseLessonGate>(b =>

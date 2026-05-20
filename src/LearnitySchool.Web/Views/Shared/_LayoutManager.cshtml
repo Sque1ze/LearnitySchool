@@ -1,30 +1,33 @@
 @using LearnitySchool.Infrastructure.Identity
+@using LearnitySchool.Infrastructure.Persistence
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
 @inject UserManager<ApplicationUser> UserManager
-
+@inject AppDbContext Db
 @{
     Layout = null;
-
     string displayName = "Guest";
+    string? userId = null;
+    int unreadCount = 0;
 
     if (User?.Identity?.IsAuthenticated == true)
     {
         var user = await UserManager.GetUserAsync(User);
-
+        userId = user?.Id;
         var first = user?.FirstName?.Trim() ?? "";
         var last = user?.LastName?.Trim() ?? "";
+        displayName = !string.IsNullOrWhiteSpace(first) && !string.IsNullOrWhiteSpace(last)
+            ? $"{first} {char.ToUpper(last[0])}."
+            : (!string.IsNullOrWhiteSpace(first) ? first : (User.Identity?.Name ?? "User"));
 
-        if (!string.IsNullOrWhiteSpace(first) && !string.IsNullOrWhiteSpace(last))
-            displayName = $"{first} {char.ToUpper(last[0])}.";
-        else if (!string.IsNullOrWhiteSpace(first))
-            displayName = first;
-        else
-            displayName = User.Identity?.Name ?? "User";
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            unreadCount = await Db.Notifications.CountAsync(n => n.UserId == userId && !n.IsRead);
+        }
     }
 
     var title = ViewData["Title"] as string ?? "Manager";
 }
-
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -34,82 +37,70 @@
     <link rel="stylesheet" href="~/css/studentLayout.css" asp-append-version="true" />
 </head>
 <body>
+<div class="layout">
+    <aside class="sidebar">
+        <a asp-controller="Home" asp-action="Index" class="logo">
+            <span class="logo-icon">L</span>
+            <span class="logo-text">LearnitySchool</span>
+        </a>
+        <nav class="menu">
+            <a asp-controller="Manager" asp-action="Index" class="menu-item">Головна</a>
+            <a asp-controller="ManagerUsers" asp-action="Index" class="menu-item">Користувачі</a>
+            <a asp-controller="ManagerCourses" asp-action="Index" class="menu-item">Курси</a>
+            <a asp-controller="Notifications" asp-action="Index" class="menu-item">Сповіщення</a>
+        </nav>
+    </aside>
 
-    <div class="layout">
+    <div class="content">
+        <header class="top-header">
+            <div class="header-left"><span class="page-title">@title</span></div>
+            <div class="header-right">
+                <a asp-controller="Notifications" asp-action="Index" class="notify-link" title="Сповіщення">
+                    <span>🔔</span>
+                    @if (unreadCount > 0)
+                    {
+                        <span class="notify-count">@unreadCount</span>
+                    }
+                </a>
 
-        <aside class="sidebar">
-            <a asp-controller="Home" asp-action="Index" class="logo">
-                <span class="logo-icon">L</span>
-                <span class="logo-text">LearnitySchool</span>
-            </a>
-
-            <nav class="menu">
-                <a asp-controller="Manager" asp-action="Index" class="menu-item">Головна сторінка</a>
-                <a asp-controller="ManagerUsers" asp-action="Index" class="menu-item">Управління користувачами</a>
-                <a asp-controller="ManagerCourses" asp-action="Index" class="menu-item">Створення курсів</a>
-            </nav>
-        </aside>
-
-        <div class="content">
-
-            <header class="top-header">
-                <div class="header-left">
-                    <span class="page-title">@title</span>
+                <div class="dropdown" id="langDropdown">
+                    <button type="button" class="dropdown-btn" data-dropdown="langDropdown"><span data-lang-current>UA</span> <span class="caret">▾</span></button>
+                    <div class="dropdown-menu">
+                        <button type="button" class="dropdown-item" data-lang="uk">Українська</button>
+                        <button type="button" class="dropdown-item" data-lang="en">English</button>
+                    </div>
                 </div>
 
-                <div class="header-right">
-
-                    <div class="dropdown" id="langDropdown">
-                        <button type="button" class="dropdown-btn" data-dropdown="langDropdown">
-                            UA <span class="caret">▾</span>
-                        </button>
-                        <div class="dropdown-menu">
-                            <button type="button" class="dropdown-item">Українська</button>
-                            <button type="button" class="dropdown-item">English</button>
-                        </div>
+                <div class="dropdown" id="userDropdown">
+                    <button type="button" class="dropdown-btn avatar-btn" data-dropdown="userDropdown">
+                        <span class="user-avatar">👤</span>
+                        <span class="user-display">@displayName</span>
+                        <span class="caret">▾</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <a asp-controller="Profile" asp-action="Index" class="dropdown-item link-item">Профіль</a>
+                        <a asp-controller="Profile" asp-action="ChangePassword" class="dropdown-item link-item">Змінити пароль</a>
+                        @if (User?.Identity?.IsAuthenticated == true)
+                        {
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="logout-form">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="dropdown-item danger-btn">Вийти</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="Login" class="dropdown-item link-item">Увійти</a>
+                        }
                     </div>
-
-                    <div class="dropdown" id="userDropdown">
-                        <button type="button" class="dropdown-btn avatar-btn" data-dropdown="userDropdown">
-                            <span class="user-avatar">👤</span>
-                            <span class="user-display">@displayName</span>
-                            <span class="caret">▾</span>
-                        </button>
-
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <a asp-controller="Manager" asp-action="Profile" class="dropdown-item link-item">
-                                Профіль
-                            </a>
-
-                            @if (User?.Identity?.IsAuthenticated == true)
-                            {
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="logout-form">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="dropdown-item danger-btn">Вийти</button>
-                                </form>
-                            }
-                            else
-                            {
-                                <a asp-controller="Account" asp-action="Login" class="dropdown-item link-item">
-                                    Увійти
-                                </a>
-                            }
-                        </div>
-                    </div>
-
                 </div>
-            </header>
+            </div>
+        </header>
 
-            <main class="main-content">
-                @RenderBody()
-            </main>
-
-        </div>
-
+        <main class="main-content">@RenderBody()</main>
     </div>
-
-    <script src="~/js/studentLayout.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
-
+</div>
+<script src="~/js/studentLayout.js" asp-append-version="true"></script>
+<script src="~/js/language.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

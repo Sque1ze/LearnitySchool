@@ -1,4 +1,5 @@
 ﻿using LearnitySchool.Domain.Entities;
+using LearnitySchool.Domain.Enums;
 using LearnitySchool.Infrastructure.Persistence;
 using LearnitySchool.Application.Common;
 using LearnitySchool.Web.ViewModels.Manager.Tasks;
@@ -41,6 +42,8 @@ public class ManagerTasksController : Controller
                 Order = x.Order,
                 Title = x.Title,
                 Type = x.Type,
+                AssessmentMode = x.AssessmentMode,
+                QuizType = x.QuizType,
                 IsPublished = x.IsPublished
             })
             .ToListAsync();
@@ -77,7 +80,11 @@ public class ManagerTasksController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(TaskEditVm vm)
     {
-        if (!ModelState.IsValid) return View(vm);
+        if (!ModelState.IsValid)
+        {
+            vm.LessonTitle = await _db.Lessons.Where(x => x.Id == vm.LessonId).Select(x => x.Title).FirstOrDefaultAsync() ?? string.Empty;
+            return View(vm);
+        }
 
         var orderExists = await _db.LessonTasks.AnyAsync(x =>
             x.LessonId == vm.LessonId && x.Order == vm.Order);
@@ -85,8 +92,13 @@ public class ManagerTasksController : Controller
         if (orderExists)
         {
             ModelState.AddModelError(nameof(vm.Order), "Такий Order вже існує в цьому уроці.");
+            vm.LessonTitle = await _db.Lessons.Where(x => x.Id == vm.LessonId).Select(x => x.Title).FirstOrDefaultAsync() ?? string.Empty;
             return View(vm);
         }
+
+        var assessmentMode = vm.Type == LessonTaskType.Practice
+            ? vm.AssessmentMode
+            : TaskAssessmentMode.AutoPercent;
 
         var task = new LessonTask
         {
@@ -96,6 +108,8 @@ public class ManagerTasksController : Controller
             Title = vm.Title.Trim(),
             Description = vm.Description?.Trim(),
             Type = vm.Type,
+            AssessmentMode = assessmentMode,
+            QuizType = vm.Type == LessonTaskType.Quiz ? vm.QuizType : QuizType.Standard,
             IsPublished = vm.IsPublished
         };
 
@@ -125,6 +139,8 @@ public class ManagerTasksController : Controller
             Title = task.Title,
             Description = task.Description,
             Type = task.Type,
+            AssessmentMode = task.AssessmentMode,
+            QuizType = task.QuizType,
             IsPublished = task.IsPublished
         });
     }
@@ -134,7 +150,11 @@ public class ManagerTasksController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(TaskEditVm vm)
     {
-        if (!ModelState.IsValid) return View(vm);
+        if (!ModelState.IsValid)
+        {
+            vm.LessonTitle = await _db.Lessons.Where(x => x.Id == vm.LessonId).Select(x => x.Title).FirstOrDefaultAsync() ?? string.Empty;
+            return View(vm);
+        }
 
         var task = await _db.LessonTasks.FirstOrDefaultAsync(x => x.Id == vm.Id);
         if (task == null) return NotFound();
@@ -147,13 +167,20 @@ public class ManagerTasksController : Controller
         if (orderExists)
         {
             ModelState.AddModelError(nameof(vm.Order), "Такий Order вже існує в цьому уроці.");
+            vm.LessonTitle = await _db.Lessons.Where(x => x.Id == vm.LessonId).Select(x => x.Title).FirstOrDefaultAsync() ?? string.Empty;
             return View(vm);
         }
+
+        var assessmentMode = vm.Type == LessonTaskType.Practice
+            ? vm.AssessmentMode
+            : TaskAssessmentMode.AutoPercent;
 
         task.Order = vm.Order;
         task.Title = vm.Title.Trim();
         task.Description = vm.Description?.Trim();
         task.Type = vm.Type;
+        task.AssessmentMode = assessmentMode;
+        task.QuizType = vm.Type == LessonTaskType.Quiz ? vm.QuizType : QuizType.Standard;
         task.IsPublished = vm.IsPublished;
 
         await _db.SaveChangesAsync();

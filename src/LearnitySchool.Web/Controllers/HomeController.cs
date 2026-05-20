@@ -12,7 +12,7 @@ public class HomeController : Controller
             return RedirectToAction("Login", "Account");
 
         if (User.IsInRole(RoleNames.Manager)) return RedirectToAction("Index", "Manager");
-        if (User.IsInRole(RoleNames.Teacher)) return RedirectToAction("Index", "Teacher");
+        if (User.IsInRole(RoleNames.Teacher)) return RedirectToAction("Dashboard", "Teacher");
         return RedirectToAction("Index", "Student");
     }
 }

@@ -1,0 +1,172 @@
+@using LearnitySchool.Domain.Enums
+@model LearnitySchool.Web.ViewModels.Teacher.Submissions.TeacherSubmissionDetailsVm
+@{
+    ViewData["Title"] = "Перевірка роботи";
+}
+
+<link rel="stylesheet" href="~/css/teacher/submissions.css" asp-append-version="true" />
+
+<section class="rev-page">
+    <header class="rev-head rev-head--details">
+        <div>
+            <div class="rev-kicker">Teacher review</div>
+            <h1 class="rev-title">@Model.TaskTitle</h1>
+            <div class="rev-sub">
+                @Model.CourseTitle → @Model.LessonTitle · Учень: <strong>@Model.StudentName</strong>
+                @if (!string.IsNullOrWhiteSpace(Model.StudentEmail))
+                {
+                    <span>(@Model.StudentEmail)</span>
+                }
+            </div>
+        </div>
+        <a asp-action="Index" class="rev-btn">← До списку</a>
+    </header>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="rev-alert rev-alert--success">@TempData["Success"]</div>
+    }
+
+    <div class="rev-details-grid">
+        <section class="rev-card rev-meta-card">
+            <div class="rev-card-title">Інформація</div>
+
+            <div class="rev-meta">
+                <div class="rev-muted">Статус</div>
+                <div>
+                    @if (Model.Status == StudentSubmissionStatus.PendingReview)
+                    {
+                        <span class="rev-pill rev-pill--pending">🟡 Очікує перевірки</span>
+                    }
+                    else if (Model.Status == StudentSubmissionStatus.Approved)
+                    {
+                        <span class="rev-pill rev-pill--ok">✅ Зараховано</span>
+                    }
+                    else
+                    {
+                        <span class="rev-pill rev-pill--returned">🔁 Повернуто</span>
+                    }
+                </div>
+
+                <div class="rev-muted">Здано</div>
+                <div>@Model.SubmittedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+
+                <div class="rev-muted">Перевірено</div>
+                <div>@(Model.ReviewedAtUtc?.ToLocalTime().ToString("dd.MM.yyyy HH:mm") ?? "—")</div>
+
+                <div class="rev-muted">Similarity</div>
+                <div>Server: @(Model.ServerSimilarity?.ToString() ?? "—")% · Client: @(Model.ClientSimilarity?.ToString() ?? "—")%</div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.TaskDescription))
+            {
+                <div class="rev-block">
+                    <div class="rev-card-title">Опис</div>
+                    <div class="rev-muted rev-pre">@Model.TaskDescription</div>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.Statement))
+            {
+                <div class="rev-block">
+                    <div class="rev-card-title">Умова</div>
+                    <div class="rev-muted rev-pre">@Model.Statement</div>
+                </div>
+            }
+
+            @if (Model.HasReference)
+            {
+                <div class="rev-block rev-reference-note">
+                    <div class="rev-card-title">Reference solution</div>
+                    <div class="rev-muted rev-pre">Еталонне рішення доступне справа у вкладках “Reference HTML/CSS/JS” та у preview.</div>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.TeacherComment))
+            {
+                <div class="rev-block rev-comment-box">
+                    <div class="rev-card-title">Останній коментар</div>
+                    <div class="rev-pre">@Model.TeacherComment</div>
+                </div>
+            }
+
+            <form asp-action="Review" method="post" class="rev-review-form">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.SubmissionId" />
+
+                <label class="rev-label">Коментар для учня</label>
+                <textarea name="comment" rows="5" class="rev-textarea" placeholder="Наприклад: все добре, але додай адаптивність...">@Model.TeacherComment</textarea>
+
+                <div class="rev-form-actions">
+                    <button type="submit" name="decision" value="approve" class="rev-btn rev-btn--ok">Зарахувати ✅</button>
+                    <button type="submit" name="decision" value="return" class="rev-btn rev-btn--danger">Повернути 🔁</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="rev-card rev-code-card">
+            <div class="rev-code-head">
+                <div>
+                    <div class="rev-card-title">Код учня і reference</div>
+                    <div class="rev-muted rev-small">Перегляньте код учня, еталонне рішення та обидва preview.</div>
+                </div>
+                <div class="rev-preview-actions">
+                    <button type="button" id="runReviewPreview" class="rev-btn rev-btn--primary">Run student ▶</button>
+                    @if (Model.HasReference)
+                    {
+                        <button type="button" id="runReferencePreview" class="rev-btn">Run reference ⭐</button>
+                    }
+                </div>
+            </div>
+
+            <div class="rev-code-tabs">
+                <button type="button" class="rev-tab active" data-tab="html">Student HTML</button>
+                <button type="button" class="rev-tab" data-tab="css">Student CSS</button>
+                <button type="button" class="rev-tab" data-tab="js">Student JS</button>
+                @if (Model.HasReference)
+                {
+                    <button type="button" class="rev-tab rev-tab--reference" data-tab="refHtml">Reference HTML</button>
+                    <button type="button" class="rev-tab rev-tab--reference" data-tab="refCss">Reference CSS</button>
+                    <button type="button" class="rev-tab rev-tab--reference" data-tab="refJs">Reference JS</button>
+                }
+            </div>
+
+            <textarea id="reviewHtml" class="rev-code-pane active" spellcheck="false" readonly>@Model.Html</textarea>
+            <textarea id="reviewCss" class="rev-code-pane" spellcheck="false" readonly>@Model.Css</textarea>
+            <textarea id="reviewJs" class="rev-code-pane" spellcheck="false" readonly>@Model.Js</textarea>
+
+            @if (Model.HasReference)
+            {
+                <textarea id="referenceHtml" class="rev-code-pane rev-code-pane--reference" spellcheck="false" readonly>@Model.ReferenceHtml</textarea>
+                <textarea id="referenceCss" class="rev-code-pane rev-code-pane--reference" spellcheck="false" readonly>@Model.ReferenceCss</textarea>
+                <textarea id="referenceJs" class="rev-code-pane rev-code-pane--reference" spellcheck="false" readonly>@Model.ReferenceJs</textarea>
+            }
+
+            <div class="rev-preview-grid @(Model.HasReference ? "rev-preview-grid--two" : "")">
+                <div>
+                    <div class="rev-preview-title">Student preview</div>
+                    <iframe id="reviewPreview" class="rev-preview" title="Student submission preview" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+                    <div class="rev-console-panel">
+                        <div class="rev-console-head"><strong>Student console</strong><button type="button" id="clearStudentConsole" class="rev-btn">Clear</button></div>
+                        <div id="studentConsole" class="rev-console-output"><div class="console-empty">Console output зʼявиться після Run student.</div></div>
+                    </div>
+                </div>
+                @if (Model.HasReference)
+                {
+                    <div>
+                        <div class="rev-preview-title">Reference preview</div>
+                        <iframe id="referencePreview" class="rev-preview" title="Reference solution preview" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+                        <div class="rev-console-panel">
+                            <div class="rev-console-head"><strong>Reference console</strong><button type="button" id="clearReferenceConsole" class="rev-btn">Clear</button></div>
+                            <div id="referenceConsole" class="rev-console-output"><div class="console-empty"></div></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/js/teacher/submissions.js" asp-append-version="true"></script>
+}

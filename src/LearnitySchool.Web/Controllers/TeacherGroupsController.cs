@@ -1,5 +1,6 @@
 ﻿using LearnitySchool.Application.Common;
 using LearnitySchool.Domain.Entities;
+using LearnitySchool.Domain.Enums;
 using LearnitySchool.Infrastructure.Identity;
 using LearnitySchool.Infrastructure.Persistence;
 using LearnitySchool.Web.ViewModels.Teacher.Groups;
@@ -64,10 +65,12 @@ public class TeacherGroupsController : Controller
         var teacherIds = items.Select(x => x.TeacherId).Where(x => x != null).Distinct().ToList()!;
         var managerIds = items.Select(x => x.ManagerUserId).Where(x => x != null).Distinct().ToList()!;
 
-        var people = await _db.Users
+        var peopleList = await _db.Users
             .AsNoTracking()
             .Where(u => teacherIds.Contains(u.Id) || managerIds.Contains(u.Id))
-            .ToDictionaryAsync(u => u.Id, u => Display(u));
+            .ToListAsync();
+
+        var people = peopleList.ToDictionary(u => u.Id, Display);
 
         vm.Items = items.Select(x => new TeacherGroupRowVm
         {
@@ -147,15 +150,17 @@ public class TeacherGroupsController : Controller
         peopleIds.AddRange(studentIds);
         peopleIds = peopleIds.Distinct().ToList();
 
-        var people = await _db.Users
+        var peopleList = await _db.Users
             .AsNoTracking()
             .Where(u => peopleIds.Contains(u.Id))
-            .ToDictionaryAsync(u => u.Id, u => new
-            {
-                Name = Display(u),
-                u.Email,
-                u.Age
-            });
+            .ToListAsync();
+
+        var people = peopleList.ToDictionary(u => u.Id, u => new
+        {
+            Name = Display(u),
+            u.Email,
+            u.Age
+        });
 
         static string Initials(string? fullName)
         {
@@ -407,11 +412,11 @@ public class TeacherGroupsController : Controller
 
         if (!studentInCourse) return NotFound();
 
-        var student = await _db.Users
+        var studentUser = await _db.Users
             .AsNoTracking()
-            .Where(u => u.Id == studentUserId)
-            .Select(u => new { Name = Display(u) })
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(u => u.Id == studentUserId);
+
+        var student = studentUser == null ? null : new { Name = Display(studentUser) };
 
         var lessons = await _db.Lessons
             .AsNoTracking()
@@ -425,7 +430,7 @@ public class TeacherGroupsController : Controller
             .Where(t => t.Lesson.CourseId == courseId && t.IsPublished)
             .OrderBy(t => t.Lesson.Order)
             .ThenBy(t => t.Order)
-            .Select(t => new { t.Id, t.LessonId, t.Order, t.Title })
+            .Select(t => new { t.Id, t.LessonId, t.Order, t.Title, t.AssessmentMode })
             .ToListAsync();
 
         var taskIds = tasks.Select(t => t.Id).ToList();
@@ -440,6 +445,22 @@ public class TeacherGroupsController : Controller
             .ToListAsync();
 
         var completedSet = completed.ToHashSet();
+
+        var submissions = await _db.StudentTaskSubmissions
+            .AsNoTracking()
+            .Where(s => s.StudentUserId == studentUserId && taskIds.Contains(s.LessonTaskId))
+            .Select(s => new { s.LessonTaskId, s.Status })
+            .ToListAsync();
+
+        var submissionMap = submissions.ToDictionary(x => x.LessonTaskId, x => x.Status);
+
+        var quizAttempts = await _db.StudentQuizAttempts
+            .AsNoTracking()
+            .Where(a => a.StudentUserId == studentUserId && taskIds.Contains(a.TaskId))
+            .Select(a => new { a.TaskId, a.ScorePercent })
+            .ToListAsync();
+
+        var quizAttemptMap = quizAttempts.ToDictionary(x => x.TaskId, x => x.ScorePercent);
 
         var tasksByLesson = tasks
             .GroupBy(t => t.LessonId)
@@ -457,12 +478,21 @@ public class TeacherGroupsController : Controller
                 var squares = new List<TeacherStudentTasksVm.TaskSquareVm>();
                 if (taskList != null)
                 {
-                    squares = taskList.Select(t => new TeacherStudentTasksVm.TaskSquareVm
+                    squares = taskList.Select(t =>
                     {
-                        TaskId = t.Id,
-                        Order = t.Order,
-                        Title = t.Title ?? "", 
-                        IsCompleted = completedSet.Contains(t.Id)
+                        var hasQuizAttempt = quizAttemptMap.TryGetValue(t.Id, out var quizScore);
+
+                        return new TeacherStudentTasksVm.TaskSquareVm
+                        {
+                            TaskId = t.Id,
+                            Order = t.Order,
+                            Title = t.Title ?? string.Empty,
+                            IsCompleted = completedSet.Contains(t.Id),
+                            AssessmentMode = t.AssessmentMode,
+                            SubmissionStatus = submissionMap.TryGetValue(t.Id, out var status) ? status : null,
+                            HasQuizAttempt = hasQuizAttempt,
+                            QuizScorePercent = hasQuizAttempt ? quizScore : null
+                        };
                     }).ToList();
                 }
 

@@ -10,4 +10,8 @@ public class StudentCourseVm
     public int TotalTasks { get; set; }
     public int CompletedTasks { get; set; }
     public int ProgressPercent { get; set; }
+
+    public int PendingReviewCount { get; set; }
+    public int PaidLessonsCount { get; set; }
+    public int UnpaidLessonsCount { get; set; }
 }

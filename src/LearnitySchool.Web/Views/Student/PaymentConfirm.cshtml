@@ -1,0 +1,29 @@
+@model LearnitySchool.Web.ViewModels.Student.Payments.PaymentConfirmVm
+@{
+    ViewData["Title"] = "Підтвердження оплати";
+}
+<link rel="stylesheet" href="~/css/student/payments.css" asp-append-version="true" />
+
+<section class="pay-page">
+    <header class="pay-head">
+        <div>
+            <div class="pay-kicker">Demo payment</div>
+            <h1>Підтвердження оплати</h1>
+            <p>Це mock/demo оплата без реальних банківських карт.</p>
+        </div>
+        <a asp-action="Lessons" asp-route-courseId="@Model.CourseId" class="pay-btn">← Назад</a>
+    </header>
+
+    <div class="pay-card confirm">
+        <div class="confirm-row"><span>Курс</span><strong>@Model.CourseTitle</strong></div>
+        <div class="confirm-row"><span>Урок</span><strong>@Model.LessonTitle</strong></div>
+        <div class="confirm-row"><span>До сплати</span><strong>@Model.Amount.ToString("0.##") @Model.Currency</strong></div>
+
+        <form asp-action="ConfirmPayment" method="post" class="confirm-actions">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="lessonId" value="@Model.LessonId" />
+            <button type="submit" class="pay-btn primary">Підтвердити demo-оплату ✅</button>
+            <a asp-action="Payments" class="pay-btn">До оплат</a>
+        </form>
+    </div>
+</section>

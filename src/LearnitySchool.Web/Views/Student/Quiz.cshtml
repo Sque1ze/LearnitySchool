@@ -1,5 +1,5 @@
-﻿@model LearnitySchool.Web.ViewModels.Student.StudentQuizVm
-
+﻿@using LearnitySchool.Domain.Enums
+@model LearnitySchool.Web.ViewModels.Student.StudentQuizVm
 @{
     ViewData["Title"] = "Тести";
 }
@@ -9,35 +9,38 @@
     <header class="sq-head">
         <div class="sq-head__left">
             <h1 class="sq-title">Quiz — <span class="sq-title__muted">@Model.Title</span></h1>
-            <div class="sq-subtitle">Оберіть відповіді та натисніть Submit</div>
+            <div class="sq-subtitle">
+                Тип: <strong>@Model.QuizType</strong>
+                @if (Model.QuizType == QuizType.Matching)
+                {
+                    <span> · З’єднай правильні пари</span>
+                }
+                @if (Model.QuizType == QuizType.FillBlank)
+                {
+                    <span> · Заповни пропуски</span>
+                }
+            </div>
         </div>
-
         <div class="sq-head__actions">
-            <a asp-action="Tasks" asp-route-lessonId="@Model.LessonId" class="sq-btn sq-btn--ghost">
-                <span class="sq-btn__arrow">←</span> Назад до завдань
-            </a>
-            <a asp-action="Lessons" asp-route-courseId="@Model.CourseId" class="sq-btn sq-btn--ghost">
-                <span class="sq-btn__arrow">←</span> Назад до уроку
-            </a>
+            <a asp-action="Tasks" asp-route-lessonId="@Model.LessonId" class="sq-btn sq-btn--ghost"><span class="sq-btn__arrow">←</span> Назад до завдань</a>
         </div>
     </header>
 
     @if (Model.HasResult)
     {
-        <div class="sq-result">
+        <div class="sq-result @(Model.Passed ? "sq-result--ok" : "sq-result--bad")">
             <div class="sq-result__row">
-                <div class="sq-result__title">
-                    Result: <span class="sq-result__score">@Model.ScorePercent%</span>
-                    <span class="sq-result__meta">(@Model.Correct / @Model.Total)</span>
+                <div>
+                    <div class="sq-result__title">Result: <span class="sq-result__score">@Model.ScorePercent%</span> <span class="sq-result__meta">(@Model.Correct / @Model.Total)</span></div>
+                    <div class="sq-result__hint">Нижче підсвічено результат: зелене — правильно, червоне — треба спробувати ще раз. Правильні відповіді не показуються.</div>
                 </div>
-
                 @if (Model.Passed)
                 {
                     <span class="sq-pill sq-pill--ok">✅ Passed</span>
                 }
                 else
                 {
-                    <span class="sq-pill sq-pill--muted">Not passed (need 70%)</span>
+                    <span class="sq-pill sq-pill--bad">Не зараховано (потрібно 95%)</span>
                 }
             </div>
         </div>
@@ -55,40 +58,111 @@
     {
         <form asp-action="SubmitQuiz" method="post" class="sq-form">
             @Html.AntiForgeryToken()
-
             <input type="hidden" name="TaskId" value="@Model.TaskId" />
             <input type="hidden" name="LessonId" value="@Model.LessonId" />
 
-            <div class="sq-questions">
+            <div class="sq-questions @(Model.QuizType == QuizType.Matching ? "matching-mode" : "")">
                 @foreach (var q in Model.Questions)
                 {
-                    <article class="sq-card">
+                    var cardState = Model.HasResult ? (q.IsCorrect == true ? "sq-card--correct" : "sq-card--wrong") : "";
+                    <article class="sq-card @cardState">
                         <div class="sq-q">
                             <div class="sq-q__num">@q.Order</div>
                             <div class="sq-q__text">@q.Text</div>
-                        </div>
-
-                        <div class="sq-options">
-                            @foreach (var o in q.Options)
+                            @if (Model.HasResult)
                             {
-                                <label class="sq-option">
-                                    <input class="sq-radio"
-                                           type="radio"
-                                           name="Answers[@q.QuestionId]"
-                                           value="@o.OptionId" />
-                                    <span class="sq-option__box" aria-hidden="true"></span>
-                                    <span class="sq-option__text">@o.Text</span>
-                                </label>
+                                if (q.IsCorrect == true)
+                                {
+                                    <span class="sq-feedback-badge sq-feedback-badge--ok">Правильно</span>
+                                }
+                                else
+                                {
+                                    <span class="sq-feedback-badge sq-feedback-badge--bad">Неправильно</span>
+                                }
                             }
                         </div>
+
+                        @if (Model.QuizType == QuizType.Standard)
+                        {
+                            <div class="sq-options">
+                                @foreach (var o in q.Options)
+                                {
+                                    var selected = q.SelectedOptionIds.Contains(o.OptionId);
+                                    var optionState = Model.HasResult && selected
+                                        ? (o.IsCorrect ? "sq-option--correct" : "sq-option--wrong")
+                                        : "";
+                                    <label class="sq-option @optionState">
+                                        <input class="sq-radio" type="checkbox" name="StandardAnswers[@q.QuestionId]" value="@o.OptionId" checked="@selected" />
+                                        <span class="sq-option__box" aria-hidden="true"></span>
+                                        <span class="sq-option__text">@o.Text</span>
+                                        @if (Model.HasResult && selected && o.IsCorrect)
+                                        {
+                                            <span class="sq-option__mark">✓ твій вибір</span>
+                                        }
+                                        else if (Model.HasResult && selected && !o.IsCorrect)
+                                        {
+                                            <span class="sq-option__mark sq-option__mark--bad">✕ твій вибір</span>
+                                        }
+                                    </label>
+                                }
+                            </div>
+                        }
+                        else if (Model.QuizType == QuizType.Matching)
+                        {
+                            var selectedMatch = q.SelectedMatchingOptionId;
+                            var selectState = Model.HasResult ? (q.IsCorrect == true ? "sq-select--correct" : "sq-select--wrong") : "";
+                            <div class="match-row">
+                                <div class="match-left">@q.Text</div>
+                                <div class="match-line"></div>
+                                <select class="sq-select @selectState" name="MatchingAnswers[@q.QuestionId]">
+                                    <option value="">Оберіть пару...</option>
+                                    @foreach (var o in Model.MatchingOptions)
+                                    {
+                                        <option value="@o.OptionId" selected="@(selectedMatch == o.OptionId)">@o.Text</option>
+                                    }
+                                </select>
+                            </div>
+                            @if (Model.HasResult)
+                            {
+                                <div class="sq-answer-note @(q.IsCorrect == true ? "sq-answer-note--ok" : "sq-answer-note--bad")">
+                                    @if (q.IsCorrect == true)
+                                    {
+                                        <span>✅ Обрана пара правильна.</span>
+                                    }
+                                    else
+                                    {
+                                        <span>❌ Поки неправильно. Спробуй ще раз — правильну відповідь не показуємо.</span>
+                                    }
+                                </div>
+                            }
+                        }
+                        else if (Model.QuizType == QuizType.FillBlank)
+                        {
+                            var blankState = Model.HasResult ? (q.IsCorrect == true ? "sq-input--correct" : "sq-input--wrong") : "";
+                            <div class="blank-box">
+                                <input class="sq-input @blankState" name="BlankAnswers[@q.QuestionId]" value="@q.BlankAnswer" placeholder="Введіть відповідь" autocomplete="off" />
+                                <div class="sq-hint">Перевірка нечутлива до регістру.</div>
+                            </div>
+                            @if (Model.HasResult)
+                            {
+                                <div class="sq-answer-note @(q.IsCorrect == true ? "sq-answer-note--ok" : "sq-answer-note--bad")">
+                                    @if (q.IsCorrect == true)
+                                    {
+                                        <span>✅ Відповідь правильна.</span>
+                                    }
+                                    else
+                                    {
+                                        <span>❌ Поки неправильно. Спробуй ще раз — правильну відповідь не показуємо.</span>
+                                    }
+                                </div>
+                            }
+                        }
                     </article>
                 }
             </div>
 
             <div class="sq-footer">
-                <button type="submit" class="sq-btn sq-btn--primary">
-                    Submit quiz <span class="sq-btn__arrow">→</span>
-                </button>
+                <button type="submit" class="sq-btn sq-btn--primary">Submit quiz <span class="sq-btn__arrow">→</span></button>
             </div>
         </form>
     }

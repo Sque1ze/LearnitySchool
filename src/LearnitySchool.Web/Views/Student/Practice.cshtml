@@ -1,6 +1,16 @@
-﻿@model LearnitySchool.Web.ViewModels.Student.StudentPracticeVm
+﻿@using LearnitySchool.Domain.Enums
+@model LearnitySchool.Web.ViewModels.Student.StudentPracticeVm
+
 @{
     ViewData["Title"] = "Practice";
+
+    var submitTitle = Model.IsTeacherReview
+        ? "Здати роботу на перевірку вчителю"
+        : "Можна здати навіть якщо менше 95%, але тоді завдання буде червоним і його можна переробити";
+
+    var submitText = Model.IsTeacherReview
+        ? "Здати роботу 🟡"
+        : "Здати роботу";
 }
 
 <link rel="stylesheet" href="~/css/student/practice.css" asp-append-version="true" />
@@ -26,16 +36,82 @@
             </div>
         }
 
+        <div class="practice-mode-card @(Model.IsTeacherReview ? "is-review" : "is-auto")">
+            @if (Model.IsTeacherReview)
+            {
+                <div class="mode-title">🟡 Режим: здача на перевірку</div>
+                <div class="mode-text">
+                    Після натискання “Здати роботу” завдання буде очікувати перевірки вчителя.
+                </div>
+            }
+            else
+            {
+                <div class="mode-title">% Режим: автоматична перевірка</div>
+                <div class="mode-text">
+                    Натисни Check, щоб побачити відсоток. Для зарахування потрібно @Model.SimilarityThreshold% або більше, але здати можна і менший результат — він буде червоним, і завдання можна переробити.
+                </div>
+            }
+        </div>
+
+        @if (Model.SubmissionStatus != null)
+        {
+            <div class="practice-status-card">
+                @if (Model.SubmissionStatus == StudentSubmissionStatus.PendingReview)
+                {
+                    <strong>🟡 Робота очікує перевірки.</strong>
+                }
+                else if (Model.SubmissionStatus == StudentSubmissionStatus.Approved)
+                {
+                    <strong>✅ Роботу зараховано.</strong>
+                }
+                else if (Model.SubmissionStatus == StudentSubmissionStatus.Returned)
+                {
+                    <strong>🔁 Роботу повернуто на доопрацювання.</strong>
+                }
+
+                @if (Model.SubmittedAtUtc.HasValue)
+                {
+                    <span>
+                        Здано: @Model.SubmittedAtUtc.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                    </span>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.TeacherComment))
+                {
+                    <div class="teacher-comment">
+                        Коментар вчителя: @Model.TeacherComment
+                    </div>
+                }
+            </div>
+        }
+
         <div class="practice-actions">
             <a asp-controller="Student"
-                   asp-action="Tasks"
-                   asp-route-lessonId="@Model.LessonId"
-                   class="btn btn-ghost">
+               asp-action="Tasks"
+               asp-route-lessonId="@Model.LessonId"
+               class="btn btn-ghost">
                 ← Back
             </a>
 
-            <button type="button" id="runBtn" class="btn btn-primary">Run ▶</button>
-            <button type="button" id="checkBtn" class="btn btn-secondary">Check ✓</button>
+            <button type="button" id="runBtn" class="btn btn-primary">
+                Run ▶
+            </button>
+
+            @if (Model.IsTeacherReview)
+            {
+                <button type="button"
+                        id="checkBtn"
+                        class="btn btn-secondary"
+                        title="Необов’язково: можна подивитися приблизний %">
+                    Check %
+                </button>
+            }
+            else
+            {
+                <button type="button" id="checkBtn" class="btn btn-secondary">
+                    Check ✓
+                </button>
+            }
 
             <button type="button" id="resetBtn" class="btn btn-ghost" title="Reset to starter code">
                 Reset ↺
@@ -59,10 +135,11 @@
                 <button type="submit"
                         id="submitBtn"
                         class="btn btn-secondary"
+                        data-mode="@((int)Model.AssessmentMode)"
+                        data-is-review="@Model.IsTeacherReview.ToString().ToLower()"
                         data-threshold="@Model.SimilarityThreshold"
-                        disabled
-                        title="Спочатку натисни Check і набери потрібний %">
-                    Submit ✅
+                        title="@submitTitle">
+                    @submitText
                 </button>
             </form>
         </div>
@@ -84,7 +161,6 @@
 
     <div class="practice-grid">
 
-        <!-- ===== LEFT: EDITOR ===== -->
         <section class="panel editor-panel">
 
             <div class="tabs" role="tablist" aria-label="Code tabs">
@@ -100,7 +176,9 @@
                     </span>
 
                     <span id="similarityBadge" class="badge badge-muted">
-                        Similarity: — (need @Model.SimilarityThreshold%)
+                        @(Model.IsTeacherReview
+                            ? "Similarity: optional"
+                            : $"Similarity: — (need {Model.SimilarityThreshold}%)")
                     </span>
                 </div>
             </div>
@@ -124,13 +202,29 @@
                 <div>
                     <div class="hint-title">Порада</div>
                     <div class="hint-text">
-                        Тут уже працює редактор Monaco: підказки, автозакриття тегів, дужок і лапок.
+                        Тут працює Monaco Editor: підказки, автозакриття тегів, дужок і лапок.
                         Натисни <b>Run</b> — щоб побачити результат.
-                        Натисни <b>Check</b> — щоб порахувати %.
-                        Кнопка <b>Submit</b> стане активною коли % ≥ @Model.SimilarityThreshold%.
+
+                        @if (Model.IsTeacherReview)
+                        {
+                            <span>
+                                У цьому режимі можна одразу натиснути <b>Здати роботу</b>,
+                                а вчитель перевірить її вручну.
+                            </span>
+                        }
+                        else
+                        {
+                            <span>
+                                Натисни <b>Check</b> — щоб порахувати %.
+                                Для зарахування потрібно <b>@Model.SimilarityThreshold%</b>, але роботу можна здати й раніше — вона буде червоною до переробки.
+                            </span>
+                        }
+
                         @if (Model.HasReference)
                         {
-                            <span> Перемкнись на <b>Reference</b>, щоб бачити приклад.</span>
+                            <span>
+                                Перемкнись на <b>Reference</b>, щоб бачити приклад.
+                            </span>
                         }
                     </div>
                 </div>
@@ -138,7 +232,6 @@
 
         </section>
 
-        <!-- ===== RIGHT: PREVIEW ===== -->
         <section class="panel preview-panel">
 
             <div class="preview-head">
@@ -148,11 +241,15 @@
                 </div>
 
                 <div class="preview-tabs">
-                    <button type="button" class="btn btn-ghost active" id="previewTabBtn">My preview</button>
+                    <button type="button" class="btn btn-ghost active" id="previewTabBtn">
+                        My preview
+                    </button>
 
                     @if (Model.HasReference)
                     {
-                        <button type="button" class="btn btn-ghost" id="referenceTabBtn">Reference</button>
+                        <button type="button" class="btn btn-ghost" id="referenceTabBtn">
+                            Reference
+                        </button>
                     }
                 </div>
             </div>
@@ -180,6 +277,16 @@
                 }
             </div>
 
+            <div class="console-panel">
+                <div class="console-head">
+                    <strong>Console</strong>
+                    <button type="button" id="clearConsoleBtn" class="btn btn-ghost btn-small">Clear</button>
+                </div>
+                <div id="previewConsole" class="console-output">
+                    <div class="console-empty">Console output зʼявиться тут після Run.</div>
+                </div>
+            </div>
+
             <div class="preview-footer">
                 <div class="muted">
                     * JS виконується в iframe. Доступ до сайту/куків заблокований sandbox’ом.
@@ -194,9 +301,11 @@
 <div id="taskMeta"
      data-taskid="@Model.TaskId"
      data-threshold="@Model.SimilarityThreshold"
+     data-mode="@((int)Model.AssessmentMode)"
+     data-is-review="@Model.IsTeacherReview.ToString().ToLower()"
      style="display:none;"></div>
 
-<!-- Поточні значення для старту редактора -->
+<!-- Поточні значення для старту Monaco Editor -->
 <textarea id="editorHtmlValue" style="display:none;">@Model.StarterHtml</textarea>
 <textarea id="editorCssValue" style="display:none;">@Model.StarterCss</textarea>
 <textarea id="editorJsValue" style="display:none;">@Model.StarterJs</textarea>

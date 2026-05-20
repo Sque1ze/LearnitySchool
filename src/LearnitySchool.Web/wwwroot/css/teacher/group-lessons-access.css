@@ -1,8 +1,8 @@
 ﻿:root {
-    --border: #1f2933;
-    --text: #e5e7eb;
-    --muted: #9ca3af;
-    --shadow: 0 18px 45px rgba(0,0,0,.35);
+    --border: #DDE7F0;
+    --text: #0F172A;
+    --muted: #64748B;
+    --shadow: 0 18px 45px rgba(15,23,42,.08);
     --radius: 18px;
 }
 
@@ -36,7 +36,7 @@
 }
 
 .panel {
-    background: rgba(255,255,255,0.02);
+    background: #FFFFFF;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
@@ -56,17 +56,17 @@
         color: var(--muted);
         padding: 12px 12px;
         border-bottom: 1px solid var(--border);
-        background: rgba(255,255,255,0.02);
+        background: #FFFFFF;
     }
 
     .table tbody td {
         padding: 14px 12px;
-        border-bottom: 1px solid rgba(31,41,51,.65);
+        border-bottom: 1px solid rgba(100,116,139,.26);
         color: var(--text);
     }
 
     .table tbody tr:hover td {
-        background: rgba(56,189,248,.06);
+        background: rgba(37,99,235,.06);
     }
 
 .strong {
@@ -82,13 +82,13 @@
     padding: 6px 10px;
     border-radius: 999px;
     border: 1px solid var(--border);
-    background: rgba(255,255,255,0.03);
+    background: #FFFFFF;
     font-size: 12px;
 }
 
 .pill-success {
-    border-color: rgba(34,197,94,.45);
-    background: rgba(34,197,94,.12);
+    border-color: rgba(20,184,166,.45);
+    background: rgba(20,184,166,.12);
 }
 
 .pill-muted {
@@ -97,7 +97,7 @@
 
 .btn {
     border: 1px solid var(--border);
-    background: rgba(255,255,255,0.03);
+    background: #FFFFFF;
     color: var(--text);
     padding: 10px 12px;
     border-radius: 12px;
@@ -119,8 +119,8 @@
 }
 
 .btn-primary {
-    border-color: rgba(56,189,248,.35);
-    background: rgba(56,189,248,.08);
+    border-color: rgba(37,99,235,.35);
+    background: rgba(37,99,235,.08);
 }
 
 .btn-danger {

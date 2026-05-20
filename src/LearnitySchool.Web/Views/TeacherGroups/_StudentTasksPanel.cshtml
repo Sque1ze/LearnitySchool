@@ -1,9 +1,10 @@
-﻿@model LearnitySchool.Web.ViewModels.Teacher.Groups.TeacherStudentTasksVm
+﻿@using LearnitySchool.Domain.Enums
+@model LearnitySchool.Web.ViewModels.Teacher.Groups.TeacherStudentTasksVm
 
 <div class="student-panel">
     <div class="student-panel-head">
         <div class="title">Задачі учня: <span class="strong">@Model.StudentName</span></div>
-        <div class="muted small">Зелений — виконано, сірий — не виконано</div>
+        <div class="muted small">Зелений — зараховано, жовтий — чекає перевірки, червоний — не зараховано/повернуто, сірий — не виконано</div>
     </div>
 
     <div class="student-panel-body">
@@ -25,8 +26,22 @@
                     {
                         foreach (var t in lesson.Tasks)
                         {
-                            <div class="task-square @(t.IsCompleted ? "done" : "todo")"
-                                 title="@lesson.Title — @t.Title">
+                            var quizPassed = t.HasQuizAttempt && (t.QuizScorePercent ?? 0) >= 95;
+                            var quizFailed = t.HasQuizAttempt && !quizPassed;
+                            var cls = (t.IsCompleted || quizPassed) ? "done"
+                                : quizFailed ? "returned"
+                                : t.SubmissionStatus == StudentSubmissionStatus.PendingReview ? "pending"
+                                : t.SubmissionStatus == StudentSubmissionStatus.Returned ? "returned"
+                                : "todo";
+
+                            var statusText = (t.IsCompleted || quizPassed) ? "зараховано"
+                                : quizFailed ? $"квіз не зараховано ({t.QuizScorePercent}%)"
+                                : t.SubmissionStatus == StudentSubmissionStatus.PendingReview ? "очікує перевірки"
+                                : t.SubmissionStatus == StudentSubmissionStatus.Returned ? "повернуто"
+                                : "не виконано";
+
+                            <div class="task-square @cls"
+                                 title="@lesson.Title — @t.Title — @statusText">
                                 @t.Order
                             </div>
                         }

@@ -3,6 +3,8 @@ using LearnitySchool.Infrastructure.Identity;
 using LearnitySchool.Infrastructure.Persistence;
 using LearnitySchool.Web.ViewModels.Teacher;
 using LearnitySchool.Web.ViewModels.Teacher.Students;
+using LearnitySchool.Web.ViewModels.Teacher.Dashboard;
+using LearnitySchool.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -335,4 +337,84 @@ public class TeacherController : Controller
 
         return View(vm);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> Dashboard()
+    {
+        var teacherId = _userManager.GetUserId(User);
+
+        var courseIds = await _db.CourseTeachers
+            .Where(t => t.TeacherUserId == teacherId)
+            .Select(t => t.CourseId)
+            .ToListAsync();
+
+        var vm = new TeacherDashboardVm
+        {
+            PendingSubmissions = await _db.StudentTaskSubmissions.CountAsync(s => courseIds.Contains(s.LessonTask.Lesson.CourseId) && s.Status == StudentSubmissionStatus.PendingReview),
+            ApprovedSubmissions = await _db.StudentTaskSubmissions.CountAsync(s => courseIds.Contains(s.LessonTask.Lesson.CourseId) && s.Status == StudentSubmissionStatus.Approved),
+            ReturnedSubmissions = await _db.StudentTaskSubmissions.CountAsync(s => courseIds.Contains(s.LessonTask.Lesson.CourseId) && s.Status == StudentSubmissionStatus.Returned),
+            PaidLessonsCount = await _db.LessonPayments.CountAsync(p => courseIds.Contains(p.Lesson.CourseId) && p.Status == PaymentStatus.Paid)
+        };
+
+        var paidRequired = await _db.CourseStudents
+            .Where(cs => courseIds.Contains(cs.CourseId))
+            .SelectMany(cs => cs.Course.Lessons.Where(l => l.IsPublished && l.PriceAmount > 0).Select(l => new { cs.StudentUserId, LessonId = l.Id }))
+            .ToListAsync();
+
+        var paidPairs = await _db.LessonPayments
+            .Where(p => p.Status == PaymentStatus.Paid && courseIds.Contains(p.Lesson.CourseId))
+            .Select(p => new { p.StudentId, p.LessonId })
+            .ToListAsync();
+
+        var paidSet = paidPairs.Select(p => $"{p.StudentId}:{p.LessonId}").ToHashSet();
+        vm.UnpaidPaidRequiredCount = paidRequired.Count(x => !paidSet.Contains($"{x.StudentUserId}:{x.LessonId}"));
+
+        var recent = await _db.StudentTaskSubmissions
+            .AsNoTracking()
+            .Where(s => courseIds.Contains(s.LessonTask.Lesson.CourseId))
+            .OrderByDescending(s => s.SubmittedAtUtc)
+            .Take(6)
+            .Select(s => new
+            {
+                s.Id,
+                s.StudentUserId,
+                CourseTitle = s.LessonTask.Lesson.Course.Title,
+                LessonTitle = s.LessonTask.Lesson.Title,
+                TaskTitle = s.LessonTask.Title,
+                s.SubmittedAtUtc
+            })
+            .ToListAsync();
+
+        var studentIds = recent.Select(x => x.StudentUserId).Distinct().ToList();
+        var peopleList = await _db.Users.AsNoTracking()
+            .Where(u => studentIds.Contains(u.Id))
+            .ToListAsync();
+        var people = peopleList.ToDictionary(u => u.Id, Display);
+
+        vm.RecentSubmissions = recent.Select(x => new TeacherDashboardSubmissionRowVm
+        {
+            SubmissionId = x.Id,
+            StudentName = people.TryGetValue(x.StudentUserId, out var name) ? name : "—",
+            CourseTitle = x.CourseTitle,
+            LessonTitle = x.LessonTitle,
+            TaskTitle = x.TaskTitle,
+            SubmittedAtUtc = x.SubmittedAtUtc
+        }).ToList();
+
+        vm.Courses = await _db.Courses
+            .AsNoTracking()
+            .Where(c => courseIds.Contains(c.Id))
+            .OrderBy(c => c.Title)
+            .Select(c => new TeacherDashboardCourseRowVm
+            {
+                CourseId = c.Id,
+                Title = c.Title,
+                StudentsCount = c.Students.Count(),
+                LessonsCount = c.Lessons.Count()
+            })
+            .ToListAsync();
+
+        return View(vm);
+    }
+
 }

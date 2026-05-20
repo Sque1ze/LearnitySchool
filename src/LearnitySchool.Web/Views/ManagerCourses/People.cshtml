@@ -1,6 +1,6 @@
 ﻿@model LearnitySchool.Web.ViewModels.Manager.Courses.CoursePeopleVm
 @{
-    ViewData["Title"] = "Люди";
+    ViewData["Title"] = "Люди курсу";
 }
 
 <link rel="stylesheet" href="~/css/userManager/coursePeople.css" asp-append-version="true" />
@@ -9,11 +9,11 @@
 
     <div class="users-header">
         <div>
-            <h2 class="users-title">People — <span class="muted">@Model.CourseTitle</span></h2>
-            <div class="sub">Признач викладача та додай учнів на курс</div>
+            <h2 class="users-title">Люди курсу — <span class="muted">@Model.CourseTitle</span></h2>
+            <div class="sub">Призначте викладача та додайте учнів. Для великих списків використовуйте пошук.</div>
         </div>
 
-        <a asp-action="Index" class="btn btn-muted">← Back</a>
+        <a asp-action="Index" class="btn btn-muted">← Назад</a>
     </div>
 
     <form asp-action="People" method="post" class="card people-form">
@@ -22,36 +22,42 @@
 
         <div class="form-grid">
 
-            <div class="field">
-                <label class="label">Teacher</label>
-                <select name="TeacherUserId" class="select">
+            <div class="field searchable-field">
+                <label class="label">Викладач</label>
+                <input type="search" class="input search-input" data-target="teacherSelect" placeholder="Пошук викладача за ім’ям або email..." autocomplete="off" />
+                <select id="teacherSelect" name="TeacherUserId" class="select">
                     <option value="">— Без викладача —</option>
                     @foreach (var t in Model.Teachers)
                     {
                         <option value="@t.Value" selected="@(Model.TeacherUserId == t.Value)">@t.Text</option>
                     }
                 </select>
+                <div class="hint">Почніть вводити ім’я — список нижче автоматично відфільтрується.</div>
             </div>
 
-            <div class="field">
-                <label class="label">Students</label>
+            <div class="field searchable-field">
+                <label class="label">Учні</label>
+                <div class="student-tools">
+                    <input type="search" class="input search-input" data-target="studentsSelect" placeholder="Пошук учня..." autocomplete="off" />
+                    <button type="button" class="btn btn-small" id="clearStudentFilter">Очистити</button>
+                </div>
 
-                <select name="SelectedStudentIds" multiple size="12" class="select select-multi">
+                <select id="studentsSelect" name="SelectedStudentIds" multiple size="12" class="select select-multi">
                     @foreach (var s in Model.Students)
                     {
-                        var selected = Model.SelectedStudentIds.Contains(s.Value ?? "");
-                        <option value="@s.Value" selected="@(selected ? "selected" : null)">@s.Text</option>
+                        var selected = Model.SelectedStudentIds?.Contains(s.Value ?? "") ?? false;
+                        <option value="@s.Value" selected="@selected">@s.Text</option>
                     }
                 </select>
 
                 <div class="hint">
-                    Порада: щоб вибрати декількох — тримай <b>Ctrl</b> (Windows) / <b>Cmd</b> (Mac)
+                    Можна шукати у списку. Щоб вибрати декількох — тримайте <b>Ctrl</b> (Windows) / <b>Cmd</b> (Mac). Уже вибрані учні не зникають після фільтрації.
                 </div>
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Save</button>
-                <a asp-action="Index" class="btn">Back</a>
+                <button type="submit" class="btn btn-primary">Зберегти</button>
+                <a asp-action="Index" class="btn">Назад</a>
             </div>
 
             <div asp-validation-summary="All" class="validation"></div>
@@ -59,3 +65,40 @@
     </form>
 
 </div>
+
+@section Scripts {
+<script>
+(() => {
+    function normalize(value) {
+        return (value || "").toString().trim().toLowerCase();
+    }
+
+    function filterSelect(input) {
+        const select = document.getElementById(input.dataset.target);
+        if (!select) return;
+
+        const term = normalize(input.value);
+        Array.from(select.options).forEach(option => {
+            if (!option.value) return;
+            const text = normalize(option.textContent);
+            const isSelected = option.selected;
+            option.hidden = term.length > 0 && !text.includes(term) && !isSelected;
+        });
+    }
+
+    document.querySelectorAll(".search-input[data-target]").forEach(input => {
+        input.addEventListener("input", () => filterSelect(input));
+        filterSelect(input);
+    });
+
+    const clearBtn = document.getElementById("clearStudentFilter");
+    clearBtn?.addEventListener("click", () => {
+        const input = document.querySelector('.search-input[data-target="studentsSelect"]');
+        if (!input) return;
+        input.value = "";
+        filterSelect(input);
+        input.focus();
+    });
+})();
+</script>
+}

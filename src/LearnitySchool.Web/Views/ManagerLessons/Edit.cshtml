@@ -40,6 +40,19 @@
                 <label class="label">Description (опційно)</label>
                 <textarea name="Description" placeholder="Короткий опис" class="textarea" rows="3">@Model.Description</textarea>
             </div>
+            <div class="grid-2">
+                <div class="field">
+                    <label class="label">Ціна уроку</label>
+                    <input name="PriceAmount" value="@Model.PriceAmount" placeholder="0 = безкоштовно" class="input" type="number" min="0" step="0.01" />
+                    <div class="hint">Якщо ціна більша за 0, учень має оплатити урок перед доступом.</div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Валюта</label>
+                    <input name="Currency" value="@Model.Currency" placeholder="UAH" class="input" maxlength="8" />
+                </div>
+            </div>
+
 
             <div class="field">
                 <label class="label">Content</label>
@@ -63,3 +76,5 @@
     </form>
 
 </div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

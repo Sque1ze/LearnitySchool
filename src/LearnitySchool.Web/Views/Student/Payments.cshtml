@@ -1,0 +1,106 @@
+@using LearnitySchool.Domain.Enums
+@model LearnitySchool.Web.ViewModels.Student.Payments.StudentPaymentsVm
+@{
+    ViewData["Title"] = "Оплата";
+}
+<link rel="stylesheet" href="~/css/student/payments.css" asp-append-version="true" />
+
+<section class="pay-page">
+    <header class="pay-head">
+        <div>
+            <div class="pay-kicker">Payments</div>
+            <h1>Оплата уроків</h1>
+            <p>Один урок = одна оплата. Безкоштовні уроки відкриваються автоматично.</p>
+        </div>
+    </header>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="pay-alert success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="pay-alert error">@TempData["Error"]</div>
+    }
+
+    <div class="pay-card">
+        <h2>Уроки</h2>
+        <div class="pay-table-wrap">
+            <table class="pay-table">
+                <thead>
+                    <tr><th>Курс</th><th>Урок</th><th>Ціна</th><th>Статус</th><th></th></tr>
+                </thead>
+                <tbody>
+                @if (!Model.Lessons.Any())
+                {
+                    <tr><td colspan="5" class="empty">Уроків поки немає.</td></tr>
+                }
+                else
+                {
+                    foreach (var l in Model.Lessons)
+                    {
+                        <tr>
+                            <td>@l.CourseTitle</td>
+                            <td><strong>#@l.LessonOrder @l.LessonTitle</strong></td>
+                            <td>@(l.IsFree ? "Безкоштовно" : $"{l.PriceAmount:0.##} {l.Currency}")</td>
+                            <td>
+                                @if (l.IsFree)
+                                {
+                                    <span class="pill free">Free</span>
+                                }
+                                else if (l.IsPaid)
+                                {
+                                    <span class="pill paid">✅ Оплачено</span>
+                                }
+                                else
+                                {
+                                    <span class="pill unpaid">🔒 Не оплачено</span>
+                                }
+                            </td>
+                            <td class="actions">
+                                @if (!l.IsFree && !l.IsPaid)
+                                {
+                                    <a asp-action="PaymentConfirm" asp-route-lessonId="@l.LessonId" class="pay-btn primary">Оплатити</a>
+                                }
+                                else
+                                {
+                                    <a asp-action="Tasks" asp-route-lessonId="@l.LessonId" class="pay-btn">Відкрити</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="pay-card">
+        <h2>Історія оплат</h2>
+        <div class="pay-table-wrap">
+            <table class="pay-table">
+                <thead>
+                    <tr><th>Дата</th><th>Курс / урок</th><th>Сума</th><th>Статус</th></tr>
+                </thead>
+                <tbody>
+                @if (!Model.History.Any())
+                {
+                    <tr><td colspan="4" class="empty">Оплат поки немає.</td></tr>
+                }
+                else
+                {
+                    foreach (var h in Model.History)
+                    {
+                        <tr>
+                            <td>@h.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                            <td><strong>@h.CourseTitle</strong><div class="muted">@h.LessonTitle</div></td>
+                            <td>@h.Amount.ToString("0.##") @h.Currency</td>
+                            <td><span class="pill @(h.Status == PaymentStatus.Paid ? "paid" : "unpaid")">@h.Status</span></td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

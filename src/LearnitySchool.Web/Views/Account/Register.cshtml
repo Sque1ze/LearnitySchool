@@ -10,30 +10,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Register • LearnitySchool</title>
 
-    <link rel="stylesheet" href="~/css/login.css" />
+    <link rel="stylesheet" href="~/css/login.css" asp-append-version="true" />
 </head>
 <body>
     <main class="auth">
-        <div class="fx" aria-hidden="true">
-            <div class="fx__stars"></div>
-            <div class="fx__stars fx__stars--2"></div>
-
-            <div class="fx__container">
-                <div class="fx__content">
-                    <div class="fx__numbers">
-                        <div class="fx__number"></div>
-                        <div class="fx__number"></div>
-                        <div class="fx__number"></div>
-                        <div class="fx__number"></div>
-                        <div class="fx__number"></div>
-                        <div class="fx__number"></div>
-                        <div class="fx__number"></div>
-                        <div class="fx__number"></div>
-                        <div class="fx__number"></div>
-                    </div>
-                </div>
-            </div>
+        <div class="lang-switch" data-lang-switch>
+            <button type="button" data-lang="uk">UA</button>
+            <button type="button" data-lang="en">EN</button>
         </div>
+
+        <div class="auth-shell">
+            <section class="auth-hero">
+                <div>
+                    <div class="auth-hero__badge">✨ LearnitySchool</div>
+                    <h2>Навчання, яке хочеться відкривати щодня.</h2>
+                    <p>Світла, зручна платформа для учнів, викладачів і менеджерів: курси, уроки, практичні завдання, квізи та перевірка робіт.</p>
+                </div>
+                <div class="auth-benefits">
+                    <div class="auth-benefit"><span>🎓</span>Курси та уроки в одному місці</div>
+                    <div class="auth-benefit"><span>💻</span>Практика з живим редактором коду</div>
+                    <div class="auth-benefit"><span>🔔</span>Сповіщення та прогрес без хаосу</div>
+                </div>
+            </section>
 
         <section class="card">
             <div class="card__header">
@@ -121,9 +119,10 @@
             </div>
         </section>
 
-        <div class="bg-glow"></div>
+        </div>
     </main>
 
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/language.js" asp-append-version="true"></script>
 </body>
 </html>

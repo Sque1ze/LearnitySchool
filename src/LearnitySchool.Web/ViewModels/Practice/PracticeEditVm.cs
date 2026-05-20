@@ -15,7 +15,7 @@ public class PracticeEditVm
     public string Statement { get; set; } = "";
 
     [Range(0, 100)]
-    public int SimilarityThreshold { get; set; } = 80;
+    public int SimilarityThreshold { get; set; } = 95;
 
     // Starter
     public string StarterHtml { get; set; } = "";

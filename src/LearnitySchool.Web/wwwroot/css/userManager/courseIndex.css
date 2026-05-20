@@ -1,12 +1,12 @@
 ﻿:root {
-    --bg: #020617;
-    --surface: #020617;
-    --card: #020617;
-    --primary: #38BDF8;
-    --secondary: #22C55E;
-    --text: #E5E7EB;
-    --muted: #9CA3AF;
-    --border: #1F2933;
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --card: #FFFFFF;
+    --primary: #2563EB;
+    --secondary: #14B8A6;
+    --text: #0F172A;
+    --muted: #64748B;
+    --border: #DDE7F0;
 }
 
 .users-page {
@@ -78,7 +78,7 @@
     }
 
     .users-table tr:hover td {
-        background: rgba(56, 189, 248, 0.05);
+        background: rgba(37, 99, 235, 0.05);
     }
 
 .actions {
@@ -137,4 +137,14 @@
 
 .pill-muted {
     color: var(--muted);
+}
+
+.alert-success {
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    border: 1px solid rgba(20,184,166,.35);
+    background: rgba(20,184,166,.08);
+    color: #0F766E;
+    border-radius: 14px;
+    font-weight: 800;
 }

@@ -1,0 +1,50 @@
+@model LearnitySchool.Web.ViewModels.Student.Projects.StudentProjectListVm
+@{
+    ViewData["Title"] = "Мої проєкти";
+}
+<link rel="stylesheet" href="~/css/student/projects.css" asp-append-version="true" />
+
+<section class="proj-page">
+    <header class="proj-head">
+        <div>
+            <div class="kicker">Practice sandbox</div>
+            <h1>Мої проєкти</h1>
+            <p>Створюй власні HTML/CSS/JS проєкти без прив’язки до завдання.</p>
+        </div>
+        <a asp-action="Create" class="proj-btn primary">+ Новий проєкт</a>
+    </header>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="proj-alert success">@TempData["Success"]</div>
+    }
+
+    @if (!Model.Items.Any())
+    {
+        <div class="proj-empty">
+            <div class="icon">🧪</div>
+            <h2>Проєктів поки немає</h2>
+            <p>Створи перший тренувальний проєкт і експериментуй з кодом.</p>
+            <a asp-action="Create" class="proj-btn primary">Створити</a>
+        </div>
+    }
+    else
+    {
+        <div class="proj-grid">
+        @foreach (var p in Model.Items)
+        {
+            <article class="proj-card">
+                <div class="proj-card-top">
+                    <h2>@p.Title</h2>
+                    <span>@p.UpdatedAtUtc.ToLocalTime().ToString("dd.MM HH:mm")</span>
+                </div>
+                <p>@(string.IsNullOrWhiteSpace(p.Description) ? "Без опису" : p.Description)</p>
+                <div class="proj-actions">
+                    <a asp-action="Edit" asp-route-id="@p.Id" class="proj-btn primary">Відкрити</a>
+                    <a asp-action="Delete" asp-route-id="@p.Id" class="proj-btn danger">Видалити</a>
+                </div>
+            </article>
+        }
+        </div>
+    }
+</section>

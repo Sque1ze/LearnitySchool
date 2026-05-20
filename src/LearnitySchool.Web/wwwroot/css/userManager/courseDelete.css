@@ -1,12 +1,12 @@
 ﻿:root {
-    --bg: #020617;
-    --surface: #020617;
-    --card: #020617;
-    --primary: #38BDF8;
-    --secondary: #22C55E;
-    --text: #E5E7EB;
-    --muted: #9CA3AF;
-    --border: #1F2933;
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --card: #FFFFFF;
+    --primary: #2563EB;
+    --secondary: #14B8A6;
+    --text: #0F172A;
+    --muted: #64748B;
+    --border: #DDE7F0;
     --danger: #ef4444;
 }
 
@@ -92,7 +92,7 @@
     border-radius: 12px;
     border: 1px solid rgba(239,68,68,.35);
     background: rgba(239,68,68,.06);
-    color: rgba(229,231,235,.95);
+    color: var(--text);
     line-height: 1.4;
 }
 

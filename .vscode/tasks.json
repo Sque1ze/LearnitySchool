@@ -1,0 +1,15 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build LearnitySchool.Web",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/LearnitySchool.Web/LearnitySchool.Web.csproj"
+      ],
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}

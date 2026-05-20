@@ -50,11 +50,11 @@ public class ManagerPracticeController : Controller
             TaskTitle = info.Title,
 
             Statement = practice?.Statement ?? "",
-            SimilarityThreshold = practice?.SimilarityThreshold ?? 80,
+            SimilarityThreshold = Math.Max(practice?.SimilarityThreshold ?? 95, 95),
 
-            StarterHtml = practice?.StarterHtml ?? "<!-- write your HTML here -->",
-            StarterCss = practice?.StarterCss ?? "/* write your CSS here */",
-            StarterJs = practice?.StarterJs ?? "",
+            StarterHtml = practice?.StarterHtml ?? string.Empty,
+            StarterCss = practice?.StarterCss ?? string.Empty,
+            StarterJs = practice?.StarterJs ?? string.Empty,
 
             ReferenceHtml = practice?.ReferenceHtml ?? "",
             ReferenceCss = practice?.ReferenceCss ?? "",
@@ -69,15 +69,13 @@ public class ManagerPracticeController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(PracticeEditVm vm)
     {
-        // ✅ Вимикаємо валідацію “JS required”, навіть якщо десь стоїть [Required]
+        // Starter і Reference можуть бути повністю порожніми.
+        ModelState.Remove(nameof(vm.ReferenceHtml));
+        ModelState.Remove(nameof(vm.ReferenceCss));
         ModelState.Remove(nameof(vm.ReferenceJs));
+        ModelState.Remove(nameof(vm.StarterHtml));
+        ModelState.Remove(nameof(vm.StarterCss));
         ModelState.Remove(nameof(vm.StarterJs));
-
-        // (опційно) якщо захочеш зробити і HTML/CSS не обов'язковими — розкоментуй:
-        // ModelState.Remove(nameof(vm.ReferenceHtml));
-        // ModelState.Remove(nameof(vm.ReferenceCss));
-        // ModelState.Remove(nameof(vm.StarterHtml));
-        // ModelState.Remove(nameof(vm.StarterCss));
 
         if (!ModelState.IsValid)
             return View(vm);
@@ -104,7 +102,7 @@ public class ManagerPracticeController : Controller
 
         // ✅ Зберігаємо все як є — порожні значення ОК
         practice.Statement = vm.Statement?.Trim() ?? "";
-        practice.SimilarityThreshold = vm.SimilarityThreshold;
+        practice.SimilarityThreshold = Math.Max(vm.SimilarityThreshold, 95);
 
         practice.StarterHtml = vm.StarterHtml ?? "";
         practice.StarterCss = vm.StarterCss ?? "";

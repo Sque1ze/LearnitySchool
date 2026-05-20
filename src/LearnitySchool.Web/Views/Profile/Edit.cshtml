@@ -1,0 +1,36 @@
+@model LearnitySchool.Web.ViewModels.Profile.ProfileEditVm
+@{
+    ViewData["Title"] = "Редагувати профіль";
+}
+<link rel="stylesheet" href="~/css/profile.css" asp-append-version="true" />
+
+<section class="profile-page">
+    <header class="profile-head">
+        <div>
+            <div class="kicker">Account</div>
+            <h1>Редагувати профіль</h1>
+            <p>Оновіть особисті дані.</p>
+        </div>
+        <a asp-action="Index" class="pbtn">← Назад</a>
+    </header>
+
+    <form asp-action="Edit" method="post" class="profile-form">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="All" class="validation"></div>
+
+        <div class="form-grid-2">
+            <label>Ім’я<input asp-for="FirstName" /></label>
+            <label>Прізвище<input asp-for="LastName" /></label>
+            <label>Username<input asp-for="UserName" /></label>
+            <label>Телефон<input asp-for="PhoneNumber" /></label>
+            <label>Вік<input asp-for="Age" type="number" min="4" max="100" /></label>
+        </div>
+
+        <div class="profile-actions left">
+            <button type="submit" class="pbtn pbtn-primary">Зберегти</button>
+            <a asp-action="Index" class="pbtn">Скасувати</a>
+        </div>
+    </form>
+</section>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

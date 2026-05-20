@@ -1,2 +1,108 @@
-<h1>Manager dashboard</h1>
-<p>Тут буде кабінет менеджера: користувачі, групи, статистика.</p>
+@model LearnitySchool.Web.ViewModels.Manager.Dashboard.ManagerDashboardVm
+@{
+    ViewData["Title"] = "Dashboard менеджера";
+}
+
+<link rel="stylesheet" href="~/css/userManager/managerDashboard.css" asp-append-version="true" />
+
+<section class="md-page">
+    <header class="md-hero">
+        <div>
+            <div class="md-kicker">Manager dashboard</div>
+            <h1 class="md-title">Панель керування LearnitySchool</h1>
+            <p class="md-sub">Швидкий огляд учнів, викладачів, курсів, оплат і робіт, які очікують перевірки.</p>
+        </div>
+        <div class="md-actions">
+            <a asp-controller="ManagerCourses" asp-action="Create" class="md-btn md-btn--primary">+ Новий курс</a>
+            <a asp-controller="ManagerUsers" asp-action="Create" class="md-btn">+ Користувач</a>
+        </div>
+    </header>
+
+    <div class="md-stats">
+        <article class="md-stat"><span class="md-stat__label">Учні</span><strong>@Model.StudentsCount</strong><small>зареєстровано</small></article>
+        <article class="md-stat"><span class="md-stat__label">Викладачі</span><strong>@Model.TeachersCount</strong><small>активні ролі</small></article>
+        <article class="md-stat"><span class="md-stat__label">Курси</span><strong>@Model.CoursesCount</strong><small>@Model.PublishedCoursesCount опубліковано</small></article>
+        <article class="md-stat"><span class="md-stat__label">Уроки</span><strong>@Model.LessonsCount</strong><small>@Model.TasksCount завдань</small></article>
+        <article class="md-stat md-stat--warn"><span class="md-stat__label">Перевірка</span><strong>@Model.PendingSubmissionsCount</strong><small>робіт очікує</small></article>
+        <article class="md-stat"><span class="md-stat__label">Оплати</span><strong>@Model.PendingPaymentsCount</strong><small>pending платежів</small></article>
+    </div>
+
+    <div class="md-grid">
+        <section class="md-card">
+            <div class="md-card__head">
+                <div>
+                    <h2>Останні курси</h2>
+                    <p>Найновіші курси з кількістю учнів, викладачів та уроків.</p>
+                </div>
+                <a asp-controller="ManagerCourses" asp-action="Index" class="md-link">Всі курси →</a>
+            </div>
+
+            @if (Model.RecentCourses.Count == 0)
+            {
+                <div class="md-empty">Курсів ще немає. Створіть перший курс.</div>
+            }
+            else
+            {
+                <div class="md-table-wrap">
+                    <table class="md-table">
+                        <thead><tr><th>Курс</th><th>Статус</th><th>Уроки</th><th>Люди</th><th></th></tr></thead>
+                        <tbody>
+                        @foreach (var c in Model.RecentCourses)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@c.Title</strong>
+                                    <span>@c.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</span>
+                                </td>
+                                <td>
+                                    @if (c.IsPublished)
+                                    {
+                                        <span class="md-pill md-pill--ok">Опубліковано</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="md-pill">Чернетка</span>
+                                    }
+                                </td>
+                                <td>@c.LessonsCount</td>
+                                <td>@c.StudentsCount учнів · @c.TeachersCount викл.</td>
+                                <td class="md-table__actions"><a asp-controller="ManagerCourses" asp-action="People" asp-route-id="@c.CourseId">Люди</a></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        <section class="md-card">
+            <div class="md-card__head">
+                <div>
+                    <h2>Роботи на перевірку</h2>
+                    <p>Свіжі практичні завдання, які ще очікують рішення викладача.</p>
+                </div>
+            </div>
+
+            @if (Model.PendingSubmissions.Count == 0)
+            {
+                <div class="md-empty">Немає робіт, які очікують перевірки.</div>
+            }
+            else
+            {
+                <div class="md-list">
+                    @foreach (var s in Model.PendingSubmissions)
+                    {
+                        <article class="md-work">
+                            <div>
+                                <strong>@s.TaskTitle</strong>
+                                <span>@s.CourseTitle → @s.LessonTitle</span>
+                                <small>@s.StudentName · @s.SubmittedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</small>
+                            </div>
+                            <span class="md-pill md-pill--warn">Очікує</span>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+    </div>
+</section>

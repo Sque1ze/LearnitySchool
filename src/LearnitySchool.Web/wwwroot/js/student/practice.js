@@ -32,7 +32,20 @@
 
     const meta = document.getElementById("taskMeta");
     const taskId = meta?.dataset?.taskid || null;
-    const threshold = submitBtn ? Number(submitBtn.dataset.threshold || "0") : 0;
+
+    const threshold = submitBtn
+        ? Number(submitBtn.dataset.threshold || meta?.dataset?.threshold || "0")
+        : Number(meta?.dataset?.threshold || "0");
+
+    function isTrue(value) {
+        return String(value || "").toLowerCase() === "true";
+    }
+
+    const teacherReviewMode =
+        isTrue(submitBtn?.dataset?.isReview) ||
+        isTrue(meta?.dataset?.isReview) ||
+        submitBtn?.dataset?.mode === "1" ||
+        meta?.dataset?.mode === "1";
 
     const initialEditorHtml = document.getElementById("editorHtmlValue")?.value ?? "";
     const initialEditorCss = document.getElementById("editorCssValue")?.value ?? "";
@@ -56,10 +69,12 @@
     let htmlEditor = null;
     let cssEditor = null;
     let jsEditor = null;
+    let lastSimilarity = 0;
 
     // =========================
     // LOAD MONACO FROM CDN
     // =========================
+
     function loadScript(src) {
         return new Promise((resolve, reject) => {
             const s = document.createElement("script");
@@ -91,24 +106,32 @@
     }
 
     // =========================
-    // MONACO
+    // MONACO EDITOR
     // =========================
+
     function createEditor(host, language, value) {
         return monaco.editor.create(host, {
             value: value || "",
             language,
             theme: "vs-dark",
+
             automaticLayout: true,
-            minimap: { enabled: false },
+            fixedOverflowWidgets: true,
+            minimap: {
+                enabled: false
+            },
+
             fontSize: 14,
             lineHeight: 22,
             roundedSelection: true,
             scrollBeyondLastLine: false,
             wordWrap: "on",
             renderWhitespace: "selection",
+
             tabSize: 2,
             insertSpaces: true,
             detectIndentation: false,
+
             quickSuggestions: {
                 other: true,
                 comments: false,
@@ -117,14 +140,23 @@
             quickSuggestionsDelay: 80,
             suggestOnTriggerCharacters: true,
             acceptSuggestionOnEnter: "on",
-            snippetSuggestions: "inline",
+            snippetSuggestions: "top",
+            suggest: {
+                showIcons: true,
+                preview: true,
+                insertMode: "replace",
+                snippetsPreventQuickSuggestions: false
+            },
+
             formatOnPaste: true,
             formatOnType: true,
+
             autoClosingBrackets: "always",
             autoClosingQuotes: "always",
             autoClosingComments: "always",
             autoSurround: "languageDefined",
             autoIndent: "full",
+
             bracketPairColorization: {
                 enabled: true
             },
@@ -132,12 +164,77 @@
                 bracketPairs: true,
                 indentation: true
             },
+
             padding: {
                 top: 12,
                 bottom: 12
             }
         });
     }
+
+    function installHtmlAutoClose(editor) {
+        const voidTags = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"]);
+
+        editor.onDidType((text) => {
+            if (text !== ">") return;
+
+            const model = editor.getModel();
+            const position = editor.getPosition();
+            if (!model || !position) return;
+
+            const lineUntilCursor = model.getLineContent(position.lineNumber).slice(0, position.column - 1);
+            const match = lineUntilCursor.match(/<([a-zA-Z][\w:-]*)(?:\s[^<>]*)?>$/);
+            if (!match) return;
+
+            const fullTag = match[0];
+            const tagName = match[1].toLowerCase();
+
+            if (fullTag.startsWith("</") || fullTag.endsWith("/>") || voidTags.has(tagName)) return;
+
+            const after = model.getValueInRange({
+                startLineNumber: position.lineNumber,
+                startColumn: position.column,
+                endLineNumber: position.lineNumber,
+                endColumn: Math.min(model.getLineMaxColumn(position.lineNumber), position.column + tagName.length + 4)
+            });
+
+            if (after.startsWith(`</${tagName}>`)) return;
+
+            editor.executeEdits("auto-close-html-tag", [{
+                range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+                text: `</${tagName}>`,
+                forceMoveMarkers: true
+            }]);
+
+            editor.setPosition(position);
+        });
+    }
+
+    function writeConsoleLine(target, type, args) {
+        if (!target) return;
+        const empty = target.querySelector(".console-empty");
+        empty?.remove();
+
+        const line = document.createElement("div");
+        line.className = `console-line console-line--${type || "log"}`;
+        const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        line.textContent = `[${time}] ${Array.isArray(args) ? args.join(" ") : String(args || "")}`;
+        target.appendChild(line);
+        target.scrollTop = target.scrollHeight;
+    }
+
+    function clearConsole(target, hint = "Console output зʼявиться тут після Run.") {
+        if (!target) return;
+        target.innerHTML = hint ? `<div class="console-empty">${hint}</div>` : "";
+    }
+
+    const previewConsole = document.getElementById("previewConsole");
+    const clearConsoleBtn = document.getElementById("clearConsoleBtn");
+    clearConsoleBtn?.addEventListener("click", () => clearConsole(previewConsole));
+    window.addEventListener("message", (event) => {
+        if (event?.data?.source !== "learnity-console") return;
+        writeConsoleLine(previewConsole, event.data.type, event.data.args);
+    });
 
     function getHtmlValue() {
         return htmlEditor ? htmlEditor.getValue() : "";
@@ -151,16 +248,23 @@
         return jsEditor ? jsEditor.getValue() : "";
     }
 
-    function setSubmitValues(avg = 0) {
+    function setEditorValues(html, css, js) {
+        htmlEditor?.setValue(html || "");
+        cssEditor?.setValue(css || "");
+        jsEditor?.setValue(js || "");
+    }
+
+    function setSubmitValues(avg = lastSimilarity) {
         if (submitHtml) submitHtml.value = getHtmlValue();
         if (submitCss) submitCss.value = getCssValue();
         if (submitJs) submitJs.value = getJsValue();
-        if (submitSimilarity) submitSimilarity.value = String(avg);
+        if (submitSimilarity) submitSimilarity.value = String(avg || 0);
     }
 
     // =========================
     // TABS
     // =========================
+
     function layoutEditors() {
         htmlEditor?.layout();
         cssEditor?.layout();
@@ -168,8 +272,13 @@
     }
 
     function setTab(name) {
-        tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === name));
-        panes.forEach(p => p.classList.toggle("active", p.dataset.pane === name));
+        tabs.forEach(t => {
+            t.classList.toggle("active", t.dataset.tab === name);
+        });
+
+        panes.forEach(p => {
+            p.classList.toggle("active", p.dataset.pane === name);
+        });
 
         setTimeout(() => {
             layoutEditors();
@@ -187,20 +296,51 @@
     // =========================
     // PREVIEW
     // =========================
+
     function setPreviewMode(mode) {
         const isPreview = mode === "preview";
         const isRef = mode === "reference";
 
         previewFrame.style.display = isPreview ? "block" : "none";
+
         if (referenceFrame) {
             referenceFrame.style.display = isRef ? "block" : "none";
         }
 
-        if (previewTabBtn) previewTabBtn.classList.toggle("active", isPreview);
-        if (referenceTabBtn) referenceTabBtn.classList.toggle("active", isRef);
+        previewTabBtn?.classList.toggle("active", isPreview);
+        referenceTabBtn?.classList.toggle("active", isRef);
     }
 
-    function buildDoc(html, css, js) {
+    function buildDoc(html, css, js, captureConsole = true) {
+        const consoleBridge = captureConsole ? `
+  function safeString(value) {
+    try {
+      if (typeof value === 'string') return value;
+      if (value instanceof Error) return value.stack || value.message;
+      if (typeof value === 'object') return JSON.stringify(value);
+      return String(value);
+    } catch (_) {
+      return String(value);
+    }
+  }
+  function send(type, args) {
+    window.parent && window.parent.postMessage({
+      source: 'learnity-console',
+      type: type,
+      args: Array.prototype.slice.call(args || []).map(safeString)
+    }, '*');
+  }
+  ['log','info','warn','error'].forEach(function(type){
+    var original = console[type];
+    console[type] = function(){
+      send(type, arguments);
+      if (original) original.apply(console, arguments);
+    };
+  });
+  window.addEventListener('error', function(e){ send('error', [e.message + ' at line ' + e.lineno]); });
+  window.addEventListener('unhandledrejection', function(e){ send('error', [e.reason]); });
+` : "";
+
         return `<!doctype html>
 <html>
 <head>
@@ -212,9 +352,11 @@
 ${html || ""}
 <script>
 (function(){
+  ${consoleBridge}
   try {
     ${js || ""}
   } catch (e) {
+    console.error(e && e.stack ? e.stack : e);
     const pre = document.createElement('pre');
     pre.style.color = 'crimson';
     pre.style.whiteSpace = 'pre-wrap';
@@ -229,12 +371,23 @@ ${html || ""}
     }
 
     function renderMyPreview() {
-        previewFrame.srcdoc = buildDoc(getHtmlValue(), getCssValue(), getJsValue());
+        clearConsole(previewConsole);
+        previewFrame.srcdoc = buildDoc(
+            getHtmlValue(),
+            getCssValue(),
+            getJsValue()
+        );
     }
 
     function renderReferencePreview() {
         if (!hasReference || !referenceFrame) return;
-        referenceFrame.srcdoc = buildDoc(refHtml, refCss, refJs);
+
+        referenceFrame.srcdoc = buildDoc(
+            refHtml,
+            refCss,
+            refJs,
+            false
+        );
     }
 
     function showMyPreview() {
@@ -243,6 +396,8 @@ ${html || ""}
 
     function showReference() {
         if (!hasReference || !referenceFrame) return;
+
+        clearConsole(previewConsole, "");
         renderReferencePreview();
         setPreviewMode("reference");
     }
@@ -251,8 +406,9 @@ ${html || ""}
     referenceTabBtn?.addEventListener("click", showReference);
 
     // =========================
-    // SIMILARITY
+    // SIMILARITY CHECK
     // =========================
+
     function normalize(s) {
         return (s || "")
             .replace(/\r\n/g, "\n")
@@ -269,26 +425,41 @@ ${html || ""}
 
     function similarityPercent(refText, curText) {
         const refSet = tokenSet(refText);
-        if (refSet.size === 0) return null;
+
+        if (refSet.size === 0) {
+            return null;
+        }
 
         const curSet = tokenSet(curText);
         let hit = 0;
 
         refSet.forEach(t => {
-            if (curSet.has(t)) hit++;
+            if (curSet.has(t)) {
+                hit++;
+            }
         });
 
         return Math.round((hit * 100) / refSet.size);
     }
 
     function updateSubmitState(avg) {
-        setSubmitValues(avg);
+        lastSimilarity = avg || 0;
+        setSubmitValues(lastSimilarity);
 
         if (!submitBtn) return;
 
-        const ok = avg >= threshold;
-        submitBtn.disabled = !ok;
-        submitBtn.title = ok ? "Ready to submit" : `Need at least ${threshold}%`;
+        if (teacherReviewMode) {
+            submitBtn.disabled = false;
+            submitBtn.title = "Здати роботу на перевірку вчителю";
+            return;
+        }
+
+        const ok = lastSimilarity >= threshold;
+
+        submitBtn.disabled = false;
+        submitBtn.title = ok
+            ? "Ready to submit"
+            : `Можна здати, але буде не зараховано до ${threshold}%`;
     }
 
     function check() {
@@ -300,6 +471,7 @@ ${html || ""}
             const pJs = similarityPercent(refJs, getJsValue());
 
             const parts = [pHtml, pCss, pJs].filter(x => x !== null);
+
             const avg = parts.length
                 ? Math.round(parts.reduce((a, b) => a + b, 0) / parts.length)
                 : 0;
@@ -307,17 +479,22 @@ ${html || ""}
             if (badge) {
                 badge.classList.remove("badge-muted");
                 badge.classList.add("badge-info");
-                badge.textContent = `Similarity: ${avg}% (need ${threshold}%)`;
+
+                badge.textContent = teacherReviewMode
+                    ? `Similarity: ${avg}% (optional)`
+                    : `Similarity: ${avg}% (need ${threshold}%)`;
             }
 
             updateSubmitState(avg);
+
             overlay?.classList.add("hidden");
         }, 200);
     }
 
     // =========================
-    // DRAFT
+    // DRAFT AUTOSAVE
     // =========================
+
     let saveTimer = null;
     let saving = false;
 
@@ -351,7 +528,9 @@ ${html || ""}
                 })
             });
 
-            if (!res.ok) throw new Error("Save failed");
+            if (!res.ok) {
+                throw new Error("Save failed");
+            }
 
             const data = await res.json();
             const t = data.updatedAt ? new Date(data.updatedAt) : new Date();
@@ -370,31 +549,60 @@ ${html || ""}
     }
 
     function scheduleSave() {
-        if (saveTimer) clearTimeout(saveTimer);
+        if (saveTimer) {
+            clearTimeout(saveTimer);
+        }
+
         saveTimer = setTimeout(saveDraft, 900);
+    }
+
+    function onEditorChanged() {
+        setSubmitValues(lastSimilarity);
+
+        if (teacherReviewMode && submitBtn) {
+            submitBtn.disabled = false;
+        }
+
+        scheduleSave();
     }
 
     // =========================
     // RESET
     // =========================
+
     function resetToStarter() {
         const ok = confirm("Reset code to starter version?");
+
         if (!ok) return;
 
-        htmlEditor?.setValue(starterHtml);
-        cssEditor?.setValue(starterCss);
-        jsEditor?.setValue(starterJs);
+        setEditorValues(
+            starterHtml,
+            starterCss,
+            starterJs
+        );
+
+        lastSimilarity = 0;
 
         if (badge) {
             badge.classList.remove("badge-info");
             badge.classList.add("badge-muted");
-            badge.textContent = `Similarity: — (need ${threshold}%)`;
+
+            badge.textContent = teacherReviewMode
+                ? "Similarity: optional"
+                : `Similarity: — (need ${threshold}%)`;
         }
 
         if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.title = "Спочатку натисни Check і набери потрібний %";
+            if (teacherReviewMode) {
+                submitBtn.disabled = false;
+                submitBtn.title = "Здати роботу на перевірку вчителю";
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.title = `Можна здати, але для зарахування потрібно ${threshold}%`;
+            }
         }
+
+        setSubmitValues(0);
 
         renderMyPreview();
         showMyPreview();
@@ -406,10 +614,10 @@ ${html || ""}
     // =========================
     // INIT
     // =========================
+
     async function init() {
         await loadMonaco();
 
-        // HTML defaults + better completion behavior
         monaco.languages.html.htmlDefaults.setOptions({
             format: {
                 tabSize: 2,
@@ -444,20 +652,11 @@ ${html || ""}
         cssEditor = createEditor(cssHost, "css", initialEditorCss);
         jsEditor = createEditor(jsHost, "javascript", initialEditorJs);
 
-        htmlEditor.onDidChangeModelContent(() => {
-            setSubmitValues(Number(submitSimilarity?.value || "0"));
-            scheduleSave();
-        });
+        installHtmlAutoClose(htmlEditor);
 
-        cssEditor.onDidChangeModelContent(() => {
-            setSubmitValues(Number(submitSimilarity?.value || "0"));
-            scheduleSave();
-        });
-
-        jsEditor.onDidChangeModelContent(() => {
-            setSubmitValues(Number(submitSimilarity?.value || "0"));
-            scheduleSave();
-        });
+        htmlEditor.onDidChangeModelContent(onEditorChanged);
+        cssEditor.onDidChangeModelContent(onEditorChanged);
+        jsEditor.onDidChangeModelContent(onEditorChanged);
 
         runBtn?.addEventListener("click", () => {
             renderMyPreview();
@@ -468,8 +667,17 @@ ${html || ""}
         resetBtn?.addEventListener("click", resetToStarter);
 
         submitForm?.addEventListener("submit", () => {
-            setSubmitValues(Number(submitSimilarity?.value || "0"));
+            setSubmitValues(lastSimilarity);
         });
+
+        if (teacherReviewMode && submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.title = "Здати роботу на перевірку вчителю";
+        }
+
+        if (badge && teacherReviewMode) {
+            badge.textContent = "Similarity: optional";
+        }
 
         setSubmitValues(0);
         setPreviewMode("preview");

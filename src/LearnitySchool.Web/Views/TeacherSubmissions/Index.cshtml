@@ -1,0 +1,106 @@
+@using LearnitySchool.Domain.Enums
+@model LearnitySchool.Web.ViewModels.Teacher.Submissions.TeacherSubmissionListVm
+@{
+    ViewData["Title"] = "Перевірка робіт";
+}
+
+<link rel="stylesheet" href="~/css/teacher/submissions.css" asp-append-version="true" />
+
+<section class="rev-page">
+    <header class="rev-head">
+        <div>
+            <div class="rev-kicker">Teacher review</div>
+            <h1 class="rev-title">Перевірка робіт</h1>
+            <div class="rev-sub">Тут з’являються Practice-завдання, які учні здали на ручну перевірку.</div>
+        </div>
+    </header>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="rev-alert rev-alert--success">@TempData["Success"]</div>
+    }
+
+    <form method="get" class="rev-filter">
+        <input name="Q" value="@Model.Q" class="rev-input" placeholder="Пошук: учень, email, курс, урок або завдання" />
+        <select name="CourseId" class="rev-select">
+            <option value="">Усі курси</option>
+            @foreach (var c in Model.Courses)
+            {
+                <option value="@c.Value" selected="@c.Selected">@c.Text</option>
+            }
+        </select>
+        <select name="Status" class="rev-select">
+            <option value="">Усі статуси</option>
+            <option value="@StudentSubmissionStatus.PendingReview" selected="@(Model.Status == StudentSubmissionStatus.PendingReview)">Очікує перевірки</option>
+            <option value="@StudentSubmissionStatus.Approved" selected="@(Model.Status == StudentSubmissionStatus.Approved)">Зараховано</option>
+            <option value="@StudentSubmissionStatus.Returned" selected="@(Model.Status == StudentSubmissionStatus.Returned)">Повернуто</option>
+        </select>
+        <input type="date" name="From" value="@(Model.From?.ToString("yyyy-MM-dd"))" class="rev-input" />
+        <input type="date" name="To" value="@(Model.To?.ToString("yyyy-MM-dd"))" class="rev-input" />
+        <button class="rev-btn rev-btn--primary" type="submit">Фільтрувати</button>
+        <a asp-action="Index" asp-route-Status="@StudentSubmissionStatus.PendingReview" class="rev-btn rev-btn--primary">Очікують</a>
+        <a asp-action="Index" asp-route-Status="" class="rev-btn">Скинути</a>
+    </form>
+
+    <div class="rev-card">
+        <div class="rev-table-wrap">
+            <table class="rev-table">
+                <thead>
+                    <tr>
+                        <th>Учень</th>
+                        <th>Курс / урок</th>
+                        <th>Завдання</th>
+                        <th>Статус</th>
+                        <th>%</th>
+                        <th>Здано</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (Model.Items.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7" class="rev-empty">Немає робіт за вибраним фільтром.</td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                <div class="rev-strong">@item.StudentName</div>
+                                <div class="rev-muted rev-small">@item.StudentEmail</div>
+                            </td>
+                            <td>
+                                <div class="rev-strong">@item.CourseTitle</div>
+                                <div class="rev-muted rev-small">@item.LessonTitle</div>
+                            </td>
+                            <td>@item.TaskTitle</td>
+                            <td>
+                                @if (item.Status == StudentSubmissionStatus.PendingReview)
+                                {
+                                    <span class="rev-pill rev-pill--pending">🟡 Очікує</span>
+                                }
+                                else if (item.Status == StudentSubmissionStatus.Approved)
+                                {
+                                    <span class="rev-pill rev-pill--ok">✅ Зараховано</span>
+                                }
+                                else
+                                {
+                                    <span class="rev-pill rev-pill--returned">🔁 Повернуто</span>
+                                }
+                            </td>
+                            <td>@(item.ServerSimilarity?.ToString() ?? "—")</td>
+                            <td>@item.SubmittedAtUtc.ToLocalTime().ToString("dd.MM HH:mm")</td>
+                            <td class="rev-actions">
+                                <a asp-action="Details" asp-route-id="@item.SubmissionId" class="rev-btn rev-btn--primary">Відкрити</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

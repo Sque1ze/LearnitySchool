@@ -1,0 +1,41 @@
+@model LearnitySchool.Web.ViewModels.Profile.ProfileDetailsVm
+@{
+    ViewData["Title"] = "Мій профіль";
+    var firstInitial = string.IsNullOrWhiteSpace(Model.FirstName) ? "?" : Model.FirstName[0].ToString();
+    var lastInitial = string.IsNullOrWhiteSpace(Model.LastName) ? string.Empty : Model.LastName[0].ToString();
+    var initials = (firstInitial + lastInitial).ToUpper();
+}
+<link rel="stylesheet" href="~/css/profile.css" asp-append-version="true" />
+
+<section class="profile-page">
+    <header class="profile-head">
+        <div>
+            <div class="kicker">Account</div>
+            <h1>Мій профіль</h1>
+            <p>Перегляд основної інформації акаунта.</p>
+        </div>
+        <div class="profile-actions">
+            <a asp-action="Edit" class="pbtn pbtn-primary">Редагувати профіль</a>
+            <a asp-action="ChangePassword" class="pbtn">Змінити пароль</a>
+        </div>
+    </header>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="p-alert p-alert-success">@TempData["Success"]</div>
+    }
+
+    <div class="profile-card">
+        <div class="avatar-big">@initials</div>
+        <div class="profile-grid">
+            <div><span>Ім’я</span><strong>@Model.FirstName</strong></div>
+            <div><span>Прізвище</span><strong>@Model.LastName</strong></div>
+            <div><span>Email</span><strong>@Model.Email</strong></div>
+            <div><span>Username</span><strong>@Model.UserName</strong></div>
+            <div><span>Телефон</span><strong>@(Model.PhoneNumber ?? "—")</strong></div>
+            <div><span>Вік</span><strong>@(Model.Age?.ToString() ?? "—")</strong></div>
+            <div><span>Роль</span><strong>@Model.Role</strong></div>
+            <div><span>Створено</span><strong>@Model.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</strong></div>
+        </div>
+    </div>
+</section>

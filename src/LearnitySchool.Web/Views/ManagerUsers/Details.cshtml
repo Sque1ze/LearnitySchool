@@ -2,19 +2,30 @@
 @{
     ViewData["Title"] = "Дані користувача";
 }
+<link rel="stylesheet" href="~/css/userManager/userIndex.css" asp-append-version="true" />
 
-<h2>Details</h2>
+<section class="manager-user-page">
+    <header class="manager-user-head">
+        <div>
+            <h1>Дані користувача</h1>
+            <p>Перегляд основної інформації про акаунт.</p>
+        </div>
+        <a asp-action="Index" class="manager-user-btn">← Назад</a>
+    </header>
 
-<div style="max-width:520px; display:grid; gap:8px;">
-    <div><strong>Email:</strong> @Model.Email</div>
-    <div><strong>UserName:</strong> @Model.UserName</div>
-    <div><strong>FirstName:</strong> @Model.FirstName</div>
-    <div><strong>LastName:</strong> @Model.LastName</div>
-    <div><strong>Age:</strong> @Model.Age</div>
-    <div><strong>Phone:</strong> @Model.PhoneNumber</div>
-
-    <div style="margin-top:12px; display:flex; gap:10px;">
-        <a asp-action="Edit" asp-route-id="@Model.Id" class="dropdown-btn">Edit</a>
-        <a asp-action="Index" class="dropdown-btn">Back</a>
+    <div class="manager-user-card">
+        <div class="detail-grid">
+            <strong>Email</strong><div>@Model.Email</div>
+            <strong>UserName</strong><div>@Model.UserName</div>
+            <strong>First name</strong><div>@Model.FirstName</div>
+            <strong>Last name</strong><div>@Model.LastName</div>
+            <strong>Age</strong><div>@Model.Age</div>
+            <strong>Phone</strong><div>@Model.PhoneNumber</div>
+            <strong>Role</strong><div><span class="role-badge @Model.Role">@Model.Role</span></div>
+        </div>
+        <div class="manager-user-actions">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="manager-user-btn primary">Edit</a>
+            <a asp-action="Index" class="manager-user-btn">Back</a>
+        </div>
     </div>
-</div>
+</section>

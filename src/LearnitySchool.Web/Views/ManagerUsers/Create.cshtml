@@ -2,33 +2,42 @@
 @{
     ViewData["Title"] = "Додати користувача";
 }
+<link rel="stylesheet" href="~/css/userManager/userIndex.css" asp-append-version="true" />
 
-<h2>Додати користувача</h2>
+<section class="manager-user-page">
+    <header class="manager-user-head">
+        <div>
+            <div class="kicker">Manager</div>
+            <h1>Додати користувача</h1>
+            <p>Створення акаунта з роллю.</p>
+        </div>
+        <a asp-action="Index" class="manager-user-btn">← Назад</a>
+    </header>
 
-<form asp-action="Create" method="post" style="max-width:520px; display:grid; gap:12px;">
-    @Html.AntiForgeryToken()
+    <form asp-action="Create" method="post" class="manager-user-form manager-user-card">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="All" class="validation"></div>
+        <div class="form-grid-2">
+            <label>Email<input asp-for="Email" /></label>
+            <label>Password<input asp-for="Password" type="password" /></label>
+            <label>First name<input asp-for="FirstName" /></label>
+            <label>Last name<input asp-for="LastName" /></label>
+            <label>Role
+                <select asp-for="Role">
+                    @foreach (var r in Model.AvailableRoles)
+                    {
+                        <option value="@r">@r</option>
+                    }
+                </select>
+            </label>
+            <label>Age<input asp-for="Age" type="number" /></label>
+            <label>Phone<input asp-for="PhoneNumber" /></label>
+        </div>
+        <div class="manager-user-actions">
+            <button type="submit" class="manager-user-btn primary">Create</button>
+            <a asp-action="Index" class="manager-user-btn">Cancel</a>
+        </div>
+    </form>
+</section>
 
-    <input name="Email" value="@Model.Email" placeholder="Email" class="dropdown-btn" />
-    <input name="Password" type="password" placeholder="Password" class="dropdown-btn" />
-
-    <input name="FirstName" value="@Model.FirstName" placeholder="First name" class="dropdown-btn" />
-    <input name="LastName" value="@Model.LastName" placeholder="Last name" class="dropdown-btn" />
-
-    <label style="opacity:.8;">Role</label>
-    <select name="Role" class="dropdown-btn">
-        @foreach (var r in Model.AvailableRoles)
-        {
-            <option value="@r" selected="@(Model.Role == r)">@r</option>
-        }
-    </select>
-
-    <input name="Age" value="@Model.Age" placeholder="Age" class="dropdown-btn" />
-    <input name="PhoneNumber" value="@Model.PhoneNumber" placeholder="Phone number" class="dropdown-btn" />
-
-    <div style="display:flex; gap:10px;">
-        <button type="submit" class="dropdown-btn">Create</button>
-        <a asp-action="Index" class="dropdown-btn">Cancel</a>
-    </div>
-
-    <div asp-validation-summary="All"></div>
-</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

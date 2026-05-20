@@ -16,12 +16,21 @@
         </div>
 
         <a asp-action="Lessons"
-               asp-route-courseId="@courseId"
-               class="st-btn st-btn--ghost">
+           asp-route-courseId="@courseId"
+           class="st-btn st-btn--ghost">
             <span class="st-btn__arrow">←</span>
             Назад до уроків
         </a>
     </header>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="st-alert st-alert--error">❌ @TempData["Error"]</div>
+    }
+    @if (TempData["Success"] != null)
+    {
+        <div class="st-alert st-alert--success">@TempData["Success"]</div>
+    }
 
     <div class="st-surface">
         <div class="st-table-wrap">
@@ -30,7 +39,8 @@
                     <tr>
                         <th class="st-th st-th--num">#</th>
                         <th class="st-th">Назва завдання</th>
-                        <th class="st-th">Тип завдання</th>
+                        <th class="st-th">Тип</th>
+                        <th class="st-th">Перевірка</th>
                         <th class="st-th">Статус</th>
                         <th class="st-th st-th--actions"></th>
                     </tr>
@@ -40,7 +50,7 @@
                     @if (Model == null || Model.Count == 0)
                     {
                         <tr>
-                            <td colspan="5" class="st-empty">
+                            <td colspan="6" class="st-empty">
                                 <div class="st-empty__icon">✅</div>
                                 <div class="st-empty__title">Немає завдань для цього уроку</div>
                                 <div class="st-empty__text">Коли викладач додасть завдання — воно з’явиться тут.</div>
@@ -51,27 +61,57 @@
                     {
                         @foreach (var t in Model)
                         {
-                            <tr class="st-tr">
+                            <tr class="st-tr @(t.IsFailedAttempt ? "st-tr--failed" : "")">
                                 <td class="st-td st-td--num">@t.Order</td>
 
                                 <td class="st-td">
                                     <div class="st-task-title">@t.Title</div>
+                                    @if (!string.IsNullOrWhiteSpace(t.TeacherComment))
+                                    {
+                                        <div class="st-note">Коментар вчителя: @t.TeacherComment</div>
+                                    }
                                 </td>
 
                                 <td class="st-td">
-                                    <span class="st-pill st-pill--type">
-                                        @t.Type
-                                    </span>
+                                    <span class="st-pill st-pill--type">@t.Type</span>
+                                </td>
+
+                                <td class="st-td">
+                                    @if (t.AssessmentMode == TaskAssessmentMode.TeacherReview)
+                                    {
+                                        <span class="st-pill st-pill--review">На перевірку</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="st-pill st-pill--auto">% автоматично</span>
+                                    }
                                 </td>
 
                                 <td class="st-td">
                                     @if (t.IsCompleted)
                                     {
-                                        <span class="st-pill st-pill--ok">✅ Completed</span>
+                                        <span class="st-pill st-pill--ok">✅ Зараховано</span>
+                                    }
+                                    else if (t.SubmissionStatus == StudentSubmissionStatus.PendingReview)
+                                    {
+                                        <span class="st-pill st-pill--pending">🟡 Очікує перевірки</span>
+                                    }
+                                    else if (t.SubmissionStatus == StudentSubmissionStatus.Returned)
+                                    {
+                                        <span class="st-pill st-pill--returned">🔴 Не зараховано</span>
+                                        @if (t.SubmittedAtUtc.HasValue)
+                                        {
+                                            <div class="st-note st-note--danger">Можна переробити і здати ще раз.</div>
+                                        }
+                                    }
+                                    else if (t.HasQuizAttempt && (t.QuizScorePercent ?? 0) < 95)
+                                    {
+                                        <span class="st-pill st-pill--returned">🔴 @t.QuizScorePercent% — спробуй ще</span>
+                                        <div class="st-note st-note--danger">Правильні відповіді не показуються, можна повторити.</div>
                                     }
                                     else
                                     {
-                                        <span class="st-pill st-pill--muted">⏳ Not completed</span>
+                                        <span class="st-pill st-pill--muted">⏳ Не виконано</span>
                                     }
                                 </td>
 
@@ -79,17 +119,17 @@
                                     @if (t.Type == LessonTaskType.Practice)
                                     {
                                         <a asp-action="Practice"
-                                               asp-route-taskId="@t.TaskId"
-                                               class="st-btn st-btn--primary">
-                                            Відкрити
+                                           asp-route-taskId="@t.TaskId"
+                                           class="st-btn st-btn--primary">
+                                            @(t.SubmissionStatus == StudentSubmissionStatus.Returned ? "Переробити" : "Відкрити")
                                             <span class="st-btn__arrow">→</span>
                                         </a>
                                     }
                                     else
                                     {
                                         <a asp-action="Quiz"
-                                               asp-route-taskId="@t.TaskId"
-                                               class="st-btn st-btn--primary">
+                                           asp-route-taskId="@t.TaskId"
+                                           class="st-btn st-btn--primary">
                                             Відкрити
                                             <span class="st-btn__arrow">→</span>
                                         </a>

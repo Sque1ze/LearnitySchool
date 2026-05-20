@@ -68,13 +68,18 @@ public class ManagerLessonsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(LessonEditVm vm)
     {
-        if (!ModelState.IsValid) return View(vm);
+        if (!ModelState.IsValid)
+        {
+            vm.CourseTitle = await _db.Courses.Where(x => x.Id == vm.CourseId).Select(x => x.Title).FirstOrDefaultAsync() ?? string.Empty;
+            return View(vm);
+        }
 
         // унікальність Order в курсі
         var orderExists = await _db.Lessons.AnyAsync(x => x.CourseId == vm.CourseId && x.Order == vm.Order);
         if (orderExists)
         {
             ModelState.AddModelError(nameof(vm.Order), "Такий Order вже існує в цьому курсі.");
+            vm.CourseTitle = await _db.Courses.Where(x => x.Id == vm.CourseId).Select(x => x.Title).FirstOrDefaultAsync() ?? string.Empty;
             return View(vm);
         }
 
@@ -86,7 +91,9 @@ public class ManagerLessonsController : Controller
             Title = vm.Title.Trim(),
             Description = vm.Description?.Trim(),
             Content = vm.Content,
-            IsPublished = vm.IsPublished
+            IsPublished = vm.IsPublished,
+            PriceAmount = vm.PriceAmount,
+            Currency = string.IsNullOrWhiteSpace(vm.Currency) ? "UAH" : vm.Currency.Trim().ToUpperInvariant()
         };
 
         _db.Lessons.Add(lesson);
@@ -115,7 +122,9 @@ public class ManagerLessonsController : Controller
             Title = lesson.Title,
             Description = lesson.Description,
             Content = lesson.Content,
-            IsPublished = lesson.IsPublished
+            IsPublished = lesson.IsPublished,
+            PriceAmount = lesson.PriceAmount,
+            Currency = lesson.Currency
         };
 
         return View(vm);
@@ -126,7 +135,11 @@ public class ManagerLessonsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(LessonEditVm vm)
     {
-        if (!ModelState.IsValid) return View(vm);
+        if (!ModelState.IsValid)
+        {
+            vm.CourseTitle = await _db.Courses.Where(x => x.Id == vm.CourseId).Select(x => x.Title).FirstOrDefaultAsync() ?? string.Empty;
+            return View(vm);
+        }
 
         var lesson = await _db.Lessons.FirstOrDefaultAsync(x => x.Id == vm.Id);
         if (lesson == null) return NotFound();
@@ -140,6 +153,7 @@ public class ManagerLessonsController : Controller
         if (orderExists)
         {
             ModelState.AddModelError(nameof(vm.Order), "Такий Order вже існує в цьому курсі.");
+            vm.CourseTitle = await _db.Courses.Where(x => x.Id == vm.CourseId).Select(x => x.Title).FirstOrDefaultAsync() ?? string.Empty;
             return View(vm);
         }
 
@@ -148,6 +162,8 @@ public class ManagerLessonsController : Controller
         lesson.Description = vm.Description?.Trim();
         lesson.Content = vm.Content;
         lesson.IsPublished = vm.IsPublished;
+        lesson.PriceAmount = vm.PriceAmount;
+        lesson.Currency = string.IsNullOrWhiteSpace(vm.Currency) ? "UAH" : vm.Currency.Trim().ToUpperInvariant();
 
         await _db.SaveChangesAsync();
 
@@ -173,7 +189,9 @@ public class ManagerLessonsController : Controller
             Order = lesson.Order,
             Title = lesson.Title,
             Description = lesson.Description,
-            IsPublished = lesson.IsPublished
+            IsPublished = lesson.IsPublished,
+            PriceAmount = lesson.PriceAmount,
+            Currency = lesson.Currency
         };
 
         return View(vm);

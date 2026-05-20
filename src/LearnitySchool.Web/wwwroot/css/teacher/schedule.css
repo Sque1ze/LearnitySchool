@@ -1,10 +1,10 @@
 ﻿:root {
-    --bg: #020617;
-    --card: #020617;
-    --text: #E5E7EB;
-    --muted: #9CA3AF;
-    --border: #1F2933;
-    --shadow: 0 10px 25px rgba(0,0,0,.35);
+    --bg: #F8FAFC;
+    --card: #FFFFFF;
+    --text: #0F172A;
+    --muted: #64748B;
+    --border: #DDE7F0;
+    --shadow: 0 10px 25px rgba(15,23,42,.08);
     --radius: 14px;
 }
 
@@ -75,7 +75,7 @@
     }
 
     .input:focus {
-        border-color: rgba(56,189,248,0.55);
+        border-color: rgba(37,99,235,0.55);
         background: rgba(255,255,255,0.06);
     }
 
@@ -125,7 +125,7 @@
 
     .btn:hover {
         background: rgba(255,255,255,0.07);
-        border-color: rgba(56,189,248,0.45);
+        border-color: rgba(37,99,235,0.45);
     }
 
     .btn.small {
@@ -134,8 +134,8 @@
     }
 
 .btn-primary {
-    border-color: rgba(56,189,248,0.65);
-    background: rgba(56,189,248,0.14);
+    border-color: rgba(37,99,235,0.65);
+    background: rgba(37,99,235,0.14);
 }
 
 .btn-ghost {
@@ -161,7 +161,7 @@
         text-transform: uppercase;
         color: var(--muted);
         border-bottom: 1px solid var(--border);
-        background: rgba(255,255,255,0.02);
+        background: #FFFFFF;
     }
 
     .table tbody td {
@@ -170,7 +170,7 @@
     }
 
     .table tbody tr:hover td {
-        background: rgba(255,255,255,0.02);
+        background: #FFFFFF;
     }
 
 .strong {
@@ -199,7 +199,7 @@
     font-size: 12px;
     font-weight: 900;
     border: 1px solid rgba(255,255,255,0.12);
-    background: rgba(255,255,255,0.03);
+    background: #FFFFFF;
     color: var(--text);
 }
 
